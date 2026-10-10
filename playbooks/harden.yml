@@ -2,17 +2,24 @@
 # Tek rol:  --tags base,auth,kernel,auditd,fail2ban,aide,ufw,ssh
 # SSH ve ufw en sonda; firewall SSH iznini enable'dan önce ekler.
 - name: Harden
-  hosts: ubuntu
+  # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
+  # kabul edilir. Sistem/sürüm desteği hardening_preflight ile kontrol edilir, grup adıyla değil.
+  hosts: "hardening:ubuntu"
   pre_tasks:
     - name: Preflight (desteklenen OS/sürüm, sürüm değişkenleri)
       ansible.builtin.include_role:
         name: hardening_preflight
+        # include_role'daki tags yalnızca include ifadesine uygulanır; içteki görevler --tags ile atlanırdı.
+        apply:
+          tags: [always]
       tags: [always]
     # Erişim kaybı korumaları: sadece firewall/SSH değişirken gerekli, --check'te de çalışır.
     - name: Erişim kaybı korumaları (allow_from, kaynak IP, root)
       ansible.builtin.include_role:
         name: hardening_preflight
         tasks_from: access
+        apply:
+          tags: [ufw, ssh]
       tags: [ufw, ssh]
   roles:
     - { role: hardening_base, tags: [base] }
@@ -28,4 +35,6 @@
     - name: Yeni bağlantı doğrulaması ve geri alma
       ansible.builtin.include_role:
         name: hardening_verify_access
+        apply:
+          tags: [ufw, ssh]
       tags: [ufw, ssh]

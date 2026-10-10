@@ -1,3 +1,12 @@
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # Anahtar yoksa rol zaten durur (authorized_keys kontrolü).
 hardening_ssh_disable_password: true
+
+# 2FA/TOTP (keyboard-interactive) kullananlar için. Varsayılan false (davranış değişmez).
+# true ise sshd'ye AuthenticationMethods publickey,keyboard-interactive yazılır: anahtar VE PAM istemi birlikte
+# gerekir (parola tek başına yetmez). Sunucuda PAM'ın 2FA'yı (örn. libpam-google-authenticator) ayrıca
+# yapılandırılması gerekir; bu rol bunu yapmaz. Yanlış yapılandırma erişimi keser: önce test sunucusunda deneyin.
+hardening_ssh_kbdinteractive: false
+# ProxyJump/tünel kullananlar için: no | local | remote | yes. Varsayılan no (davranış değişmez).
+# ProxyJump için jump host'ta en az "local" gerekir; "yes" gereksiz geniştir.
+hardening_ssh_allow_tcp_forwarding: "no"

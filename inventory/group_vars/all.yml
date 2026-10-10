@@ -17,8 +17,9 @@
 # hardening_pwquality_minlen: 14
 
 # --- fail2ban ---
-# Buradan gelen IP'ler asla banlanmaz (erişim kaybını önler).
-# hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1 10.0.0.0/8"
+# Asla banlanmayacak adresler. Kontrol makinesinin sunucunun gördüğü adresi (SSH_CONNECTION) buna
+# otomatik eklenir; tüm yönetim ağını muaf tutmak için açıkça yazın (önerilmez).
+# hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1"
 # hardening_fail2ban_maxretry: 5
 # hardening_fail2ban_bantime: 1h
 
@@ -26,7 +27,17 @@
 # ZORUNLU: varsayılan boş; boşken harden.yml (ufw/ssh) durur. Yönetim ağınızı yazın.
 # hardening_ssh_allow_from:
 #   - 192.168.1.0/24
-# hardening_ssh_port: 22
 # hardening_ssh_disable_password: true
+# 2FA/TOTP (keyboard-interactive) için. true ise AuthenticationMethods publickey,keyboard-interactive yazılır
+# (anahtar VE PAM istemi gerekir). Sunucuda PAM 2FA'sı ayrıca kurulmalıdır; yanlışsa erişim kesilir.
+# hardening_ssh_kbdinteractive: false
+# ProxyJump/tünel için: no | local | remote | yes (string; YAML'da no'yu tırnaklayın).
+# hardening_ssh_allow_tcp_forwarding: "no"
 # Ek açılacak portlar, örn: ["443/tcp"]
 # hardening_ufw_extra_allow: []
+
+# --- audit ---
+# Tarama çıktısının yazılacağı dizin (varsayılan: repodaki scans/). Altında <host>/<tarih>/ oluşur; <host> ve
+# <tarih> dizinleri 0700, dosyalar 0600. lynis-report.dat hostname, paket ve kullanıcı adı içerir; taşınabilir
+# bir ortama (USB) yazacaksanız şifreli bir birim kullanın.
+# hardening_scan_dir: /yol/scans

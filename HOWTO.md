@@ -74,7 +74,7 @@ Sunucuda yapılacaklar:
 ```yaml
 all:
   children:
-    ubuntu:
+    hardening:               # (eski 'ubuntu' grubu da kabul edilir)
       hosts:
         test-vm-01:
           ansible_host: 192.168.1.50
@@ -98,8 +98,10 @@ Ağ ayarlarını kontrol et (varsayılanı rol `defaults/`'ında, örnek `invent
 | Değişken | Anlamı | Dikkat |
 |---|---|---|
 | `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **ZORUNLU, varsayılan boş.** Boşsa veya Ansible'ın bağlandığı IP burada değilse playbook durur. NAT/jump host varsa sunucunun *gördüğü* adresi yaz. Örn. `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` |
-| `hardening_fail2ban_ignoreip` | Asla banlanmayacak ağlar | Aynı ağı yaz |
+| `hardening_fail2ban_ignoreip` | Asla banlanmayacak adresler (varsayılan `127.0.0.1/8 ::1`) | Ansible'ın bağlandığı kontrol makinesinin **sunucunun gördüğü adresi** otomatik eklenir; tüm yönetim ağını muaf tutmak istersen açıkça yaz (önerilmez). Dinamik IP'den çalıştırırsan dosya her çalıştırmada değişir ve fail2ban yeniden başlar |
 | `hardening_ssh_disable_password` | SSH parola girişini kapat | Anahtar yoksa rol zaten durur |
+| `hardening_ssh_kbdinteractive` | 2FA/TOTP için `keyboard-interactive` (varsayılan `false`) | `true` ise `AuthenticationMethods publickey,keyboard-interactive` yazılır. PAM 2FA'sı **sizin kurmanız gerekir**; yanlışsa erişim kesilir. Bağlantı doğrulaması yalnızca banner'ı sınar |
+| `hardening_ssh_allow_tcp_forwarding` | `no` \| `local` \| `remote` \| `yes` (varsayılan `"no"`) | ProxyJump için jump host'ta en az `local`. YAML'da `no`'yu tırnaklayın (tırnaksız bool olur ve doğrulama durdurur) |
 | `hardening_ufw_extra_allow` | Ek açılacak portlar, örn. `["443/tcp"]` | Web sunucusu vb. için |
 
 Bir sunucuya özel ayar: `inventory/host_vars/yeni-sunucu.yml` oluşturup oraya yaz.
@@ -154,6 +156,26 @@ Aynısını sunucuda elle de görebilirsin (aynı sonucu verir, 77 bunun doğrul
 sudo lynis audit system
 ```
 
+Her taramanın klasöründe ayrıca makine-okunur bir **`summary.json`** üretilir:
+
+```json
+{ "date": "2026-10-10T11:12:21Z", "hardening_index": 77, "host": "test-vm-01",
+  "suggestions": 25, "tests_performed": 264, "warnings": 0 }
+```
+
+| Alan | Kaynak (`lynis-report.dat`) |
+|---|---|
+| `host` | envanterdeki ana makine adı |
+| `date` | özetin üretildiği an (UTC, ISO 8601) |
+| `hardening_index` | `hardening_index=` satırı |
+| `tests_performed` | `tests_executed=` satırındaki `\|` ile ayrılmış test sayısı |
+| `warnings` / `suggestions` | `warning[]=` / `suggestion[]=` satır sayısı |
+
+Rapordan okunamayan alan `null` olur (0 değil). Dosyada yalnızca sayılar ve ana makine adı vardır.
+Çıktı konumunu `hardening_scan_dir` ile değiştirebilirsin (varsayılan repodaki `scans/`); `<host>` ve `<tarih>`
+dizinleri 0700, dosyalar 0600 yazılır. `audit.yml` her çalışmada yeni bir tarih klasörü ürettiği için
+**idempotent değildir** (bu beklenen); `--check` modunda tarama yapılmaz ve rapor/özet üretilmez.
+
 Skor tek başına hedef değil. Önemli olan **uyarı sayısı (0)** ve bilerek yapılmayanların `docs/decisions.md`'de kayıtlı olması.
 
 ---
@@ -194,7 +216,7 @@ Bilerek yapılmayanlar ve nedenleri: `docs/decisions.md`.
 
 ## 7a. Erişim kaybı korumaları (otomatik)
 
-`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (`--tags ufw` veya `ssh` ile çalışırken):
+`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (tam çalıştırmada ve `--tags ufw` / `--tags ssh` ile çalışırken; OS/sürüm preflight'ı ise **her** `--tags` çalıştırmasında da yapılır):
 
 **Önce (durdurur, `--check`'te de çalışır):**
 - `hardening_ssh_allow_from` boş/tanımsız/geçersizse durur.
@@ -213,6 +235,8 @@ Sınırlar (bilerek açık yazıyoruz):
 - Agent'ta 3'ten fazla anahtar varsa ve `ansible_ssh_private_key_file` verilmediyse, `MaxAuthTries 3` yüzünden "Too many authentication failures" ile yanlış negatif olabilir.
 - `authorized_keys` kontrolü varsayılan konuma bakar (özel `AuthorizedKeysFile` ayarını bilmez) ve sadece dosyanın dolu olduğunu doğrular, bağlandığın anahtarın içinde olduğunu değil.
 - `ufw` komutları `--check` modunda çalışmaz; önizleme firewall değişikliğini göstermez.
+- `--check` modunda servis başlatma (auditd, fail2ban) ve `restart fail2ban` handler'ı **atlanır**; temiz bir sunucuda paketler henüz kurulu olmadığı için bunlar simüle edilemez. Önizleme servis durumunu göstermez.
+- **SSH portu değiştirilmez/desteklenmez.** ufw kuralı sshd'nin *gerçekten dinlediği* porttan (`ss`) yazılır; `hardening_ssh_port` kaldırıldı. sshd bulunamazsa ufw'ye dokunulmaz ve playbook durur.
 
 ---
 
@@ -234,7 +258,7 @@ ansible-playbook playbooks/harden.yml --ask-become-pass
 1. Proxmox snapshot / yedek al.
 2. Tek sunucuyla başla: `--limit sunucu1`.
 3. Önce `--check --diff`, çıktıyı oku.
-4. `hardening_ssh_allow_from` (zorunlu) ve `hardening_fail2ban_ignoreip` **o sunucuya göre doğru mu?** Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
+4. `hardening_ssh_allow_from` (zorunlu) **o sunucuya göre doğru mu?** (fail2ban `ignoreip` kontrol makinesi adresini zaten otomatik ekler.) Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
 5. Sunucuda çalışan servis varsa (web, veritabanı...) portlarını `hardening_ufw_extra_allow` ile aç; yoksa firewall onları kapatır.
 6. Bakım penceresinde uygula. Otomatik reboot yoktur ama paket/servis değişiklikleri kısa kesinti yapabilir.
 7. Kademeli git: ilk gün `--tags base,auth,kernel`, sonra `auditd,fail2ban,aide`, en son `ufw,ssh`.

@@ -2,14 +2,17 @@
 PermitRootLogin no
 PasswordAuthentication {{ 'no' if hardening_ssh_disable_password else 'yes' }}
 PermitEmptyPasswords no
-KbdInteractiveAuthentication no
+KbdInteractiveAuthentication {{ 'yes' if hardening_ssh_kbdinteractive else 'no' }}
+{% if hardening_ssh_kbdinteractive %}
+AuthenticationMethods publickey,keyboard-interactive
+{% endif %}
 PubkeyAuthentication yes
 MaxAuthTries 3
 MaxSessions 4
 LoginGraceTime 60
 LogLevel VERBOSE
 X11Forwarding no
-AllowTcpForwarding no
+AllowTcpForwarding {{ hardening_ssh_allow_tcp_forwarding }}
 AllowAgentForwarding no
 TCPKeepAlive no
 ClientAliveInterval 300
