@@ -57,17 +57,17 @@ jobs:
           cp vars/ubuntu-26.04.yml vars/ubuntu-24.04.yml
       - name: harden.yml --check --diff (temiz sunucu)
         env:
-          SSH_CONNECTION: "10.1.2.3 5555 10.9.9.9 22"
+          SSH_CONNECTION: "192.0.2.10 5555 192.0.2.20 22"
         run: |
           set -o pipefail
           .venv/bin/ansible-playbook -i test/inventory-local.yml playbooks/harden.yml --check --diff \
             -e hardening_allow_unsupported=true \
-            -e '{"hardening_ssh_allow_from": ["10.0.0.0/8"]}' \
+            -e '{"hardening_ssh_allow_from": ["192.0.2.0/24"]}' \
             -e ansible_python_interpreter=/usr/bin/python3 | tee smoke.log
           grep -E 'failed=0' smoke.log
       - name: Etiketli çalıştırma (--tags ssh) korumaları atlamamalı
         env:
-          SSH_CONNECTION: "10.1.2.3 5555 10.9.9.9 22"
+          SSH_CONNECTION: "192.0.2.10 5555 192.0.2.20 22"
         run: |
           set +e
           out=$(.venv/bin/ansible-playbook -i test/inventory-local.yml playbooks/harden.yml --check --tags ssh \
