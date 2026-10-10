@@ -1,0 +1,19 @@
+- name: Check distribution and version are supported
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution in hardening_supported_os
+      - ansible_distribution_version in hardening_supported_os[ansible_distribution]
+    fail_msg: >-
+      Desteklenmeyen sistem: {{ ansible_distribution }} {{ ansible_distribution_version }}.
+      Desteklenenler: {{ hardening_supported_os }}. docs/SUPPORT.md'ye bak.
+  when: not hardening_allow_unsupported
+
+- name: Load OS/version specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+      paths:
+        - "{{ playbook_dir }}/../vars"

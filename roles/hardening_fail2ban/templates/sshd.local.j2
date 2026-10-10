@@ -1,0 +1,9 @@
+# Ansible tarafından yönetilir
+[DEFAULT]
+ignoreip = {{ hardening_fail2ban_ignoreip }}
+bantime = {{ hardening_fail2ban_bantime }}
+maxretry = {{ hardening_fail2ban_maxretry }}
+
+[sshd]
+enabled = true
+backend = systemd

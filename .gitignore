@@ -1,0 +1,21 @@
+# tarama raporları ve hassas çıktılar
+scans/*
+!scans/.gitkeep
+
+# Ansible
+*.retry
+.vault_pass
+*.vault
+
+# gerçek inventory (IP/hostname içerir); örnek dosya takip edilir
+inventory/hosts.yml
+!inventory/hosts.example.yml
+
+.DS_Store
+.venv/
+
+# SSH anahtarlari ASLA commit edilmez
+key/
+*id_ed25519*
+*id_rsa*
+*.pem

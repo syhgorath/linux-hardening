@@ -1,0 +1,32 @@
+# Not: login.defs değerleri sadece YENİ hesapları etkiler; mevcut kullanıcılara dokunmaz (kilitlenme riski yok).
+- name: Install libpam-pwquality
+  ansible.builtin.apt:
+    name: libpam-pwquality
+    state: present
+
+- name: login.defs password aging and umask
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^\s*#?\s*{{ item.key }}\b'
+    line: "{{ item.key }}\t{{ item.value }}"
+  loop:
+    - { key: PASS_MAX_DAYS, value: "{{ hardening_pass_max_days }}" }
+    - { key: PASS_MIN_DAYS, value: "{{ hardening_pass_min_days }}" }
+    - { key: PASS_WARN_AGE, value: "{{ hardening_pass_warn_age }}" }
+    - { key: UMASK, value: "{{ hardening_umask }}" }
+    - { key: SHA_CRYPT_MIN_ROUNDS, value: "65536" }
+    - { key: SHA_CRYPT_MAX_ROUNDS, value: "65536" }
+
+- name: Ensure pwquality.conf.d exists
+  ansible.builtin.file:
+    path: /etc/security/pwquality.conf.d
+    state: directory
+    mode: "0755"
+
+- name: pwquality policy
+  ansible.builtin.template:
+    src: pwquality.conf.j2
+    dest: /etc/security/pwquality.conf.d/90-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"

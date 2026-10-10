@@ -1,0 +1,52 @@
+# Sistemde bir mail-transport-agent bagimliligi var; postfix'i sadece kaldirmak apt'e
+# courier-mta (25/tcp dinler) kurdurdu. Dinlemeyen bir MTA (dma) ile karsilaniyor.
+- name: Install dma (sadece giden mail, port dinlemez)
+  ansible.builtin.apt:
+    name: dma
+    state: present
+
+- name: Purge listening MTAs (postfix, courier)
+  ansible.builtin.apt:
+    name: [postfix, "courier-*"]
+    state: absent
+    purge: true
+    autoremove: true
+
+- name: Install unattended-upgrades
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+
+- name: Enable automatic security updates (otomatik reboot YOK)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Disable usb-storage
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/60-hardening-usb.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      install usb-storage /bin/false
+      blacklist usb-storage
+
+- name: Legal banner
+  ansible.builtin.copy:
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Authorized use only. Activity on this system is monitored and logged.
+      Unauthorized access is prohibited.
+  loop:
+    - /etc/issue
+    - /etc/issue.net

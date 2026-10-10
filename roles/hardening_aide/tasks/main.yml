@@ -1,0 +1,11 @@
+- name: Install AIDE
+  ansible.builtin.apt:
+    name: [aide, aide-common]
+    state: present
+
+- name: Initialize AIDE database (ilk seferde dakikalar sürebilir)
+  ansible.builtin.command: aideinit -y -f
+  args:
+    creates: /var/lib/aide/aide.db
+  async: 1800
+  poll: 15

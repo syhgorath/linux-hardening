@@ -1,0 +1,6 @@
+# Desteklenen dagitim ve surumler. Yeni surum eklemek: vars/<dagitim>-<surum>.yml olustur,
+# buraya ekle, docs/SUPPORT.md'yi guncelle.
+hardening_supported_os:
+  Ubuntu: ["26.04"]
+# Desteklenmeyen surumde zorla calistirmak icin (onerilmez): -e hardening_allow_unsupported=true
+hardening_allow_unsupported: false

@@ -1,0 +1,8 @@
+# Kopyala: cp inventory/hosts.example.yml inventory/hosts.yml
+all:
+  children:
+    ubuntu:
+      hosts:
+        test-vm-01:
+          ansible_host: 192.168.1.50
+          ansible_user: ubuntu

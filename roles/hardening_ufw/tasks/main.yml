@@ -1,0 +1,35 @@
+# ufw modülü community.general içinde; sadece ansible-core kurulu olduğu için komutla yönetiyoruz.
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+
+- name: Allow SSH from management networks (enable'dan ÖNCE)
+  ansible.builtin.command: "ufw allow from {{ item }} to any port {{ hardening_ssh_port }} proto tcp"
+  loop: "{{ hardening_ssh_allow_from }}"
+  register: hardening_ufw_ssh
+  changed_when: "'Skipping' not in hardening_ufw_ssh.stdout"
+
+- name: Allow extra ports
+  ansible.builtin.command: "ufw allow {{ item }}"
+  loop: "{{ hardening_ufw_extra_allow }}"
+  register: hardening_ufw_extra
+  changed_when: "'Skipping' not in hardening_ufw_extra.stdout"
+
+- name: Default policies
+  ansible.builtin.command: "ufw default {{ item.value }} {{ item.key }}"
+  loop:
+    - { key: incoming, value: deny }
+    - { key: outgoing, value: allow }
+  changed_when: false
+
+- name: ufw current state
+  ansible.builtin.command: ufw status
+  register: hardening_ufw_state
+  changed_when: false
+  check_mode: false
+
+- name: Enable ufw
+  ansible.builtin.command: ufw --force enable
+  changed_when: true
+  when: "'Status: active' not in hardening_ufw_state.stdout"

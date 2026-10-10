@@ -1,0 +1,21 @@
+- name: sysctl hardening
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.d/60-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload sysctl
+
+- name: Disable unused network protocols
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/60-hardening-protocols.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      {% for m in ['dccp', 'sctp', 'rds', 'tipc'] %}
+      install {{ m }} /bin/false
+      blacklist {{ m }}
+      {% endfor %}

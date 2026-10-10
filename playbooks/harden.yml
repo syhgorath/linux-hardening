@@ -1,0 +1,18 @@
+# Önce: ansible-playbook playbooks/harden.yml --check --diff
+# Tek rol:  --tags base,auth,kernel,auditd,fail2ban,aide,ufw,ssh
+# SSH ve ufw en sonda; firewall SSH iznini enable'dan önce ekler.
+- name: Harden
+  hosts: ubuntu
+  pre_tasks:
+    - ansible.builtin.include_role:
+        name: hardening_preflight
+      tags: [always]
+  roles:
+    - { role: hardening_base, tags: [base] }
+    - { role: hardening_auth, tags: [auth] }
+    - { role: hardening_kernel, tags: [kernel] }
+    - { role: hardening_auditd, tags: [auditd] }
+    - { role: hardening_fail2ban, tags: [fail2ban] }
+    - { role: hardening_aide, tags: [aide] }
+    - { role: hardening_ufw, tags: [ufw] }
+    - { role: hardening_ssh, tags: [ssh] }
