@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Repo hijyeni: gizli bilgi, anahtar, gerçek inventory/tarama çıktısı, sürüm biçimi, paket içeriği.
+# shellcheck source=test/lib.sh
 . "$(dirname "$0")/lib.sh"
 cd "$ROOT" || exit 1
 files=$(git ls-files)
