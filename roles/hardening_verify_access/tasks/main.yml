@@ -1,0 +1,60 @@
+# ufw/ssh değişikliğinden SONRA: kontrol makinesinden YENİ ve bağımsız bir SSH bağlantısı açar.
+# Başarısızsa, hâlâ açık olan ESKİ oturum üzerinden sshd drop-in'ini geri alır, ufw'yi kapatır ve durur.
+# Sınırlar docs/decisions.md ve HOWTO.md'de yazılıdır (başka rollerin değişiklikleri geri ALINMAZ).
+# --check modunda hiçbir şey değişmediği için atlanır.
+- name: Verify access after ssh/ufw changes
+  when: not ansible_check_mode
+  block:
+    - name: Flush pending handlers (sshd reload burada uygulanır)
+      ansible.builtin.meta: flush_handlers
+
+    - name: Login user (become olmadan)
+      ansible.builtin.command: id -un
+      become: false
+      register: hardening_verify_access_user
+      changed_when: false
+
+    - name: Open a NEW SSH connection from the controller (BatchMode, çoklama yok)
+      delegate_to: localhost
+      become: false
+      ansible.builtin.command:
+        argv: >-
+          {{ ['ssh', '-o', 'BatchMode=yes', '-o', 'ControlMaster=no', '-o', 'ControlPath=none',
+              '-o', 'ConnectTimeout=8', '-o', 'PreferredAuthentications=publickey']
+             + (['-p', (hostvars[inventory_hostname]['ansible_port'] | string)]
+                if hostvars[inventory_hostname]['ansible_port'] is defined else [])
+             + (['-i', hostvars[inventory_hostname]['ansible_ssh_private_key_file'], '-o', 'IdentitiesOnly=yes']
+                if hostvars[inventory_hostname]['ansible_ssh_private_key_file'] is defined else [])
+             + (hostvars[inventory_hostname]['ansible_ssh_common_args'].split()
+                if hostvars[inventory_hostname]['ansible_ssh_common_args'] is defined else [])
+             + [(hostvars[inventory_hostname]['ansible_user'] | default(hardening_verify_access_user.stdout))
+                ~ '@' ~ (hostvars[inventory_hostname]['ansible_host'] | default(inventory_hostname)),
+                'true'] }}
+      register: hardening_verify_access_new_connection
+      changed_when: false
+      retries: 2
+      delay: 3
+      until: hardening_verify_access_new_connection.rc == 0
+
+  rescue:
+    - name: ROLLBACK - remove sshd drop-in
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d/00-hardening.conf
+        state: absent
+
+    - name: ROLLBACK - reload sshd
+      ansible.builtin.systemd:
+        name: "{{ hardening_ssh_service | default('ssh') }}"
+        state: reloaded
+
+    - name: ROLLBACK - disable ufw (kurallar silinmez, sadece firewall kapatılır)
+      ansible.builtin.command: ufw --force disable
+      changed_when: true
+      failed_when: false
+
+    - name: Stop with a clear message
+      ansible.builtin.fail:
+        msg: >-
+          Yeni SSH bağlantısı doğrulanamadı; GERİ ALINDI: /etc/ssh/sshd_config.d/00-hardening.conf silindi,
+          sshd yeniden yüklendi, ufw kapatıldı. GERİ ALINMADI: kurulan paketler, sysctl, auditd, fail2ban,
+          AIDE ve diğer roller. Erişimi elle doğrulayın; gerekirse Proxmox konsolu/snapshot kullanın.

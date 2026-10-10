@@ -4,9 +4,16 @@
 - name: Harden
   hosts: ubuntu
   pre_tasks:
-    - ansible.builtin.include_role:
+    - name: Preflight (desteklenen OS/sürüm, sürüm değişkenleri)
+      ansible.builtin.include_role:
         name: hardening_preflight
       tags: [always]
+    # Erişim kaybı korumaları: sadece firewall/SSH değişirken gerekli, --check'te de çalışır.
+    - name: Erişim kaybı korumaları (allow_from, kaynak IP, root)
+      ansible.builtin.include_role:
+        name: hardening_preflight
+        tasks_from: access
+      tags: [ufw, ssh]
   roles:
     - { role: hardening_base, tags: [base] }
     - { role: hardening_auth, tags: [auth] }
@@ -16,3 +23,9 @@
     - { role: hardening_aide, tags: [aide] }
     - { role: hardening_ufw, tags: [ufw] }
     - { role: hardening_ssh, tags: [ssh] }
+  post_tasks:
+    # ufw/ssh değiştikten sonra yeni bir bağlantı açıp doğrular; başarısızsa geri alır.
+    - name: Yeni bağlantı doğrulaması ve geri alma
+      ansible.builtin.include_role:
+        name: hardening_verify_access
+      tags: [ufw, ssh]

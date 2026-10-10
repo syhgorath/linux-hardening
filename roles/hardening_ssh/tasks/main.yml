@@ -1,6 +1,20 @@
+- name: Login user (become olmadan)
+  ansible.builtin.command: id -un
+  become: false
+  register: hardening_ssh_login_user
+  changed_when: false
+  check_mode: false
+  when: hardening_ssh_disable_password
+
+- name: Login user's real home directory (getent passwd)
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ hardening_ssh_login_user.stdout }}"
+  when: hardening_ssh_disable_password
+
 - name: Authorized key must exist before disabling password auth
   ansible.builtin.stat:
-    path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+    path: "{{ getent_passwd[hardening_ssh_login_user.stdout][4] }}/.ssh/authorized_keys"
   register: hardening_ssh_keys
   when: hardening_ssh_disable_password
 
@@ -9,7 +23,10 @@
     that:
       - hardening_ssh_keys.stat.exists
       - hardening_ssh_keys.stat.size > 0
-    fail_msg: "{{ ansible_user }} için authorized_keys yok; parola girişi kapatılmadı."
+    fail_msg: >-
+      {{ hardening_ssh_login_user.stdout }} için
+      {{ getent_passwd[hardening_ssh_login_user.stdout][4] }}/.ssh/authorized_keys yok ya da boş;
+      parola girişi kapatılmadı.
   when: hardening_ssh_disable_password
 
 - name: "sshd drop-in (00- oneki: cloud-init drop-in dosyasindan once okunur)"

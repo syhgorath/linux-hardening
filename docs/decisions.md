@@ -13,3 +13,9 @@
 | 2026-10-09 | SSH Port | 22 bırakıldı | Firewall ile yönetim ağına kısıtlı; port değişikliği ek güvenlik katmanı sayılmadı |
 | 2026-10-09 | ufw | default deny incoming; SSH sadece 10.0.0.0/8 | Yönetim ağı (VPN) 10.0.0.0/8 içinde |
 | 2026-10-09 | GRUB parolası, /home /var ayrı bölüm, uzak log, process accounting | Uygulanmadı | VM ortamında getirisi düşük / altyapı kararı gerektirir |
+| 2026-10-10 | **BREAKING** hardening_ssh_allow_from varsayılanı | `10.0.0.0/8` kaldırıldı, varsayılan boş; boşsa harden.yml durur | Kilitlenme koruması. Eskiden belirtmeden çalıştırılan kullanım artık değişkeni vermek zorunda |
+| 2026-10-10 | Kaynak IP kontrolü | Ansible'ın bağlandığı adres (SSH_CONNECTION) allow_from içinde değilse durur | ufw enable bağlantıyı keserdi. NAT/jump host'ta sunucunun gördüğü adres yazılmalı |
+| 2026-10-10 | root ile çalışma | ansible_user/giriş kullanıcısı root ise durur | PermitRootLogin no yazılıyor; root ile devam etmek erişimi keser |
+| 2026-10-10 | authorized_keys yolu | getent passwd ile gerçek home dizini | /home/<kullanıcı> varsayımı özel home'larda yanlış sonuç veriyordu |
+| 2026-10-10 | Uygulama sonrası bağlantı doğrulaması | Yeni ssh bağlantısı testi; başarısızsa sshd drop-in sil + sshd reload + ufw disable | Geri alma SADECE ssh drop-in ve ufw'yi kapsar; paketler/sysctl/auditd/fail2ban/AIDE geri alınmaz; eski oturum canlı olmalı |
+

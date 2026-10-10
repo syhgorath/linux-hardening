@@ -1,0 +1,80 @@
+# Erişim kaybı korumaları. Sadece ufw/ssh değişikliklerinden önce çalıştırılır (harden.yml, tags: ufw,ssh).
+# ansible.cfg'de become=True olduğu için fact'ler root olarak toplanır (user_id=root, sudo ortamı
+# SSH_CONNECTION'ı siler); bu yüzden giriş kullanıcısı ve istemci IP'si become OLMADAN okunur.
+# --check modunda da çalışır (salt-okunur komutlar).
+- name: Login user (become olmadan)
+  ansible.builtin.command: id -un
+  become: false
+  register: hardening_preflight_login_user
+  changed_when: false
+  check_mode: false
+
+- name: Login user must not be root (PermitRootLogin no yazılıyor, root ile çalışmak erişimi keser)
+  ansible.builtin.assert:
+    that:
+      - hardening_preflight_login_user.stdout != 'root'
+    fail_msg: >-
+      Ansible root olarak bağlanıyor, ama sertleştirme PermitRootLogin no yazar ve bağlantı kesilir.
+      sudo yetkili normal bir kullanıcıyla bağlanın (ansible_user).
+
+- name: Allow-from list must be a non-empty list
+  ansible.builtin.assert:
+    that:
+      - hardening_ssh_allow_from is defined
+      - hardening_ssh_allow_from is not string
+      - hardening_ssh_allow_from is sequence
+      - hardening_ssh_allow_from | length > 0
+    fail_msg: >-
+      hardening_ssh_allow_from boş veya tanımsız. ufw'yi SSH izni olmadan açmak sunucuyu kilitler.
+      Yönetim ağınızı yazın, örn: -e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'
+      (varsayılan inventory/group_vars/all.yml içinde bilerek boştur).
+
+- name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
+  ansible.builtin.command: printenv SSH_CONNECTION
+  become: false
+  register: hardening_preflight_ssh_connection
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: SSH_CONNECTION must be readable
+  ansible.builtin.assert:
+    that:
+      - hardening_preflight_ssh_connection.rc == 0
+      - hardening_preflight_ssh_connection.stdout.split() | length >= 1
+    fail_msg: >-
+      Sunucuda SSH_CONNECTION okunamadı (SSH dışı bir bağlantı mı?). Kaynak IP'nin izinli ağlarda olduğu
+      doğrulanamadığı için durduruldu.
+
+- name: Check client address is inside hardening_ssh_allow_from (ek koleksiyon gerekmez)
+  ansible.builtin.command:
+    argv: >-
+      {{ [ansible_python_interpreter | default('/usr/bin/python3'), '-c', hardening_preflight_source_check_script,
+          hardening_preflight_ssh_connection.stdout.split()[0]] + hardening_ssh_allow_from }}
+  vars:
+    hardening_preflight_source_check_script: |
+      import ipaddress, sys
+      try:
+          ip = ipaddress.ip_address(sys.argv[1])
+          nets = [ipaddress.ip_network(n, strict=False) for n in sys.argv[2:]]
+      except ValueError as e:
+          print("GECERSIZ: %s" % e)
+          sys.exit(2)
+      sys.exit(0 if any(ip in n for n in nets) else 1)
+  become: false
+  register: hardening_preflight_source_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Client address must be allowed (aksi halde ufw bu bağlantıyı keser)
+  ansible.builtin.assert:
+    that:
+      - hardening_preflight_source_check.rc == 0
+    fail_msg: >-
+      {{ 'hardening_ssh_allow_from içinde geçersiz değer var (' ~ hardening_preflight_source_check.stdout ~ ').'
+         if hardening_preflight_source_check.rc == 2 else
+         'Sunucunun gördüğü kaynak adres ' ~ hardening_preflight_ssh_connection.stdout.split()[0]
+         ~ ', hardening_ssh_allow_from (' ~ (hardening_ssh_allow_from | join(', '))
+         ~ ') içinde değil. ufw enable bağlantıyı keserdi; durduruldu. NAT/atlama sunucusu (jump host) varsa
+         sunucunun GÖRDÜĞÜ adresi listeye ekleyin.' }}
