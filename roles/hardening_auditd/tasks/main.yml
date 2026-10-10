@@ -10,7 +10,7 @@
     owner: root
     group: root
     mode: "0640"
-  notify: load audit rules
+  notify: Load audit rules
 
 - name: Enable and start auditd
   ansible.builtin.systemd:

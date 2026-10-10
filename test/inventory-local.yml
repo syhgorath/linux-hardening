@@ -1,0 +1,7 @@
+# Testlerde kullanılan yerel envanter (ağa çıkmaz).
+all:
+  children:
+    hardening:
+      hosts:
+        localhost:
+          ansible_connection: local

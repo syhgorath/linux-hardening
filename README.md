@@ -39,6 +39,33 @@ Alınan kararlar ve istisnalar: [docs/decisions.md](docs/decisions.md).
 > Örn: `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'`
 > Önce test sunucusunda deneyin, snapshot alın, `--check --diff` ile bakın.
 
+## Testler
+`test/` altındaki testler her PR'da CI'da (`.github/workflows/ci.yml`) çalışır; yerelde:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements-dev.txt
+PATH="$PWD/.venv/bin:$PATH" test/run-all.sh          # hepsi
+PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
+```
+
+| Test | Neyi korur |
+|---|---|
+| `test_lint.sh` | `--syntax-check`, `yamllint --strict`, `ansible-lint` (0 bulgu) |
+| `test_access_guards.sh` | `allow_from` boş/geçersiz/kaynak dışı, `SSH_CONNECTION` yok, root, IPv4/IPv6 |
+| `test_expressions.py` | sshd portlarının `ss` çıktısından türetilmesi, efektif fail2ban `ignoreip` |
+| `test_templates.py` | Şablonların varsayılan çıktısı (golden dosyalar) ve güvenli varsayılanlar |
+| `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |
+| `test_tags_and_hosts.sh` | `--tags` ile preflight/korumaların atlanmaması, `hardening:ubuntu` deseni |
+| `test_handlers.py` | Her `notify` bir handler'a bağlı |
+| `test_vars_defined.py` | `group_vars` olmadan değişkenler tanımlı, güvenli varsayılanlar |
+| `test_consistency.sh` | `VERSION`/`component.yml`/destek matrisi tutarlılığı (kasıtlı bozmalar yakalanır) |
+| `test_repo_hygiene.sh`, `test_ip_addresses.py` | Anahtar/token/IP sızıntısı, paket içeriği |
+
+CI ayrıca Python 3.12/3.13/3.14'te hash'li kurulumu dener ve gerçek bir Linux'ta (`linux-smoke`) `harden.yml --check` çalıştırır.
+
+> **Sınır:** CI canlı sunucu testi yerine geçmez; firewall/SSH değişiklikleri uygulanmaz (runner'ın kendi bağlantısını keserdi).
+> Golden dosyaları bilerek değiştirirseniz: `UPDATE_GOLDEN=1 python3 -I test/test_templates.py` ve farkı PR'da inceleyin.
+
 ## Lisans
 
 MIT, bkz. [LICENSE](LICENSE). Kullanım sorumluluğu size aittir: sertleştirme erişimi kesebilir; önce test sunucusunda deneyin.

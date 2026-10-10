@@ -1,0 +1,5 @@
+# Geliştirme/CI bağımlılıkları (hash'li). Üretmek için:
+#   pip-compile --generate-hashes --strip-extras -o requirements-dev.txt requirements-dev.in
+-r requirements.in
+yamllint==1.38.0
+ansible-lint==26.9.0

@@ -4,7 +4,7 @@
     name: libpam-pwquality
     state: present
 
-- name: login.defs password aging and umask
+- name: Set login.defs password aging and umask
   ansible.builtin.lineinfile:
     path: /etc/login.defs
     regexp: '^\s*#?\s*{{ item.key }}\b'
@@ -23,7 +23,7 @@
     state: directory
     mode: "0755"
 
-- name: pwquality policy
+- name: Configure pwquality policy
   ansible.builtin.template:
     src: pwquality.conf.j2
     dest: /etc/security/pwquality.conf.d/90-hardening.conf

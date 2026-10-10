@@ -1,0 +1,11 @@
+# Erişim korumalarını (hardening_preflight/tasks/access.yml) yalıtılmış çalıştırır.
+- name: Access guards (test)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Run access guards
+      ansible.builtin.include_role:
+        name: hardening_preflight
+        tasks_from: access

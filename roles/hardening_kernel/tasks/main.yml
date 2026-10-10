@@ -1,11 +1,11 @@
-- name: sysctl hardening
+- name: Apply sysctl hardening
   ansible.builtin.template:
     src: sysctl.conf.j2
     dest: /etc/sysctl.d/60-hardening.conf
     owner: root
     group: root
     mode: "0644"
-  notify: reload sysctl
+  notify: Reload sysctl
 
 - name: Disable unused network protocols
   ansible.builtin.copy:
