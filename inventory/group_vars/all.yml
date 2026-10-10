@@ -36,4 +36,3 @@
 # <tarih> dizinleri 0700, dosyalar 0600. lynis-report.dat hostname, paket ve kullanıcı adı içerir; taşınabilir
 # bir ortama (USB) yazacaksanız şifreli bir birim kullanın.
 # hardening_scan_dir: /yol/scans
-
