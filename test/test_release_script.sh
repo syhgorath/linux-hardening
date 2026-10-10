@@ -72,4 +72,20 @@ expect_fail "gecersiz VERSION" "$(rel)"
 fresh; (cd "$TMP/r" && sed -i.bak "s/^## \[$V\]/## [9.9.9]/" CHANGELOG.md && rm -f CHANGELOG.md.bak && git add -A \
   && git -c user.email=t@t -c user.name=t commit -qm c && git tag -d "v$V" >/dev/null && git -c user.email=t@t -c user.name=t tag -a "v$V" -m t)
 expect_fail "CHANGELOG basligi eksik" "$(rel)"
+
+echo "-- python/PyYAML"
+fresh
+out=$(cd "$TMP/r" && LH_PYTHON=/bin/false LH_SIGNING_KEY="$KEY" bash scripts/release.sh 2>&1)
+expect_fail "PyYAML yok (LH_PYTHON bozuk)" "$out"
+expect_contains "  mesaj cozumu soyler" "$out" ".venv/bin/pip install --require-hashes"
+expect_contains "  mesaj kullanilan python'u soyler" "$out" "/bin/false"
+# .venv/bin/python3 varsa kendiliginden kullanilir (gercek python'a yonlendiren, cagrildigini kaydeden sarmalayici)
+fresh
+mkdir -p "$TMP/r/.venv/bin"
+REALPY="$(command -v python3)"
+printf '#!/bin/sh\necho used >> "%s/venv_used"\nexec "%s" "$@"\n' "$TMP" "$REALPY" > "$TMP/r/.venv/bin/python3"
+chmod +x "$TMP/r/.venv/bin/python3"
+out=$(rel); rc=$?
+expect_eq ".venv ile basarili" "0" "$rc"
+if [ -s "$TMP/venv_used" ]; then ok ".venv/bin/python3 kendiliginden kullanildi"; else bad ".venv/bin/python3 kullanilmadi"; fi
 finish

@@ -26,9 +26,17 @@ grep -q "^## \[$VERSION\]" CHANGELOG.md || die "CHANGELOG.md içinde [$VERSION] 
 [ -f "$KEY" ] || die "imza anahtarı bulunamadı: $KEY (LH_SIGNING_KEY ile belirtin)"
 command -v ssh-keygen >/dev/null || die "ssh-keygen yok"
 
+# Python: LH_PYTHON; yoksa repodaki .venv (varsa); yoksa PATH'teki python3
+PY="${LH_PYTHON:-}"
+if [ -z "$PY" ]; then
+    if [ -x ".venv/bin/python3" ]; then PY=".venv/bin/python3"; else PY="python3"; fi
+fi
+"$PY" -c 'import yaml' >/dev/null 2>&1 \
+    || die "PyYAML bulunamadı ($PY). Çözüm: python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements.txt (betik .venv'i kendiliğinden kullanır) ya da LH_PYTHON=/yol/python3"
+
 # Tutarlılık (VERSION, component.yml, profiller, destek matrisi, vars)
-python3 -I scripts/check-consistency.py >/dev/null \
-    || die "scripts/check-consistency.py başarısız (PyYAML kurulu mu? bulgu için komutu doğrudan çalıştırın)"
+"$PY" -I scripts/check-consistency.py >/dev/null \
+    || die "scripts/check-consistency.py başarısız; bulguyu görmek için: $PY -I scripts/check-consistency.py"
 
 mkdir -p dist
 ARCHIVE="dist/linux-hardening-$VERSION.tar.gz"
