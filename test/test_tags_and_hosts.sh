@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # (1) --tags ile çalışırken preflight/korumalar ATLANMAMALI (PR-0e regresyonu)
 # (2) hosts deseni: hardening / ubuntu / ikisi / hiçbiri (PR-B)
+# shellcheck source=test/lib.sh
 . "$(dirname "$0")/lib.sh"
 PYBIN="$(command -v python3)"
 HARDEN="$ROOT/playbooks/harden.yml"; AUDIT="$ROOT/playbooks/audit.yml"

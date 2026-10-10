@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Erişim kaybı korumaları: allow_from boş/geçersiz/kaynak dışı, SSH_CONNECTION yok, root.
+# shellcheck source=test/lib.sh
 . "$(dirname "$0")/lib.sh"
 PYBIN="$(command -v python3)"
 mkdir -p "$TMP/fakebin"; printf '#!/bin/sh\necho root\n' > "$TMP/fakebin/id"; chmod +x "$TMP/fakebin/id"

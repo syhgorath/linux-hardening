@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # scripts/check-consistency.py: gerçek depoda OK vermeli; kasıtlı bozulmaları YAKALAMALI.
+# shellcheck source=test/lib.sh
 . "$(dirname "$0")/lib.sh"
 cd "$ROOT" || exit 1
 out=$("$PY" -I scripts/check-consistency.py 2>&1); rc=$?

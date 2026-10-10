@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TESTDIR="$ROOT/test"
 FAILS=0
 PY="${PYTHON:-python3}"
+export PY
 
 ok()  { printf '  ok   %s\n' "$1"; }
 bad() { printf '  FAIL %s\n' "$1"; FAILS=$((FAILS+1)); }
