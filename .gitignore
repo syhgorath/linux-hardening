@@ -19,3 +19,6 @@ key/
 *id_ed25519*
 *id_rsa*
 *.pem
+
+# Sürüm paketleri (scripts/release.sh çıktısı)
+dist/
