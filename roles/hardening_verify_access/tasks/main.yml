@@ -1,5 +1,7 @@
 # ufw/ssh değişikliğinden SONRA: kontrol makinesinden YENİ ve bağımsız bir SSH bağlantısı açar.
-# Başarısızsa, hâlâ açık olan ESKİ oturum üzerinden sshd drop-in'ini geri alır, ufw'yi kapatır ve durur.
+# Başarılıysa geri alma güvenlik ağını DISARM eder (hardening_rollback).
+# Başarısızsa, hardening_rollback kuruluysa ÖNCEKİ duruma döner (yedekten geri yükler, silmez); kurulu değilse
+# (hardening_rollback_enabled=false) eski davranış: sshd drop-in'i siler, ufw'yi kapatır. Sonra durur.
 # Sınırlar docs/decisions.md ve HOWTO.md'de yazılıdır (başka rollerin değişiklikleri geri ALINMAZ).
 # --check modunda hiçbir şey değişmediği için atlanır.
 - name: Verify access after ssh/ufw changes
@@ -51,25 +53,57 @@
       until: hardening_verify_access_new_connection.rc == 0
       when: not (hardening_ssh_kbdinteractive | default(false))
 
+    - name: Disarm rollback safety net (erişim doğrulandı)
+      ansible.builtin.include_role:
+        name: hardening_rollback
+        tasks_from: disarm
+
   rescue:
-    - name: ROLLBACK - remove sshd drop-in
+    - name: Check rollback script is installed
+      ansible.builtin.stat:
+        path: /usr/local/sbin/hardening-rollback
+      register: hardening_verify_access_rollback_script
+
+    - name: ROLLBACK - restore previous state (hardening_rollback)
+      ansible.builtin.include_role:
+        name: hardening_rollback
+        tasks_from: restore
+      when:
+        - hardening_rollback_enabled | default(true) | bool
+        - hardening_verify_access_rollback_script.stat.exists
+
+    # Güvenlik ağı kurulu değilse (kapalı ya da kurulamadı): eski, sil/kapat davranışı
+    - name: ROLLBACK (eski davranış) - remove sshd drop-in
       ansible.builtin.file:
         path: /etc/ssh/sshd_config.d/00-hardening.conf
         state: absent
+      when: not (hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists)
 
-    - name: ROLLBACK - reload sshd
+    - name: ROLLBACK (eski davranış) - reload sshd
       ansible.builtin.systemd:
         name: "{{ hardening_ssh_service | default('ssh') }}"
         state: reloaded
+      when: not (hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists)
 
-    - name: ROLLBACK - disable ufw (kurallar silinmez, sadece firewall kapatılır)
+    - name: ROLLBACK (eski davranış) - disable ufw (kurallar silinmez, sadece firewall kapatılır)
       ansible.builtin.command: ufw --force disable
       changed_when: true
       failed_when: false
+      when: not (hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists)
 
-    - name: Stop with a clear message
+    - name: Stop with a clear message (önceki duruma dönüldü)
+      ansible.builtin.fail:
+        msg: >-
+          Yeni SSH bağlantısı doğrulanamadı; ÖNCEKİ DURUMA DÖNÜLDÜ: sshd drop-in ve ufw (kurallar ve aktif/pasif
+          durumu) değişiklikten önceki yedekten geri yüklendi. GERİ ALINMADI: kurulan paketler, sysctl, auditd,
+          fail2ban, AIDE ve diğer roller. Erişimi elle doğrulayın; gerekirse Proxmox konsolu/snapshot kullanın.
+      when: hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists
+
+    - name: Stop with a clear message (eski davranış)
       ansible.builtin.fail:
         msg: >-
           Yeni SSH bağlantısı doğrulanamadı; GERİ ALINDI: /etc/ssh/sshd_config.d/00-hardening.conf silindi,
-          sshd yeniden yüklendi, ufw kapatıldı. GERİ ALINMADI: kurulan paketler, sysctl, auditd, fail2ban,
-          AIDE ve diğer roller. Erişimi elle doğrulayın; gerekirse Proxmox konsolu/snapshot kullanın.
+          sshd yeniden yüklendi, ufw kapatıldı (geri alma güvenlik ağı kurulu değildi). GERİ ALINMADI: kurulan
+          paketler, sysctl, auditd, fail2ban, AIDE ve diğer roller. Erişimi elle doğrulayın; gerekirse Proxmox
+          konsolu/snapshot kullanın.
+      when: not (hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists)

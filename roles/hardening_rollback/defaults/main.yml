@@ -1,0 +1,8 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# Hedef taraflı geri alma güvenlik ağı: ufw/ssh değişmeden önce önceki durumu yedekler ve bir zamanlayıcı kurar;
+# doğrulama başarılı olursa disarm edilir, kontrol kaybolursa sunucu N saniye sonra kendini önceki duruma döndürür.
+# Tasarım: docs/design/rollback-timer.md
+# false = güvenlik ağı kapalı (BİLİNÇLİ kaçış; erişim kaybı riski artar)
+hardening_rollback_enabled: true
+# Saniye (30..3600). Uzun bir koşuda yanlışlıkla tetiklenmesin diye ufw/ssh'tan hemen önce kurulur.
+hardening_rollback_timeout: 300

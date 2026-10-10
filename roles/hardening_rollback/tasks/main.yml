@@ -1,0 +1,62 @@
+# ARMA: ufw/ssh değişmeden HEMEN ÖNCE çalıştırılır. Tasarım: docs/design/rollback-timer.md
+# --check'te hiçbir şey yapılmaz. Disarm/restore için tasks_from: disarm | restore.
+- name: Note that the rollback safety net is disabled
+  ansible.builtin.debug:
+    msg: >-
+      UYARI: hardening_rollback_enabled=false; hedef taraflı geri alma güvenlik ağı KAPALI.
+      Erişim kaybı olursa sunucu kendini geri almaz.
+  when: not (hardening_rollback_enabled | bool)
+
+- name: Arm the rollback safety net
+  when: hardening_rollback_enabled | bool and not ansible_check_mode
+  block:
+    - name: Validate timeout (30..3600 sn)
+      ansible.builtin.assert:
+        that:
+          - hardening_rollback_timeout | string is match('^[0-9]+$')
+          - hardening_rollback_timeout | int >= 30
+          - hardening_rollback_timeout | int <= 3600
+        fail_msg: "hardening_rollback_timeout 30..3600 arasında bir tamsayı olmalı (saniye)."
+
+    - name: Check systemd is available
+      ansible.builtin.command: systemctl --version
+      register: hardening_rollback_systemd
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Refuse to continue without systemd (güvenlik ağı kurulamaz)
+      ansible.builtin.assert:
+        that:
+          - hardening_rollback_systemd.rc == 0
+        fail_msg: >-
+          systemd bulunamadı; geri alma güvenlik ağı kurulamıyor, bu yüzden ufw/ssh'a dokunulmadı.
+          Bilinçli olarak kapatmak için hardening_rollback_enabled=false verin (önerilmez).
+
+    - name: Install rollback script
+      ansible.builtin.template:
+        src: hardening-rollback.sh.j2
+        dest: /usr/local/sbin/hardening-rollback
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Install rollback units
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - hardening-rollback.service
+        - hardening-rollback.timer
+
+    - name: Reload systemd units
+      ansible.builtin.systemd:
+        daemon_reload: true
+      changed_when: false
+
+    - name: Arm (backup previous state + start timer)
+      ansible.builtin.command: /usr/local/sbin/hardening-rollback arm
+      changed_when: false

@@ -41,6 +41,15 @@ out=$(runp "$HARDEN" --tags kernel -e hardening_allow_unsupported=true -e '{"har
 expect_contains "--tags kernel: kernel rolu gercekten calisti (bos gecis degil)" "$out" "hardening_kernel"
 expect_not_contains "--tags kernel: erisim korumasi CALISMAZ (yalniz ufw/ssh icin)" "$out" "boş veya tanımsız"
 unset SSH_CONNECTION
+echo "-- geri alma guvenlik agi etiketle secilir (arm ufw/ssh ile, kernel ile DEGIL)"
+export SSH_CONNECTION='10.1.2.3 5 10.9.9.9 22'
+for tag in ufw ssh; do
+  out=$(runp "$HARDEN" --tags "$tag" -e hardening_allow_unsupported=true -e '{"hardening_ssh_allow_from":["10.0.0.0/8"]}')
+  expect_contains "--tags $tag: hardening_rollback gorevleri secildi" "$out" "TASK [hardening_rollback"
+done
+out=$(runp "$HARDEN" --tags kernel -e hardening_allow_unsupported=true -e '{"hardening_ssh_allow_from":["10.0.0.0/8"]}')
+expect_not_contains "--tags kernel: hardening_rollback SECILMEDI" "$out" "TASK [hardening_rollback"
+unset SSH_CONNECTION
 cleanup_vars
 
 echo "-- hosts deseni"

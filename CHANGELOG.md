@@ -5,6 +5,14 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_rollback` rolü: hedef taraflı geri alma güvenlik ağı (betik, systemd zamanlayıcısı, önceki durum yedeği).
+  `harden.yml`'de ufw/ssh'tan önce arm edilir, doğrulama başarılıysa disarm edilir. Tasarım: `docs/design/rollback-timer.md`.
+
+### Değişti
+- **Davranış değişikliği:** doğrulama başarısız olduğunda geri alma artık drop-in'i **silmez**, değişiklikten önceki duruma
+  **geri yükler** (ufw kuralları ve aktif/pasif durumu dahil). Güvenlik ağı kapalıysa eski davranış korunur.
+
 ## [0.1.0] - 2026-10-10
 
 İlk sürüm: Ubuntu 26.04 LTS için Ansible tabanlı sertleştirme ve makine-okunur bileşen sözleşmesi.

@@ -1,0 +1,6 @@
+# RESTORE: önceki duruma hemen dön (armed değilse betik hiçbir şey yapmaz).
+- name: Restore previous state now
+  ansible.builtin.command: /usr/local/sbin/hardening-rollback restore
+  register: hardening_rollback_restore
+  changed_when: "'geri alma tamamlandi' in hardening_rollback_restore.stdout"
+  when: not ansible_check_mode
