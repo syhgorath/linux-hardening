@@ -247,6 +247,27 @@ Sınırlar (bilerek açık yazıyoruz):
 
 ---
 
+## 7a-2. Geri alma güvenlik ağını yönetmek
+
+Kontrol makineniz bir koşu sırasında kitlenirse ya da bağlantı kopup geri dönerseniz, sunucudaki zamanlayıcının durumuna
+bakıp "değişiklik iyi" diyebilirsiniz. Bu komutlar preflight/erişim korumalarını çalıştırmaz (kontrol kaybından sonra da çalışmalı).
+
+```bash
+ansible-playbook playbooks/rollback.yml                  # status (varsayılan, salt-okunur)
+ansible-playbook playbooks/rollback.yml --tags disarm    # "değişiklik iyi": geri almayı iptal et
+ansible-playbook playbooks/rollback.yml --tags now       # hemen önceki duruma dön (armed ise)
+```
+
+| Durum | Ne görürsünüz | Ne yapmalı |
+|---|---|---|
+| `armed=yes`, `timer=active` (kalan süre görünür) | Geri alma bekliyor | Erişim iyiyse `--tags disarm`; sorun varsa bekleyin ya da `--tags now` |
+| `armed=no`, `timer=inactive` | Bekleyen geri alma yok | Süre dolmuş ve geri alınmış olabilir; `harden.yml`'i yeniden çalıştırın |
+
+`disarm` ve `now` **`never`** etiketlidir: `--tags` ile açıkça istenmedikçe çalışmaz. Sunucuda kayıt:
+`journalctl -t hardening-rollback`.
+
+---
+
 ## 7b. Üretim sunucuları
 
 Test VM'de parolasız sudo kullandık; **üretimde kullanma.** Onun yerine:
