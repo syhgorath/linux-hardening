@@ -10,6 +10,10 @@
 | 2026-10-09 | MTA | postfix purge, dma kuruldu | postfix kaldırınca apt courier-mta (25/tcp) kurdu; dma port dinlemez, MTA bağımlılığını karşılar |
 | 2026-10-09 | SSH PasswordAuthentication | no (sadece anahtar) | cloud-init drop-in'i yes veriyordu; 00-hardening.conf önceliklidir |
 | 2026-10-09 | SSH MaxSessions | 4 (Lynis önerisi 2) | Ansible bağlantı çoklamasıyla uyum |
+| 2026-10-10 | Inventory grubu | `hosts: "hardening:ubuntu"`; örnek inventory `hardening` grubunu kullanır, `ubuntu` geçiş için kabul edilir | Dışarıdan üretilen inventory'ler (sshpocket) tek bir genel grup adı kullanabilsin; sürüm/dağıtım desteği zaten preflight ile denetleniyor. BREAKING değil |
+| 2026-10-10 | SSH `KbdInteractiveAuthentication` | `hardening_ssh_kbdinteractive` (varsayılan false = eskisi gibi `no`). true ise `AuthenticationMethods publickey,keyboard-interactive` zorunlu yazılır | UsePAM yes iken kbd-interactive açmak, `PasswordAuthentication no` olsa bile PAM üzerinden tek başına parola girişini açabilir; AuthenticationMethods bunu engeller. PAM 2FA kurulumu bu rolün kapsamı dışında |
+| 2026-10-10 | SSH `AllowTcpForwarding` | `hardening_ssh_allow_tcp_forwarding` string `no\|local\|remote\|yes`, varsayılan `no`; geçersiz değerde durur | ProxyJump için `local` yeterli (en az yetki); bool olursa `yes` gereksiz geniş. YAML `no` → bool tuzağına karşı doğrulama var |
+| 2026-10-10 | kbd-interactive açıkken bağlantı doğrulaması | BatchMode ssh testi yerine yeni TCP bağlantısında SSH banner'ı (`wait_for`) | 2FA istemi otomatik cevaplanamaz; BatchMode testi yanlışlıkla geri alma tetiklerdi. Kimlik doğrulama bu durumda doğrulanmaz (sınır) |
 | 2026-10-09 | SSH Port | 22 bırakıldı | Firewall ile yönetim ağına kısıtlı; port değişikliği ek güvenlik katmanı sayılmadı |
 | 2026-10-09 | ufw | default deny incoming; SSH sadece 10.0.0.0/8 | Yönetim ağı (VPN) 10.0.0.0/8 içinde |
 | 2026-10-09 | GRUB parolası, /home /var ayrı bölüm, uzak log, process accounting | Uygulanmadı | VM ortamında getirisi düşük / altyapı kararı gerektirir |

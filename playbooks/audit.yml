@@ -1,7 +1,9 @@
 # Baseline tarama. Sistem ayarlarini degistirmez; sadece lynis paketini kurar.
 # Rapor: scans/<host>/<tarih>/lynis-report.dat ve lynis.log
 - name: Audit (Lynis)
-  hosts: ubuntu
+  # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
+  # kabul edilir. Sistem/sürüm desteği hardening_preflight ile kontrol edilir, grup adıyla değil.
+  hosts: "hardening:ubuntu"
   pre_tasks:
     - ansible.builtin.include_role:
         name: hardening_preflight
