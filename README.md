@@ -25,3 +25,7 @@ Alınan kararlar ve istisnalar: [docs/decisions.md](docs/decisions.md).
 
 > Sunucunun ağ ayarını (`hardening_ssh_allow_from`) doğru vermezseniz firewall sizi dışarıda bırakır.
 > Önce test sunucusunda deneyin, snapshot alın, `--check --diff` ile bakın.
+
+## Lisans
+
+MIT, bkz. [LICENSE](LICENSE). Kullanım sorumluluğu size aittir: sertleştirme erişimi kesebilir; önce test sunucusunda deneyin.
