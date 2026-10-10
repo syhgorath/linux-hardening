@@ -8,6 +8,7 @@
 | 2026-10-09 | NOPASSWD sudo (test VM) | Geçici, hardening sonunda kaldırılacak | Ansible'ın non-interactive çalışması |
 | BEKLEYEN | CIS 26.04 hazır rol / SSG 26.04 datastream | Çıkınca karşılaştır | 26.04'e özel hazır içerik henüz yok |
 | 2026-10-09 | MTA | postfix purge, dma kuruldu | postfix kaldırınca apt courier-mta (25/tcp) kurdu; dma port dinlemez, MTA bağımlılığını karşılar |
+| 2026-10-10 | `--check` modunda servis/handler | `restart fail2ban` handler'ı ve auditd/fail2ban `started` görevleri check'te atlanır (`when: not ansible_check_mode`); `ufw status` kurulu olmayan ufw'de check'te hata vermez | Temiz bir sunucuda paketler henüz kurulu olmadığı için `--check` `failed=1` veriyordu; sshpocket `preview` eylemi bunu hata olarak gösterirdi. Check'te servis durumu zaten simüle edilemez |
 | 2026-10-09 | SSH PasswordAuthentication | no (sadece anahtar) | cloud-init drop-in'i yes veriyordu; 00-hardening.conf önceliklidir |
 | 2026-10-09 | SSH MaxSessions | 4 (Lynis önerisi 2) | Ansible bağlantı çoklamasıyla uyum |
 | 2026-10-09 | SSH Port | 22 bırakıldı | Firewall ile yönetim ağına kısıtlı; port değişikliği ek güvenlik katmanı sayılmadı |

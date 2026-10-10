@@ -27,6 +27,7 @@
   ansible.builtin.command: ufw status
   register: hardening_ufw_state
   changed_when: false
+  failed_when: hardening_ufw_state.rc != 0 and not ansible_check_mode
   check_mode: false
 
 - name: Enable ufw

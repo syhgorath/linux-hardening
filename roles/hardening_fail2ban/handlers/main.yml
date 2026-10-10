@@ -1,4 +1,7 @@
+# --check modunda paket henüz kurulu olmayabilir (apt görevi sadece simüle edilir); o yüzden restart
+# denenirse "Could not find the requested service fail2ban" hatası verirdi. Check'te zaten anlamlı değil.
 - name: restart fail2ban
   ansible.builtin.systemd:
     name: fail2ban
     state: restarted
+  when: not ansible_check_mode
