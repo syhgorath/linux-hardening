@@ -120,6 +120,13 @@ for name, act in comp.get("actions", {}).items():
     playbook = re.search(r"playbooks/\S+\.yml", act.get("cmd", ""))
     if playbook and not (ROOT / playbook.group(0)).exists():
         err(f"actions.{name}: {playbook.group(0)} yok")
+    # cmd'deki `--tags a,b` degerleri o playbook'ta gercekten bir etiket olarak gecmeli
+    tag_m = re.search(r"--tags\s+(\S+)", act.get("cmd", ""))
+    if tag_m and playbook and (ROOT / playbook.group(0)).exists():
+        pb_text = (ROOT / playbook.group(0)).read_text(encoding="utf-8")
+        for tag in tag_m.group(1).split(","):
+            if not re.search(rf"tags:\s*\[[^\]]*\b{re.escape(tag)}\b", pb_text):
+                err(f"actions.{name}: --tags {tag} {playbook.group(0)} icinde bir etiket olarak yok")
     for req in act.get("requires", []):
         if req not in comp["actions"]:
             err(f"actions.{name}.requires: bilinmeyen eylem {req}")

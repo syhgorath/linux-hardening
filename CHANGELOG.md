@@ -10,6 +10,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
   `harden.yml`'de ufw/ssh'tan önce arm edilir, doğrulama başarılıysa disarm edilir. Tasarım: `docs/design/rollback-timer.md`.
 
 - `playbooks/rollback.yml`: geri alma güvenlik ağının durumu (`status`, varsayılan), `--tags disarm`, `--tags now`.
+- `component.yml`: `rollback_status`, `rollback_disarm`, `rollback_now` eylemleri; `vars`'a `hardening_rollback_enabled`/`hardening_rollback_timeout`.
 
 ### Değişti
 - **Davranış değişikliği:** doğrulama başarısız olduğunda geri alma artık drop-in'i **silmez**, değişiklikten önceki duruma
