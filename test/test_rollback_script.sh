@@ -147,7 +147,8 @@ setup; printf 'X\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
 PATH="$BIN:$PATH" INVOCATION_ID=abc123 hr arm >/dev/null
 if log_lacks "logger "; then ok "INVOCATION_ID dolu: logger cagrilmadi"; else bad "INVOCATION_ID dolu iken logger cagrildi"; fi
 : > "$HR_LOG"; setup; printf 'X\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
-PATH="$BIN:$PATH" hr arm >/dev/null
+# CI runner'i (systemd altinda) ortamda zaten INVOCATION_ID tasir: acikca BOSALT
+PATH="$BIN:$PATH" INVOCATION_ID="" hr arm >/dev/null
 if log_has "logger -t hardening-rollback"; then ok "INVOCATION_ID bos: logger cagrildi (elle/Ansible)"; else bad "logger cagrilmadi"; fi
 
 echo "-- 8) status ve kullanim"
