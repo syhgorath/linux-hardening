@@ -125,6 +125,7 @@ hr arm >/dev/null; printf 'ONAYLI-DEGISIKLIK\n' > "$R/etc/ssh/sshd_config.d/00-h
 hr disarm >/dev/null
 absent "armed silindi" "$R/var/lib/hardening-rollback/armed"
 absent "yedek silindi" "$R/var/lib/hardening-rollback/00-hardening.conf"
+absent "bos ufw yedek klasoru de silindi (artik birakilmaz)" "$R/var/lib/hardening-rollback/ufw"
 out=$(hr restore); expect_contains "  restore no-op" "$out" "armed degil"
 file_eq "onayli degisiklik KORUNDU" "$R/etc/ssh/sshd_config.d/00-hardening.conf" "ONAYLI-DEGISIKLIK"
 

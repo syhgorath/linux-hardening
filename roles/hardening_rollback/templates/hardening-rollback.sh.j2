@@ -63,6 +63,7 @@ do_arm() {
 do_disarm() {
   rm -f "$ARMED" "$STATE/had-dropin" "$STATE/00-hardening.conf" "$STATE/ufw-active"
   for f in $UFW_FILES; do rm -f "$STATE/ufw/$f"; done
+  rmdir "$STATE/ufw" 2>/dev/null || true
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
   log "disarmed"
 }
