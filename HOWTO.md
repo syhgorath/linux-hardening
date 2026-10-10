@@ -98,7 +98,7 @@ Ağ ayarlarını kontrol et (varsayılanı rol `defaults/`'ında, örnek `invent
 | Değişken | Anlamı | Dikkat |
 |---|---|---|
 | `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **ZORUNLU, varsayılan boş.** Boşsa veya Ansible'ın bağlandığı IP burada değilse playbook durur. NAT/jump host varsa sunucunun *gördüğü* adresi yaz. Örn. `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` |
-| `hardening_fail2ban_ignoreip` | Asla banlanmayacak ağlar | Aynı ağı yaz |
+| `hardening_fail2ban_ignoreip` | Asla banlanmayacak adresler (varsayılan `127.0.0.1/8 ::1`) | Ansible'ın bağlandığı kontrol makinesinin **sunucunun gördüğü adresi** otomatik eklenir; tüm yönetim ağını muaf tutmak istersen açıkça yaz (önerilmez). Dinamik IP'den çalıştırırsan dosya her çalıştırmada değişir ve fail2ban yeniden başlar |
 | `hardening_ssh_disable_password` | SSH parola girişini kapat | Anahtar yoksa rol zaten durur |
 | `hardening_ufw_extra_allow` | Ek açılacak portlar, örn. `["443/tcp"]` | Web sunucusu vb. için |
 
@@ -236,7 +236,7 @@ ansible-playbook playbooks/harden.yml --ask-become-pass
 1. Proxmox snapshot / yedek al.
 2. Tek sunucuyla başla: `--limit sunucu1`.
 3. Önce `--check --diff`, çıktıyı oku.
-4. `hardening_ssh_allow_from` (zorunlu) ve `hardening_fail2ban_ignoreip` **o sunucuya göre doğru mu?** Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
+4. `hardening_ssh_allow_from` (zorunlu) **o sunucuya göre doğru mu?** (fail2ban `ignoreip` kontrol makinesi adresini zaten otomatik ekler.) Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
 5. Sunucuda çalışan servis varsa (web, veritabanı...) portlarını `hardening_ufw_extra_allow` ile aç; yoksa firewall onları kapatır.
 6. Bakım penceresinde uygula. Otomatik reboot yoktur ama paket/servis değişiklikleri kısa kesinti yapabilir.
 7. Kademeli git: ilk gün `--tags base,auth,kernel`, sonra `auditd,fail2ban,aide`, en son `ufw,ssh`.

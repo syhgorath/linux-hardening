@@ -17,8 +17,9 @@
 # hardening_pwquality_minlen: 14
 
 # --- fail2ban ---
-# Buradan gelen IP'ler asla banlanmaz (erişim kaybını önler).
-# hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1 10.0.0.0/8"
+# Asla banlanmayacak adresler. Kontrol makinesinin sunucunun gördüğü adresi (SSH_CONNECTION) buna
+# otomatik eklenir; tüm yönetim ağını muaf tutmak için açıkça yazın (önerilmez).
+# hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1"
 # hardening_fail2ban_maxretry: 5
 # hardening_fail2ban_bantime: 1h
 
