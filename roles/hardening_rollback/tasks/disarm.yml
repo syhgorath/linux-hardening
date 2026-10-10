@@ -1,0 +1,14 @@
+# DISARM: değişiklik doğrulandı. Betik kurulu değilse (arma hiç yapılmadıysa) atlanır.
+- name: Check rollback script is installed
+  ansible.builtin.stat:
+    path: /usr/local/sbin/hardening-rollback
+  register: hardening_rollback_script
+  when: hardening_rollback_enabled | bool and not ansible_check_mode
+
+- name: Disarm the rollback safety net
+  ansible.builtin.command: /usr/local/sbin/hardening-rollback disarm
+  changed_when: false
+  when:
+    - hardening_rollback_enabled | bool
+    - not ansible_check_mode
+    - hardening_rollback_script.stat.exists

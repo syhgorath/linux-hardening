@@ -65,6 +65,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_handlers.py` | Her `notify` bir handler'a bağlı |
 | `test_vars_defined.py` | `group_vars` olmadan değişkenler tanımlı, güvenli varsayılanlar |
 | `test_consistency.sh` | `VERSION`/`component.yml`/destek matrisi tutarlılığı (kasıtlı bozmalar yakalanır) |
+| `test_rollback_script.sh` | geri alma betiği: arm/disarm/restore (önceki içeriği geri yükler, silmez), sahte komutlarla |
 | `test_release_script.sh` | `scripts/release.sh`: gerçek imzalama/doğrulama, reddedilme senaryoları |
 | `test_repo_hygiene.sh`, `test_ip_addresses.py` | Anahtar/token/IP sızıntısı, paket içeriği |
 

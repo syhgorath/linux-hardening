@@ -5,6 +5,10 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_rollback` rolü: hedef taraflı geri alma güvenlik ağı (betik, systemd zamanlayıcısı, önceki durum yedeği).
+  **Henüz playbook'lara bağlı değil** (bağlama PR 2'de). Tasarım: `docs/design/rollback-timer.md`.
+
 ## [0.1.0] - 2026-10-10
 
 İlk sürüm: Ubuntu 26.04 LTS için Ansible tabanlı sertleştirme ve makine-okunur bileşen sözleşmesi.

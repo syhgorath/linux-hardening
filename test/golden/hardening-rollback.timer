@@ -1,0 +1,10 @@
+# Ansible tarafından yönetilir (hardening_rollback)
+[Unit]
+Description=Hardening rollback zamanlayicisi (300 sn)
+
+[Timer]
+OnActiveSec=300s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

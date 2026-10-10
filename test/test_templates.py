@@ -23,6 +23,7 @@ DEFAULTS = [
     "roles/hardening_fail2ban/defaults/main.yml",
     "roles/hardening_ufw/defaults/main.yml",
     "roles/hardening_ssh/defaults/main.yml",
+    "roles/hardening_rollback/defaults/main.yml",
     "roles/hardening_preflight/defaults/main.yml",
     "vars/ubuntu-26.04.yml",
 ]
@@ -40,6 +41,11 @@ CASES = [
      {"hardening_ssh_disable_password": False}),
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
     ("hardening.rules", "roles/hardening_auditd/templates/hardening.rules.j2", {}),
+    ("hardening-rollback.sh", "roles/hardening_rollback/templates/hardening-rollback.sh.j2", {}),
+    ("hardening-rollback.service", "roles/hardening_rollback/templates/hardening-rollback.service.j2", {}),
+    ("hardening-rollback.timer", "roles/hardening_rollback/templates/hardening-rollback.timer.j2", {}),
+    ("hardening-rollback.timer.600", "roles/hardening_rollback/templates/hardening-rollback.timer.j2",
+     {"hardening_rollback_timeout": 600}),
 ]
 
 
@@ -116,6 +122,12 @@ if not UPDATE:
     assert_has("kbd: PasswordAuthentication hala no", k, "PasswordAuthentication no")
     assert_has("fail2ban: efektif ignoreip kullanilir", read("sshd.local"), "ignoreip = 127.0.0.1/8 ::1 192.0.2.10")
     assert_has("fail2ban: 10.0.0.0/8 muaf DEGIL", read("sshd.local"), "10.0.0.0/8", want=False)
+    assert_has("rollback: timer 300s", read("hardening-rollback.timer"), "OnActiveSec=300s")
+    assert_has("rollback: timer 600s degiskenden", read("hardening-rollback.timer.600"), "OnActiveSec=600s")
+    assert_has("rollback: service restore cagirir", read("hardening-rollback.service"),
+               "ExecStart=/usr/local/sbin/hardening-rollback restore")
+    assert_has("rollback: betik ssh servisi varsayilani", read("hardening-rollback.sh"),
+               "DEFAULT_SSH_SERVICE='ssh'")
 
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)

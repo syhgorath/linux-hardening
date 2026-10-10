@@ -1,0 +1,7 @@
+# Ansible tarafından yönetilir (hardening_rollback)
+[Unit]
+Description=Hardening rollback (armed ise onceki duruma doner)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/hardening-rollback restore

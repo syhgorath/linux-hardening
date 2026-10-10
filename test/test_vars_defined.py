@@ -67,6 +67,8 @@ expect = {
     "hardening_ssh_allow_tcp_forwarding": "no",
     "hardening_fail2ban_ignoreip": "127.0.0.1/8 ::1",
     "hardening_allow_unsupported": False,
+    "hardening_rollback_enabled": True,
+    "hardening_rollback_timeout": 300,
 }
 bad = False
 for k, want in expect.items():
