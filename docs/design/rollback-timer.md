@@ -1,7 +1,9 @@
 # Tasarım: hedef taraflı geri alma zamanlayıcısı
 
-> **Durum: TASARIM, henüz uygulanmadı.** Bu belge bir öneridir; kararlar PR'da tartışılıp netleşecek.
-> Uygulama ayrı PR'larla (aşağıda "Uygulama planı") ve **gerçek bir hedefte denenerek** yapılacak.
+> **Durum: UYGULANDI** (PR #20-#23) ve test VM'inde canlı doğrulandı (Ubuntu 26.04.1): doğrulama başarısızlığı
+> (sunucu sertleşmiş kalır), kontrol makinesinin ölmesi (`SIGKILL`, sunucu ~5 dk sonra kendini geri alır) ve
+> `armed` iken sunucunun yeniden başlatılması (açılışta geri alma). Doğrulanmayan: gerçek ağ düzeyi kesinti.
+> Sınırlar ve açık riskler §7'de.
 
 ## 1. Amaç
 `harden.yml` ufw ve SSH ayarlarını değiştirirken sunucuya **erişimin kalıcı olarak kaybedilmemesi**: değişiklik

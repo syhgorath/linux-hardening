@@ -137,6 +137,19 @@ out=$(hr restore); expect_contains "  uyari" "$out" "sshd -t basarisiz"
 if log_lacks "systemctl reload"; then ok "sshd reload edilmedi"; else bad "sshd reload edildi"; fi
 file_eq "dosya yine de geri yazildi" "$R/etc/ssh/sshd_config.d/00-hardening.conf" "ORIGINAL-DROPIN"
 
+echo "-- 7b) journald: systemd altinda (INVOCATION_ID) logger cagrilmaz (cift kayit yok)"
+cat > "$BIN/logger" <<'F'
+#!/bin/sh
+echo "logger $*" >> "$HR_LOG"
+F
+chmod +x "$BIN/logger"
+setup; printf 'X\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
+PATH="$BIN:$PATH" INVOCATION_ID=abc123 hr arm >/dev/null
+if log_lacks "logger "; then ok "INVOCATION_ID dolu: logger cagrilmadi"; else bad "INVOCATION_ID dolu iken logger cagrildi"; fi
+: > "$HR_LOG"; setup; printf 'X\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
+PATH="$BIN:$PATH" hr arm >/dev/null
+if log_has "logger -t hardening-rollback"; then ok "INVOCATION_ID bos: logger cagrildi (elle/Ansible)"; else bad "logger cagrilmadi"; fi
+
 echo "-- 8) status ve kullanim"
 setup; out=$(hr status); expect_contains "  armed=no" "$out" "armed=no"
 hr arm >/dev/null; out=$(hr status); expect_contains "  armed=yes" "$out" "armed=yes"

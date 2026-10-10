@@ -11,9 +11,11 @@ The path to add other versions/distributions is open: see [docs/SUPPORT.md](docs
 > **Language note:** the detailed guide ([HOWTO.md](HOWTO.md)), decision log ([docs/decisions.md](docs/decisions.md)) and
 > most comments are in Turkish. This file is a translation of the README only.
 
-> **Status:** the roles and the access-loss protections are covered by automated tests and CI (including a `--check`
-> run on a real Linux runner), but applying them to a real server (firewall/SSH changes and the rollback path) has **not
-> been verified end to end on a live host yet**. Use a test server first.
+> **Status (0.x):** **verified live** on an Ubuntu 26.04.1 LTS test VM: first-time install on a clean server, `changed=0`
+> on the second run, `--check` (`failed=0`), the access-loss protections and the rollback safety net (verification
+> failure, controller death, server reboot). Lynis hardening index 77, no warnings.
+> **Not verified:** servers other than that one VM/configuration, a real network-level outage, Raspberry Pi/Proxmox,
+> full CIS Benchmark compliance (deliberately an "approach"). Try it on a test server and take a snapshot first.
 
 ## Workflow
 1. `playbooks/audit.yml` — baseline scan (Lynis)

@@ -8,9 +8,11 @@ destek açıkça listelenir, desteklenmeyen sistemde çalışmayı durdurur.
 **Şu an desteklenen:** Ubuntu 26.04 LTS (hedef: CIS Level 1 Server yaklaşımı).
 Başka sürüm/dağıtım ekleme yolu açık: bkz. [docs/SUPPORT.md](docs/SUPPORT.md).
 
-> **Durum:** roller ve erişim kaybı korumaları otomatik testler ve CI ile (gerçek bir Linux runner'da `--check` dahil)
-> sınanıyor; ancak sunucuya gerçek uygulama (firewall/SSH değişikliği ve geri alma yolu) bir canlı hedefte uçtan uca
-> **henüz doğrulanmadı**. Önce test sunucusunda deneyin.
+> **Durum (0.x):** Ubuntu 26.04.1 LTS test VM'inde **canlı doğrulandı**: temiz sunucuda ilk kurulum, ikinci
+> koşuda `changed=0`, `--check` (`failed=0`), erişim kaybı korumaları ve geri alma güvenlik ağı (doğrulama
+> başarısızlığı, kontrol makinesinin ölmesi, sunucunun yeniden başlaması). Lynis hardening index 77, uyarı 0.
+> **Doğrulanmayanlar:** tek bir VM/yapılandırma dışı sunucular, gerçek ağ düzeyi kesinti, Raspberry Pi/Proxmox,
+> tam CIS Benchmark uyumu (bilerek "yaklaşım"). Önce test sunucusunda deneyin, snapshot alın.
 
 ## Akış
 1. `playbooks/audit.yml` — baseline tarama (Lynis)
