@@ -14,3 +14,5 @@
 5. Dağıtıma özel bir rol gerekiyorsa (örn. Proxmox firewall) ayrı bir rol yaz; ortak roller değişmez.
 
 Desteklenmeyen sistemde zorla çalıştırmak (önerilmez): `-e hardening_allow_unsupported=true`.
+
+Makine-okunur karşılığı `component.yml` içindeki `profiles` alanıdır; tutarlılığı `scripts/check-consistency.py` denetler.

@@ -1,0 +1,8 @@
+# Sürüm paketine (git archive) girmeyecek geliştirme/test dosyaları
+.gitattributes export-ignore
+.gitignore export-ignore
+.ansible-lint export-ignore
+.github export-ignore
+scripts export-ignore
+scans export-ignore
+docs/RELEASING.md export-ignore

@@ -25,7 +25,7 @@ Eski **`ubuntu`** grubu geçiş için hâlâ kabul edilir. Desteklenen sistem/s�
 
 ## Başlangıç
 ```
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements.txt   # hash'li, Python >= 3.12
 cp inventory/hosts.example.yml inventory/hosts.yml   # kendi makinelerini yaz
 source .venv/bin/activate
 ansible-playbook playbooks/audit.yml
