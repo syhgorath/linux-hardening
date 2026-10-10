@@ -84,7 +84,16 @@ all:
           ansible_user: kullanici
 ```
 
-Ağ ayarlarını kontrol et: `inventory/group_vars/all.yml`
+**Değişkenler nerede?** Varsayılanlar rollerin içindedir (`roles/hardening_*/defaults/main.yml`) ve her çalıştırmada
+geçerlidir; `inventory/group_vars/all.yml` yalnızca **örnek geçersiz kılma** dosyasıdır (içi yorumlu). Değiştirmek için:
+
+| Yöntem | Ne zaman |
+|---|---|
+| `inventory/group_vars/all.yml` veya `inventory/host_vars/<sunucu>.yml` | Varsayılan `inventory/hosts.yml` ile çalışırken (kalıcı) |
+| `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` | Tek seferlik, her durumda çalışır |
+| `-e @degiskenler.yml` | **Başka bir inventory (`-i /tmp/...`) ile** çalışırken; `group_vars` yalnızca inventory'nin yanındaysa yüklenir |
+
+Ağ ayarlarını kontrol et (varsayılanı rol `defaults/`'ında, örnek `inventory/group_vars/all.yml`'de):
 
 | Değişken | Anlamı | Dikkat |
 |---|---|---|

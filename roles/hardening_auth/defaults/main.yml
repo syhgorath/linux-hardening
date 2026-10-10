@@ -1,0 +1,7 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# Not: login.defs değerleri sadece YENİ hesapları etkiler.
+hardening_pass_max_days: 365
+hardening_pass_min_days: 1
+hardening_pass_warn_age: 7
+hardening_umask: "027"
+hardening_pwquality_minlen: 14
