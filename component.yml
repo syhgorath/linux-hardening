@@ -38,8 +38,23 @@ actions:
     requires_sudo: true
     requires: [preview]                # sshpocket önce preview çalıştırıp göstermeli
 
+  # Geri alma güvenlik ağı (hardening_rollback): kontrol kaybından sonra durumu görmek ve iptal etmek için.
+  # Bu eylemler preflight/erişim korumalarını çalıştırmaz (kontrol kaybından sonra da çalışabilmeli).
+  rollback_status:
+    cmd: "ansible-playbook playbooks/rollback.yml"
+    effects: []
+    requires_sudo: true
+  rollback_disarm:
+    cmd: "ansible-playbook playbooks/rollback.yml --tags disarm"
+    effects: [changes-config]            # geri alma güvenlik ağını iptal eder (zamanlayıcı/yedek silinir)
+    requires_sudo: true
+  rollback_now:
+    cmd: "ansible-playbook playbooks/rollback.yml --tags now"
+    effects: [changes-config]            # armed ise sunucuyu hemen önceki duruma döndürür
+    requires_sudo: true
+
 # sshpocket'in -e ile verebileceği değişkenler. hardening_ssh_port YOKTUR (kaldırıldı, port değiştirme desteklenmiyor).
-vars: [hardening_ssh_allow_from, hardening_scan_dir]
+vars: [hardening_ssh_allow_from, hardening_scan_dir, hardening_rollback_enabled, hardening_rollback_timeout]
 
 # sshpocket'in yukarıdaki cmd'nin sonuna eklediği argümanlar.
 invoke:

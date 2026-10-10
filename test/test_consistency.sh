@@ -20,5 +20,7 @@ mutate "VERSION farkli"            VERSION                 's/.*/9.9.9/'        
 mutate "profil surumu yanlis"      component.yml           's/ubuntu-26.04/ubuntu-24.04/'        "hardening_supported_os"
 mutate "vars'a ssh_port eklendi"   component.yml           's/^vars: \[.*\]/vars: [hardening_ssh_port]/' "hardening_ssh_port olmamalı"
 mutate "bilinmeyen effect"         component.yml           's/effects: \[\]/effects: [yikar]/'   "effects geçersiz"
+mutate "eylemin --tags degeri playbook'ta yok" component.yml 's/--tags disarm/--tags yok-boyle-etiket/' "bir etiket olarak yok"
+mutate "bilinmeyen playbook" component.yml 's#playbooks/rollback.yml"$#playbooks/yok.yml"#' "yok"
 mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinmiyor/'           "Desteklenir"
 finish
