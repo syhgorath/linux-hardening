@@ -194,7 +194,7 @@ Bilerek yapılmayanlar ve nedenleri: `docs/decisions.md`.
 
 ## 7a. Erişim kaybı korumaları (otomatik)
 
-`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (`--tags ufw` veya `ssh` ile çalışırken):
+`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (tam çalıştırmada ve `--tags ufw` / `--tags ssh` ile çalışırken; OS/sürüm preflight'ı ise **her** `--tags` çalıştırmasında da yapılır):
 
 **Önce (durdurur, `--check`'te de çalışır):**
 - `hardening_ssh_allow_from` boş/tanımsız/geçersizse durur.

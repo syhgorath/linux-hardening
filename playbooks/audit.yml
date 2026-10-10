@@ -3,8 +3,12 @@
 - name: Audit (Lynis)
   hosts: ubuntu
   pre_tasks:
-    - ansible.builtin.include_role:
+    - name: Preflight (desteklenen OS/sürüm, sürüm değişkenleri)
+      ansible.builtin.include_role:
         name: hardening_preflight
+        # include_role'daki tags yalnızca include ifadesine uygulanır; içteki görevler --tags ile atlanırdı.
+        apply:
+          tags: [always]
       tags: [always]
   tasks:
     - name: Fix scan directory for this run
