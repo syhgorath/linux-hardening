@@ -6,3 +6,6 @@
 scripts export-ignore
 scans export-ignore
 docs/RELEASING.md export-ignore
+test export-ignore
+requirements-dev.in export-ignore
+requirements-dev.txt export-ignore

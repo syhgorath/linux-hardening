@@ -39,7 +39,7 @@
       parola girişi kapatılmadı.
   when: hardening_ssh_disable_password
 
-- name: "sshd drop-in (00- oneki: cloud-init drop-in dosyasindan once okunur)"
+- name: "Write sshd drop-in (00- oneki: cloud-init drop-in dosyasindan once okunur)"
   ansible.builtin.template:
     src: sshd-hardening.conf.j2
     dest: /etc/ssh/sshd_config.d/00-hardening.conf
@@ -47,4 +47,4 @@
     group: root
     mode: "0644"
     validate: /usr/sbin/sshd -t -f %s
-  notify: reload ssh
+  notify: Reload ssh

@@ -1,0 +1,15 @@
+# Sentetik Lynis rapor örneği (gerçek sistem verisi İÇERMEZ); yalnızca test için.
+report_version=1.0
+report_datetime_start=2026-01-01 00:00:00
+lynis_version=3.1.6
+os_version=26.04
+hostname=ornek-host
+tests_executed=HRDN-7231|HRDN-7230|HRDN-7222|KRNL-6000|SSH-7408|AUTH-9262
+tests_skipped=MALW-3288|MALW-3286
+hardening_index=62
+warning[]=PKGS-7392|Found one or more vulnerable packages.|-|-|
+warning[]=MAIL-8818|Information disclosure in SMTP banner|-|-|
+suggestion[]=DEB-0280|Install libpam-tmpdir|-|-|
+suggestion[]=DEB-0880|Install fail2ban|-|-|
+suggestion[]=BOOT-5122|Set a password on GRUB|-|-|
+loaded_kernel_module[]=nf_tables

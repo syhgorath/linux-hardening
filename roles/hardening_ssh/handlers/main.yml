@@ -1,4 +1,4 @@
-- name: reload ssh
+- name: Reload ssh
   ansible.builtin.systemd:
     name: "{{ hardening_ssh_service | default('ssh') }}"
     state: reloaded

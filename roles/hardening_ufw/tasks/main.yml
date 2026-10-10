@@ -56,7 +56,7 @@
     - { key: outgoing, value: allow }
   changed_when: false
 
-- name: ufw current state
+- name: Read ufw current state
   ansible.builtin.command: ufw status
   register: hardening_ufw_state
   changed_when: false
