@@ -1,0 +1,3 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# Anahtar yoksa rol zaten durur (authorized_keys kontrolü).
+hardening_ssh_disable_password: true

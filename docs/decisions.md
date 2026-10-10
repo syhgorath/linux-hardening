@@ -18,4 +18,4 @@
 | 2026-10-10 | root ile çalışma | ansible_user/giriş kullanıcısı root ise durur | PermitRootLogin no yazılıyor; root ile devam etmek erişimi keser |
 | 2026-10-10 | authorized_keys yolu | getent passwd ile gerçek home dizini | /home/<kullanıcı> varsayımı özel home'larda yanlış sonuç veriyordu |
 | 2026-10-10 | Uygulama sonrası bağlantı doğrulaması | Yeni ssh bağlantısı testi; başarısızsa sshd drop-in sil + sshd reload + ufw disable | Geri alma SADECE ssh drop-in ve ufw'yi kapsar; paketler/sysctl/auditd/fail2ban/AIDE geri alınmaz; eski oturum canlı olmalı |
-
+| 2026-10-10 | Değişken varsayılanlarının yeri | `hardening_*` varsayılanları rol `defaults/main.yml`'e taşındı; `inventory/group_vars/all.yml` yalnızca yorumlu örnek | `group_vars` yalnızca varsayılan inventory ile yüklenir; `-i /tmp/geçici.yml` ile (sshpocket) tüm değişkenler tanımsız kalıp roller düşüyordu. Efektif değerler DEĞİŞMEDİ; kullanılmayan `hardening_profile` kaldırıldı |
