@@ -28,6 +28,9 @@
     - { role: hardening_auditd, tags: [auditd] }
     - { role: hardening_fail2ban, tags: [fail2ban] }
     - { role: hardening_aide, tags: [aide] }
+    # Geri alma güvenlik ağı: ufw/ssh değişmeden HEMEN ÖNCE arm edilir; hardening_verify_access doğrulayınca disarm eder.
+    # Arada herhangi bir hata/kopma olursa sunucu N sn sonra kendini önceki duruma döndürür (docs/design/rollback-timer.md).
+    - { role: hardening_rollback, tags: [ufw, ssh] }
     - { role: hardening_ufw, tags: [ufw] }
     - { role: hardening_ssh, tags: [ssh] }
   post_tasks:

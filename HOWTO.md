@@ -225,12 +225,19 @@ Bilerek yapılmayanlar ve nedenleri: `docs/decisions.md`.
 - Parola girişini kapatmadan önce giriş kullanıcısının *gerçek* home dizininde `authorized_keys` var mı bakar.
 
 **Sonra (`--check`'te atlanır):** kontrol makinesinden yeni ve bağımsız bir `ssh` bağlantısı (BatchMode) açar.
-Başarısızsa **hâlâ açık olan eski oturum** üzerinden: `/etc/ssh/sshd_config.d/00-hardening.conf` silinir,
-sshd yeniden yüklenir, ufw kapatılır ve playbook hata ile durur.
+Başarılıysa geri alma güvenlik ağı **disarm** edilir. Başarısızsa sunucu **değişiklikten önceki duruma döner**
+(`hardening_rollback`: sshd drop-in ve ufw kuralları/aktif-pasif durumu yedekten geri yüklenir, **silinmez**) ve
+playbook hata ile durur.
+
+**Geri alma güvenlik ağı (`hardening_rollback`):** ufw/ssh değişmeden hemen önce sunucuda önceki durum yedeklenir ve bir
+systemd zamanlayıcısı kurulur (`hardening_rollback_timeout`, varsayılan 300 sn). Doğrulama başarılıysa disarm edilir.
+**Bağlantı tamamen kaybolursa** (Mac kitlenir, eski oturum kopar) sunucu süre dolunca **kendini** önceki duruma döndürür.
+`hardening_rollback_enabled: false` ile kapatılabilir (önerilmez; açık uyarı verir). systemd yoksa ufw/ssh'a dokunulmaz.
 
 Sınırlar (bilerek açık yazıyoruz):
 - **Geri alınmayanlar:** paketler, sysctl, auditd, fail2ban, AIDE ve diğer roller. Sadece SSH drop-in ve ufw geri alınır.
-- Geri alma, eski SSH oturumunun hâlâ canlı olmasına dayanır. Eski bağlantı da koparsa kurtarma **yapılamaz**; Proxmox konsolu/snapshot gerekir.
+- Bağlantı doğrulanamazsa geri alma anında yapılır; **bağlantı tamamen kaybolursa** sunucu `hardening_rollback_timeout` sn sonra kendini geri alır. O süre boyunca erişim yoktur. Sunucu bu sırada **yeniden başlarsa** zamanlayıcı `armed` iken yeniden etkinleşir ve açılıştan N sn sonra geri alır. Yine de son çare Proxmox konsolu/snapshot'tır.
+- **Gereksiz geri alma olabilir:** kontrol makineniz süre dolmadan dönmezse ve değişiklik iyiyse sunucu yine de geri alır (*erişim kaybı yerine gereksiz geri alma* bilinçli seçim). Süre içinde dönerseniz `hardening-rollback status/disarm` ile bakılır.
 - Doğrulama `ssh` komutunu kontrol makinesinde çalıştırır: anahtar `ssh-agent`'ta (veya `ansible_ssh_private_key_file`) olmalıdır, passphrase sorulamaz. Agent'ta anahtar yoksa doğrulama başarısız olur ve gereksiz yere geri alınır.
 - Agent'ta 3'ten fazla anahtar varsa ve `ansible_ssh_private_key_file` verilmediyse, `MaxAuthTries 3` yüzünden "Too many authentication failures" ile yanlış negatif olabilir.
 - `authorized_keys` kontrolü varsayılan konuma bakar (özel `AuthorizedKeysFile` ayarını bilmez) ve sadece dosyanın dolu olduğunu doğrular, bağlandığın anahtarın içinde olduğunu değil.
