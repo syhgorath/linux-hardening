@@ -1,10 +1,16 @@
 # linux-hardening
 
+🇹🇷 Türkçe · 🇬🇧 [English](README.en.md)
+
 Ansible ile Linux sunucu sertleştirme (hardening). Rolleri tek repoda tutar; her dağıtım/sürüm için
 destek açıkça listelenir, desteklenmeyen sistemde çalışmayı durdurur.
 
 **Şu an desteklenen:** Ubuntu 26.04 LTS (hedef: CIS Level 1 Server yaklaşımı).
 Başka sürüm/dağıtım ekleme yolu açık: bkz. [docs/SUPPORT.md](docs/SUPPORT.md).
+
+> **Durum:** roller ve erişim kaybı korumaları otomatik testler ve CI ile (gerçek bir Linux runner'da `--check` dahil)
+> sınanıyor; ancak sunucuya gerçek uygulama (firewall/SSH değişikliği ve geri alma yolu) bir canlı hedefte uçtan uca
+> **henüz doğrulanmadı**. Önce test sunucusunda deneyin.
 
 ## Akış
 1. `playbooks/audit.yml` — baseline tarama (Lynis)
@@ -50,7 +56,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 
 | Test | Neyi korur |
 |---|---|
-| `test_lint.sh` | `--syntax-check`, `yamllint --strict`, `ansible-lint` (0 bulgu) |
+| `test_lint.sh` | `--syntax-check`, `yamllint --strict`, `ansible-lint` (0 bulgu), shellcheck |
 | `test_access_guards.sh` | `allow_from` boş/geçersiz/kaynak dışı, `SSH_CONNECTION` yok, root, IPv4/IPv6 |
 | `test_expressions.py` | sshd portlarının `ss` çıktısından türetilmesi, efektif fail2ban `ignoreip` |
 | `test_templates.py` | Şablonların varsayılan çıktısı (golden dosyalar) ve güvenli varsayılanlar |
@@ -59,6 +65,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_handlers.py` | Her `notify` bir handler'a bağlı |
 | `test_vars_defined.py` | `group_vars` olmadan değişkenler tanımlı, güvenli varsayılanlar |
 | `test_consistency.sh` | `VERSION`/`component.yml`/destek matrisi tutarlılığı (kasıtlı bozmalar yakalanır) |
+| `test_release_script.sh` | `scripts/release.sh`: gerçek imzalama/doğrulama, reddedilme senaryoları |
 | `test_repo_hygiene.sh`, `test_ip_addresses.py` | Anahtar/token/IP sızıntısı, paket içeriği |
 
 CI ayrıca Python 3.12/3.13/3.14'te hash'li kurulumu dener ve gerçek bir Linux'ta (`linux-smoke`) `harden.yml --check` çalıştırır.
