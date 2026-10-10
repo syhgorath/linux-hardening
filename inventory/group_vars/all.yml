@@ -1,26 +1,32 @@
-# Hardening değişkenleri. Her kontrol açılıp kapatılabilir; sapmaları docs/decisions.md'ye yaz.
-hardening_profile: cis_level1_server
-ansible_python_interpreter: /usr/bin/python3
+# ÖRNEK geçersiz kılma dosyası. Varsayılanlar rollerin defaults/main.yml dosyalarındadır
+# (roles/hardening_*/defaults/main.yml); bu dosyaya hiçbir şey yazmak ZORUNLU DEĞİLDİR.
+# Burada ya da host_vars/ içinde tanımlanan değer varsayılanı ezer. Aşağıdakiler varsayılan değerlerdir;
+# değiştirmek istediğinizin yorumunu kaldırın. Sapmaları docs/decisions.md'ye yazın.
+#
+# NOT: Bu dosya yalnızca varsayılan inventory/hosts.yml ile yüklenir. Başka bir inventory (-i ...) ile
+# çalışırken aynı değerleri -e @dosya.yml ile verin; rol varsayılanları her durumda geçerlidir.
+
+# --- bağlantı ---
+# ansible_python_interpreter: /usr/bin/python3
 
 # --- auth ---
-hardening_pass_max_days: 365
-hardening_pass_min_days: 1
-hardening_pass_warn_age: 7
-hardening_umask: "027"
-hardening_pwquality_minlen: 14
+# hardening_pass_max_days: 365
+# hardening_pass_min_days: 1
+# hardening_pass_warn_age: 7
+# hardening_umask: "027"
+# hardening_pwquality_minlen: 14
 
 # --- fail2ban ---
-# Kendi yönetim ağını yaz; buradan gelen IP'ler asla banlanmaz (erişim kaybını önler).
-hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1 10.0.0.0/8"
-hardening_fail2ban_maxretry: 5
-hardening_fail2ban_bantime: 1h
+# Buradan gelen IP'ler asla banlanmaz (erişim kaybını önler).
+# hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1 10.0.0.0/8"
+# hardening_fail2ban_maxretry: 5
+# hardening_fail2ban_bantime: 1h
 
 # --- ssh / ufw ---
-# ZORUNLU: Bu ağlardan SSH'a izin verilir; diğer her şey gelen trafikte engellenir.
-# Bilerek BOŞ bırakıldı: boşken harden.yml (ufw/ssh) hata verip durur. Kendi yönetim ağını yaz,
-# örn: ["192.168.1.0/24"]. Ansible'ın bağlandığı kaynak IP bu ağlardan birinde değilse yine durur.
-hardening_ssh_allow_from: []
-hardening_ssh_port: 22
-hardening_ssh_disable_password: true
+# ZORUNLU: varsayılan boş; boşken harden.yml (ufw/ssh) durur. Yönetim ağınızı yazın.
+# hardening_ssh_allow_from:
+#   - 192.168.1.0/24
+# hardening_ssh_port: 22
+# hardening_ssh_disable_password: true
 # Ek açılacak portlar, örn: ["443/tcp"]
-hardening_ufw_extra_allow: []
+# hardening_ufw_extra_allow: []

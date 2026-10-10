@@ -20,10 +20,9 @@
 - name: Allow-from list must be a non-empty list
   ansible.builtin.assert:
     that:
-      - hardening_ssh_allow_from is defined
-      - hardening_ssh_allow_from is not string
-      - hardening_ssh_allow_from is sequence
-      - hardening_ssh_allow_from | length > 0
+      - hardening_ssh_allow_from | default([]) is not string
+      - hardening_ssh_allow_from | default([]) is sequence
+      - hardening_ssh_allow_from | default([]) | length > 0
     fail_msg: >-
       hardening_ssh_allow_from boş veya tanımsız. ufw'yi SSH izni olmadan açmak sunucuyu kilitler.
       Yönetim ağınızı yazın, örn: -e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'
@@ -50,7 +49,7 @@
   ansible.builtin.command:
     argv: >-
       {{ [ansible_python_interpreter | default('/usr/bin/python3'), '-c', hardening_preflight_source_check_script,
-          hardening_preflight_ssh_connection.stdout.split()[0]] + hardening_ssh_allow_from }}
+          hardening_preflight_ssh_connection.stdout.split()[0]] + (hardening_ssh_allow_from | default([])) }}
   vars:
     hardening_preflight_source_check_script: |
       import ipaddress, sys
@@ -75,6 +74,6 @@
       {{ 'hardening_ssh_allow_from içinde geçersiz değer var (' ~ hardening_preflight_source_check.stdout ~ ').'
          if hardening_preflight_source_check.rc == 2 else
          'Sunucunun gördüğü kaynak adres ' ~ hardening_preflight_ssh_connection.stdout.split()[0]
-         ~ ', hardening_ssh_allow_from (' ~ (hardening_ssh_allow_from | join(', '))
+         ~ ', hardening_ssh_allow_from (' ~ (hardening_ssh_allow_from | default([]) | join(', '))
          ~ ') içinde değil. ufw enable bağlantıyı keserdi; durduruldu. NAT/atlama sunucusu (jump host) varsa
          sunucunun GÖRDÜĞÜ adresi listeye ekleyin.' }}
