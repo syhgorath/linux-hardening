@@ -213,6 +213,7 @@ Sınırlar (bilerek açık yazıyoruz):
 - Agent'ta 3'ten fazla anahtar varsa ve `ansible_ssh_private_key_file` verilmediyse, `MaxAuthTries 3` yüzünden "Too many authentication failures" ile yanlış negatif olabilir.
 - `authorized_keys` kontrolü varsayılan konuma bakar (özel `AuthorizedKeysFile` ayarını bilmez) ve sadece dosyanın dolu olduğunu doğrular, bağlandığın anahtarın içinde olduğunu değil.
 - `ufw` komutları `--check` modunda çalışmaz; önizleme firewall değişikliğini göstermez.
+- **SSH portu değiştirilmez/desteklenmez.** ufw kuralı sshd'nin *gerçekten dinlediği* porttan (`ss`) yazılır; `hardening_ssh_port` kaldırıldı. sshd bulunamazsa ufw'ye dokunulmaz ve playbook durur.
 
 ---
 
