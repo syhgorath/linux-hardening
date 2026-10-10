@@ -1,0 +1,8 @@
+# ansible-lint ayarları.
+#
+# var-naming[no-role-prefix] BİLEREK atlanır: hardening_* değişken adları dışarıya açılan arayüzdür
+# (sshpocket gibi araçlar ve operatörler `-e hardening_ssh_allow_from=...` ile verir; bazıları birden
+# fazla rol tarafından okunur). Rol öneki eklemek (örn. hardening_ufw_ssh_allow_from) bu arayüzü kırar.
+# Rol içi geçici/register değişkenleri zaten rol önekiyle adlandırılır.
+skip_list:
+  - var-naming[no-role-prefix]
