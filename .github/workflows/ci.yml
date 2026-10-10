@@ -31,6 +31,25 @@ jobs:
           export PATH="$PWD/.venv/bin:$PATH"
           test/run-all.sh
 
+  runtime-install:
+    # Çalışma zamanı bağımlılıkları (requirements.txt) desteklenen tüm Python sürümlerinde hash'li kurulabilmeli.
+    name: runtime-install (python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Hash'li kurulum (requirements.txt)
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --require-hashes -r requirements.txt
+          .venv/bin/ansible-playbook --version
+
   linux-smoke:
     # Gerçek bir Linux'ta (runner Ubuntu 24.04) harden.yml'i YALNIZCA --check ile çalıştırır:
     # temiz sunucuda failed=0 (PR-0c), gerçek `ss -p` ve ufw/ssh okumaları. Hiçbir değişiklik uygulanmaz.
