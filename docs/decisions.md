@@ -12,6 +12,7 @@
 | 2026-10-09 | SSH PasswordAuthentication | no (sadece anahtar) | cloud-init drop-in'i yes veriyordu; 00-hardening.conf önceliklidir |
 | 2026-10-09 | SSH MaxSessions | 4 (Lynis önerisi 2) | Ansible bağlantı çoklamasıyla uyum |
 | 2026-10-09 | SSH Port | 22 bırakıldı | Firewall ile yönetim ağına kısıtlı; port değişikliği ek güvenlik katmanı sayılmadı |
+| 2026-10-10 | ufw SSH portu | `hardening_ssh_port` KALDIRILDI; ufw kuralı `ss` ile sshd'nin gerçekten dinlediği porttan yazılır, sshd bulunamazsa rol durur. **Port değiştirme desteklenmiyor** | Ubuntu'da sshd çoğu zaman ssh.socket ile başlar; sshd_config'teki Port yok sayılabilir. Değişken yalnızca ufw'yi değiştirip sshd'yi değiştirmediği için `2222` verilince ufw 2222'yi açıp sshd 22'de kalıyordu (kilitlenme). Değişken artık yok sayılır (tanımlıysa uyarı verilir) |
 | 2026-10-09 | ufw | default deny incoming; SSH sadece 10.0.0.0/8 | Yönetim ağı (VPN) 10.0.0.0/8 içinde |
 | 2026-10-09 | GRUB parolası, /home /var ayrı bölüm, uzak log, process accounting | Uygulanmadı | VM ortamında getirisi düşük / altyapı kararı gerektirir |
 | 2026-10-10 | **BREAKING** hardening_ssh_allow_from varsayılanı | `10.0.0.0/8` kaldırıldı, varsayılan boş; boşsa harden.yml durur | Kilitlenme koruması. Eskiden belirtmeden çalıştırılan kullanım artık değişkeni vermek zorunda |
