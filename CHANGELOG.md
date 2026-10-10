@@ -9,6 +9,8 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 - `hardening_rollback` rolü: hedef taraflı geri alma güvenlik ağı (betik, systemd zamanlayıcısı, önceki durum yedeği).
   `harden.yml`'de ufw/ssh'tan önce arm edilir, doğrulama başarılıysa disarm edilir. Tasarım: `docs/design/rollback-timer.md`.
 
+- `playbooks/rollback.yml`: geri alma güvenlik ağının durumu (`status`, varsayılan), `--tags disarm`, `--tags now`.
+
 ### Değişti
 - **Davranış değişikliği:** doğrulama başarısız olduğunda geri alma artık drop-in'i **silmez**, değişiklikten önceki duruma
   **geri yükler** (ufw kuralları ve aktif/pasif durumu dahil). Güvenlik ağı kapalıysa eski davranış korunur.

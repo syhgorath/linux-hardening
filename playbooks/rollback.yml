@@ -1,0 +1,55 @@
+# Geri alma güvenlik ağını (hardening_rollback) yönetir. Tasarım: docs/design/rollback-timer.md
+#
+#   ansible-playbook playbooks/rollback.yml                 # status (varsayılan, salt-okunur)
+#   ansible-playbook playbooks/rollback.yml --tags disarm   # "değişiklik iyi": geri almayı iptal et
+#   ansible-playbook playbooks/rollback.yml --tags now      # hemen önceki duruma dön (armed ise)
+#
+# disarm/now `never` etiketlidir: açıkça --tags ile istenmedikçe ÇALIŞMAZ (varsayılan koşu yalnızca durumu gösterir).
+# Preflight/erişim korumaları bu playbook'ta YOKTUR: amaç kontrol kaybından sonra da çalışabilmektir.
+- name: Rollback safety net control
+  hosts: "hardening:ubuntu"
+  gather_facts: false
+  tasks:
+    - name: Check rollback script is installed
+      ansible.builtin.stat:
+        path: /usr/local/sbin/hardening-rollback
+      register: hardening_rollback_ctl_script
+      tags: [status, disarm, now]
+
+    - name: Say that the rollback safety net is not installed
+      ansible.builtin.debug:
+        msg: "Geri alma güvenlik ağı kurulu değil (/usr/local/sbin/hardening-rollback yok): armed zamanlayıcı yok."
+      when: not hardening_rollback_ctl_script.stat.exists
+      tags: [status, disarm, now]
+
+    - name: Read status
+      ansible.builtin.command: /usr/local/sbin/hardening-rollback status
+      register: hardening_rollback_ctl_status
+      changed_when: false
+      when: hardening_rollback_ctl_script.stat.exists
+      tags: [status]
+
+    - name: Show status
+      ansible.builtin.debug:
+        msg: "{{ hardening_rollback_ctl_status.stdout_lines }}"
+      when: hardening_rollback_ctl_script.stat.exists
+      tags: [status]
+
+    - name: Disarm (değişiklik doğrulandı; geri alma iptal edilir)
+      ansible.builtin.command: /usr/local/sbin/hardening-rollback disarm
+      changed_when: true
+      when: hardening_rollback_ctl_script.stat.exists
+      tags: [disarm, never]
+
+    - name: Restore previous state now (armed ise)
+      ansible.builtin.command: /usr/local/sbin/hardening-rollback restore
+      register: hardening_rollback_ctl_restore
+      changed_when: "'geri alma tamamlandi' in hardening_rollback_ctl_restore.stdout"
+      when: hardening_rollback_ctl_script.stat.exists
+      tags: [now, never]
+
+    - name: Show result
+      ansible.builtin.debug:
+        msg: "{{ hardening_rollback_ctl_restore.stdout_lines }}"
+      when: hardening_rollback_ctl_script.stat.exists and hardening_rollback_ctl_restore is defined
+      tags: [now, never]
