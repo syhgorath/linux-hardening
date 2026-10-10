@@ -48,9 +48,16 @@
 - name: Check client address is inside hardening_ssh_allow_from (ek koleksiyon gerekmez)
   ansible.builtin.command:
     argv: >-
-      {{ [ansible_python_interpreter | default('/usr/bin/python3'), '-c', hardening_preflight_source_check_script,
+      {{ [hardening_preflight_python, '-c', hardening_preflight_source_check_script,
           hardening_preflight_ssh_connection.stdout.split()[0]] + (hardening_ssh_allow_from | default([])) }}
   vars:
+    # Çalıştırılacak yorumlayıcı: Ansible'ın keşfettiği gerçek yol (fact); yoksa mutlak yol olan
+    # ansible_python_interpreter; aksi halde /usr/bin/python3. ansible_python_interpreter 'auto',
+    # 'auto_silent' gibi bir ANAHTAR SÖZCÜK olabilir; bu bir program yolu DEĞİLDİR, doğrudan çalıştırılmaz.
+    hardening_preflight_python: >-
+      {%- set fp = (ansible_facts.get('python', {}) or {}).get('executable', '') -%}
+      {%- set ip = ansible_python_interpreter | default('') -%}
+      {{ fp if fp else (ip if ip is match('^/') else '/usr/bin/python3') }}
     hardening_preflight_source_check_script: |
       import ipaddress, sys
       try:
@@ -67,11 +74,23 @@
   check_mode: false
 
 - name: Client address must be allowed (aksi halde ufw bu bağlantıyı keser)
+  vars:
+    hardening_preflight_python: >-
+      {%- set fp = (ansible_facts.get('python', {}) or {}).get('executable', '') -%}
+      {%- set ip = ansible_python_interpreter | default('') -%}
+      {{ fp if fp else (ip if ip is match('^/') else '/usr/bin/python3') }}
   ansible.builtin.assert:
     that:
       - hardening_preflight_source_check.rc == 0
     fail_msg: >-
-      {{ 'hardening_ssh_allow_from içinde geçersiz değer var (' ~ hardening_preflight_source_check.stdout ~ ').'
+      {{ ('Kaynak adres denetim betiği çalıştırılamadı (çıkış kodu ' ~ hardening_preflight_source_check.rc
+           ~ ', yorumlayıcı: ' ~ hardening_preflight_python ~ '): '
+           ~ (hardening_preflight_source_check.msg | default(hardening_preflight_source_check.stderr | default(''))))
+         if hardening_preflight_source_check.rc not in [0, 1, 2]
+            or (hardening_preflight_source_check.rc == 2
+                and not hardening_preflight_source_check.stdout.startswith('GECERSIZ'))
+         else
+         'hardening_ssh_allow_from içinde geçersiz değer var (' ~ hardening_preflight_source_check.stdout ~ ').'
          if hardening_preflight_source_check.rc == 2 else
          'Sunucunun gördüğü kaynak adres ' ~ hardening_preflight_ssh_connection.stdout.split()[0]
          ~ ', hardening_ssh_allow_from (' ~ (hardening_ssh_allow_from | default([]) | join(', '))
