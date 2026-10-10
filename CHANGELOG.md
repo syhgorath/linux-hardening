@@ -5,17 +5,6 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
-### Eklendi
-- `hardening_rollback` rolü: hedef taraflı geri alma güvenlik ağı (betik, systemd zamanlayıcısı, önceki durum yedeği).
-  `harden.yml`'de ufw/ssh'tan önce arm edilir, doğrulama başarılıysa disarm edilir. Tasarım: `docs/design/rollback-timer.md`.
-
-- `playbooks/rollback.yml`: geri alma güvenlik ağının durumu (`status`, varsayılan), `--tags disarm`, `--tags now`.
-- `component.yml`: `rollback_status`, `rollback_disarm`, `rollback_now` eylemleri; `vars`'a `hardening_rollback_enabled`/`hardening_rollback_timeout`.
-
-### Değişti
-- **Davranış değişikliği:** doğrulama başarısız olduğunda geri alma artık drop-in'i **silmez**, değişiklikten önceki duruma
-  **geri yükler** (ufw kuralları ve aktif/pasif durumu dahil). Güvenlik ağı kapalıysa eski davranış korunur.
-
 ## [0.1.0] - 2026-10-10
 
 İlk sürüm: Ubuntu 26.04 LTS için Ansible tabanlı sertleştirme ve makine-okunur bileşen sözleşmesi.
@@ -25,8 +14,14 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
   `hardening_aide`, `hardening_ufw`, `hardening_ssh`; ön kontrol `hardening_preflight`.
 - `playbooks/audit.yml` (Lynis taraması, `summary.json`), `playbooks/harden.yml`.
 - Erişim kaybı korumaları: `hardening_ssh_allow_from` zorunlu, kaynak IP ve root kontrolü, uygulama sonrası
-  bağlantı doğrulaması ve geri alma.
-- `component.yml` (sshpocket sözleşmesi), `VERSION`, hash'li `requirements.txt`, `docs/RELEASING.md`.
+  bağlantı doğrulaması.
+- **Hedef taraflı geri alma güvenlik ağı** (`hardening_rollback`): ufw/ssh'tan önce önceki durum yedeklenir ve
+  kalıcı bir systemd zamanlayıcısı kurulur; doğrulama başarılıysa disarm, başarısızsa ya da kontrol kaybolursa
+  (kontrol makinesi ölür, sunucu yeniden başlar) sunucu **kendini önceki duruma döndürür** (silmez, geri yükler).
+  `playbooks/rollback.yml` (`status`, `--tags disarm`, `--tags now`). Tasarım: `docs/design/rollback-timer.md`.
+- `component.yml` (sshpocket sözleşmesi; `rollback_status/disarm/now` eylemleri dahil), `VERSION`, hash'li
+  `requirements.txt`, `docs/RELEASING.md`, `scripts/release.sh`.
+- CI (7 kontrol), 16 test dosyası, Dependabot, `SECURITY.md`, katkı rehberi ve şablonlar, `README.en.md`.
 
 ### Değişti
 - `hardening_*` varsayılanları rol `defaults/` dosyalarına taşındı.

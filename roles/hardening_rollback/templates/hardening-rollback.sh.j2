@@ -22,8 +22,12 @@ SSH_SERVICE="${HR_SSH_SERVICE:-$DEFAULT_SSH_SERVICE}"
 TIMER="hardening-rollback.timer"
 UFW_FILES="ufw.conf user.rules user6.rules"
 
+# systemd altinda (INVOCATION_ID dolu) stdout zaten journal'a (hardening-rollback etiketiyle) gider; logger'i da
+# cagirmak her satiri iki kez kaydederdi. Elle/Ansible calistirmada stdout journal'a gitmez: logger ile yazilir.
 log() {
-  logger -t hardening-rollback -- "$*" 2>/dev/null || true
+  if [ -z "${INVOCATION_ID:-}" ]; then
+    logger -t hardening-rollback -- "$*" 2>/dev/null || true
+  fi
   echo "$*"
 }
 
