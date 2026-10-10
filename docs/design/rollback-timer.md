@@ -1,7 +1,7 @@
 # Tasarım: hedef taraflı geri alma zamanlayıcısı
 
-> **Durum: TASARIM, henüz uygulanmadı.** Bu belge bir öneridir; kararlar PR'da tartışılıp netleşecek.
-> Uygulama ayrı PR'larla (aşağıda "Uygulama planı") ve **gerçek bir hedefte denenerek** yapılacak.
+> **Durum: kararlar onaylandı (§9), uygulama başladı.** Uygulama ayrı PR'larla (§10) ve **gerçek bir hedefte denenerek**
+> yapılıyor. Sınırlar ve açık riskler §7'de.
 
 ## 1. Amaç
 `harden.yml` ufw ve SSH ayarlarını değiştirirken sunucuya **erişimin kalıcı olarak kaybedilmemesi**: değişiklik
@@ -126,12 +126,23 @@ başlatmada kaybolur (bkz. §6, senaryo 4).
 5. Disarm: süre dolmadan `disarm` → geri alma tetiklenmez.
 6. Zaten sertleşmiş sunucuda doğrulama başarısızlığı: sunucu **başlangıçtan zayıf kalmaz**.
 
-## 9. Açık sorular
-1. Varsayılan **açık** mı olsun (güvenli ama ek bir bileşen) yoksa ilk sürümde opt-in mi?
-2. `hardening_rollback_timeout` varsayılanı 300 sn uygun mu (uzun ağ gecikmesi/yavaş sunucuda)?
-3. ufw durumu yedeği: komutla mı (`ufw status numbered`) yoksa `/etc/ufw/*.rules` dosya yedeğiyle mi?
-4. `rollback.yml` komutları `component.yml` eylemleri arasına mı girmeli (sshpocket menüsünden `status/disarm`)?
-5. Geri alma tetiklendiğinde kullanıcıya bildirim (sshpocket tarafında nasıl gösterilir)?
+## 9. Kararlar (kullanıcı onayı: varsayılanlarla ilerle)
+| # | Soru | Karar | Not |
+|---|---|---|---|
+| 1 | Varsayılan açık mı? | **Açık** (`hardening_rollback_enabled: true`) | Güvenlik ağı olmadan ufw/ssh'a dokunmak daha riskli; kapatmak bilinçli ve uyarılı |
+| 2 | Süre | **300 sn**, `30..3600` aralığında doğrulanır | |
+| 3 | ufw yedeği | **Dosya yedeği** (`/etc/ufw/ufw.conf`, `user.rules`, `user6.rules`) + aktif/pasif durumu | İlk öneri "komutla" idi; kural listesini `ufw` komutlarıyla birebir yeniden kurmak kırılgan (sıra, IPv6, varsayılan politikalar). Dosyaları geri yazıp `ufw --force enable/disable` daha doğru |
+| 4 | `status`/`disarm` menüde mi? | **Evet**, `component.yml` eylemleri (PR 4) | sshpocket tarafı ayrı |
+| 5 | Bildirim | Playbook mesajı + `journald` (`logger -t hardening-rollback`) | sshpocket'te gösterim sshpocket tarafının işi |
+
+## 9b. Uygulama kararları
+- Mantık **kurulu bir betikte** (`/usr/local/sbin/hardening-rollback`: `arm` / `disarm` / `restore` / `status`); Ansible ince kalır.
+  Böylece betik yerelde sahte komutlarla test edilebilir (`HR_ROOT`, `HR_UFW`, `HR_SSHD`, `HR_SYSTEMCTL`).
+- Zamanlayıcı yalnızca **armed iken enable** edilir; disarm'da `disable --now` (kalıcı iz bırakmaz). `OnActiveSec`
+  kullanıldığı için yeniden başlatmada da, timer yeniden etkinleştirildiğinden N sn sonra tetiklenir.
+- Zaten `armed` ise **ilk yedek korunur**, yalnızca geri sayım yenilenir (gerçek "önceki durum" ezilmez).
+- **PR 1 playbook'lara BAĞLANMAZ** (rol ölü kod olarak gelir). Bağlanmadan arm eden ama disarm etmeyen bir sürüm,
+  N sn sonra sertleştirmeyi geri alırdı; bağlama ve disarm aynı PR'da (PR 2) yapılır.
 
 ## 10. Uygulama planı (ayrı PR'lar)
 | PR | İçerik | Canlı VM |
