@@ -16,9 +16,10 @@ hardening_fail2ban_maxretry: 5
 hardening_fail2ban_bantime: 1h
 
 # --- ssh / ufw ---
-# Bu ağlardan SSH'a izin verilir; diğer her şey gelen trafikte engellenir.
-hardening_ssh_allow_from:
-  - 10.0.0.0/8
+# ZORUNLU: Bu ağlardan SSH'a izin verilir; diğer her şey gelen trafikte engellenir.
+# Bilerek BOŞ bırakıldı: boşken harden.yml (ufw/ssh) hata verip durur. Kendi yönetim ağını yaz,
+# örn: ["192.168.1.0/24"]. Ansible'ın bağlandığı kaynak IP bu ağlardan birinde değilse yine durur.
+hardening_ssh_allow_from: []
 hardening_ssh_port: 22
 hardening_ssh_disable_password: true
 # Ek açılacak portlar, örn: ["443/tcp"]

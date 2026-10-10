@@ -88,7 +88,7 @@ Ağ ayarlarını kontrol et: `inventory/group_vars/all.yml`
 
 | Değişken | Anlamı | Dikkat |
 |---|---|---|
-| `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **Kendi ağın burada yoksa firewall seni dışarıda bırakır.** Şu an `10.0.0.0/8` |
+| `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **ZORUNLU, varsayılan boş.** Boşsa veya Ansible'ın bağlandığı IP burada değilse playbook durur. NAT/jump host varsa sunucunun *gördüğü* adresi yaz. Örn. `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` |
 | `hardening_fail2ban_ignoreip` | Asla banlanmayacak ağlar | Aynı ağı yaz |
 | `hardening_ssh_disable_password` | SSH parola girişini kapat | Anahtar yoksa rol zaten durur |
 | `hardening_ufw_extra_allow` | Ek açılacak portlar, örn. `["443/tcp"]` | Web sunucusu vb. için |
@@ -175,8 +175,35 @@ Bilerek yapılmayanlar ve nedenleri: `docs/decisions.md`.
 | `sudo: a password is required` | NOPASSWD ayarı yok → `--ask-become-pass` kullan ya da bölüm 2.4 |
 | Host key hatası | Önce elle `ssh kullanici@IP` ile bağlanıp kabul et |
 | `ansible: command not found` | `source .venv/bin/activate` yapılmamış |
+| `hardening_ssh_allow_from boş veya tanımsız` / `kaynak adres ... içinde değil` | Yönetim ağını `hardening_ssh_allow_from`'a yaz (bölüm 3). Bu kontrol seni kilitlenmeden korur, aşmaya çalışma |
+| `Ansible root olarak bağlanıyor` | `ansible_user` olarak sudo yetkili normal kullanıcı ver; root ile SSH sertleştirmesi bağlantıyı keser |
+| `Yeni SSH bağlantısı doğrulanamadı; GERİ ALINDI` | Kural: sshd drop-in silindi, sshd yenilendi, ufw kapatıldı. Erişimi doğrulayıp nedeni bul (anahtar ssh-agent'ta mı? ağ?) ve tekrar çalıştır |
 | Beklenmedik değişiklik oldu | Proxmox snapshot'a dön, `--check --diff` ile farkı incele |
 | Bir kontrolü kapatmak istiyorum | İlgili değişkeni `group_vars`/`host_vars` içinde değiştir veya `--tags` ile rolü atla; kararı `docs/decisions.md`'ye yaz |
+
+---
+
+## 7a. Erişim kaybı korumaları (otomatik)
+
+`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (`--tags ufw` veya `ssh` ile çalışırken):
+
+**Önce (durdurur, `--check`'te de çalışır):**
+- `hardening_ssh_allow_from` boş/tanımsız/geçersizse durur.
+- Sunucunun gördüğü bağlantı kaynağı (`SSH_CONNECTION`) bu ağlarda değilse durur.
+- `root` olarak bağlanılıyorsa durur.
+- Parola girişini kapatmadan önce giriş kullanıcısının *gerçek* home dizininde `authorized_keys` var mı bakar.
+
+**Sonra (`--check`'te atlanır):** kontrol makinesinden yeni ve bağımsız bir `ssh` bağlantısı (BatchMode) açar.
+Başarısızsa **hâlâ açık olan eski oturum** üzerinden: `/etc/ssh/sshd_config.d/00-hardening.conf` silinir,
+sshd yeniden yüklenir, ufw kapatılır ve playbook hata ile durur.
+
+Sınırlar (bilerek açık yazıyoruz):
+- **Geri alınmayanlar:** paketler, sysctl, auditd, fail2ban, AIDE ve diğer roller. Sadece SSH drop-in ve ufw geri alınır.
+- Geri alma, eski SSH oturumunun hâlâ canlı olmasına dayanır. Eski bağlantı da koparsa kurtarma **yapılamaz**; Proxmox konsolu/snapshot gerekir.
+- Doğrulama `ssh` komutunu kontrol makinesinde çalıştırır: anahtar `ssh-agent`'ta (veya `ansible_ssh_private_key_file`) olmalıdır, passphrase sorulamaz. Agent'ta anahtar yoksa doğrulama başarısız olur ve gereksiz yere geri alınır.
+- Agent'ta 3'ten fazla anahtar varsa ve `ansible_ssh_private_key_file` verilmediyse, `MaxAuthTries 3` yüzünden "Too many authentication failures" ile yanlış negatif olabilir.
+- `authorized_keys` kontrolü varsayılan konuma bakar (özel `AuthorizedKeysFile` ayarını bilmez) ve sadece dosyanın dolu olduğunu doğrular, bağlandığın anahtarın içinde olduğunu değil.
+- `ufw` komutları `--check` modunda çalışmaz; önizleme firewall değişikliğini göstermez.
 
 ---
 
@@ -198,7 +225,7 @@ ansible-playbook playbooks/harden.yml --ask-become-pass
 1. Proxmox snapshot / yedek al.
 2. Tek sunucuyla başla: `--limit sunucu1`.
 3. Önce `--check --diff`, çıktıyı oku.
-4. `hardening_ssh_allow_from` ve `hardening_fail2ban_ignoreip` **o sunucuya göre doğru mu?** Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
+4. `hardening_ssh_allow_from` (zorunlu) ve `hardening_fail2ban_ignoreip` **o sunucuya göre doğru mu?** Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
 5. Sunucuda çalışan servis varsa (web, veritabanı...) portlarını `hardening_ufw_extra_allow` ile aç; yoksa firewall onları kapatır.
 6. Bakım penceresinde uygula. Otomatik reboot yoktur ama paket/servis değişiklikleri kısa kesinti yapabilir.
 7. Kademeli git: ilk gün `--tags base,auth,kernel`, sonra `auditd,fail2ban,aide`, en son `ufw,ssh`.

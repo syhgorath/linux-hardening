@@ -23,7 +23,9 @@ ansible-playbook playbooks/audit.yml
 Ayrıntılı kullanım, sudo/üretim notları ve sorun giderme: **[HOWTO.md](HOWTO.md)**.
 Alınan kararlar ve istisnalar: [docs/decisions.md](docs/decisions.md).
 
-> Sunucunun ağ ayarını (`hardening_ssh_allow_from`) doğru vermezseniz firewall sizi dışarıda bırakır.
+> **`hardening_ssh_allow_from` zorunludur** (varsayılanı bilerek boş). Boşsa, geçersizse ya da Ansible'ın bağlandığı
+> kaynak IP bu ağlarda değilse `harden.yml` firewall/SSH'a dokunmadan durur. Ayrıca root olarak bağlanılamaz.
+> Örn: `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'`
 > Önce test sunucusunda deneyin, snapshot alın, `--check --diff` ile bakın.
 
 ## Lisans
