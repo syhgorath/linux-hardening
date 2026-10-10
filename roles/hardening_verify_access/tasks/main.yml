@@ -14,6 +14,20 @@
       register: hardening_verify_access_user
       changed_when: false
 
+    # keyboard-interactive (2FA) açıkken BatchMode ile tam kimlik doğrulama yapılamaz (istem cevaplanamaz) ve
+    # yanlışlıkla geri alma tetiklenirdi. O durumda yalnızca yeni bir TCP bağlantısında SSH banner'ı beklenir
+    # (sshd ayakta ve firewall izin veriyor); kimlik doğrulama doğrulanmaz.
+    - name: Verify a NEW TCP connection shows the SSH banner (kbd-interactive açık)
+      delegate_to: localhost
+      become: false
+      ansible.builtin.wait_for:
+        host: "{{ hostvars[inventory_hostname]['ansible_host'] | default(inventory_hostname) }}"
+        port: "{{ hostvars[inventory_hostname]['ansible_port'] | default(22) }}"
+        search_regex: "SSH-2.0"
+        connect_timeout: 8
+        timeout: 20
+      when: hardening_ssh_kbdinteractive | default(false)
+
     - name: Open a NEW SSH connection from the controller (BatchMode, çoklama yok)
       delegate_to: localhost
       become: false
@@ -35,6 +49,7 @@
       retries: 2
       delay: 3
       until: hardening_verify_access_new_connection.rc == 0
+      when: not (hardening_ssh_kbdinteractive | default(false))
 
   rescue:
     - name: ROLLBACK - remove sshd drop-in

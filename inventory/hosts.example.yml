@@ -1,7 +1,8 @@
 # Kopyala: cp inventory/hosts.example.yml inventory/hosts.yml
+# Sunucular 'hardening' grubuna yazılır. (Eski 'ubuntu' grubu da kabul edilir; yeni inventory'lerde 'hardening' kullanın.)
 all:
   children:
-    ubuntu:
+    hardening:
       hosts:
         test-vm-01:
           ansible_host: 192.168.1.50

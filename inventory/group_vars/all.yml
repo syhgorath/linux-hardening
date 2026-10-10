@@ -28,5 +28,10 @@
 # hardening_ssh_allow_from:
 #   - 192.168.1.0/24
 # hardening_ssh_disable_password: true
+# 2FA/TOTP (keyboard-interactive) için. true ise AuthenticationMethods publickey,keyboard-interactive yazılır
+# (anahtar VE PAM istemi gerekir). Sunucuda PAM 2FA'sı ayrıca kurulmalıdır; yanlışsa erişim kesilir.
+# hardening_ssh_kbdinteractive: false
+# ProxyJump/tünel için: no | local | remote | yes (string; YAML'da no'yu tırnaklayın).
+# hardening_ssh_allow_tcp_forwarding: "no"
 # Ek açılacak portlar, örn: ["443/tcp"]
 # hardening_ufw_extra_allow: []
