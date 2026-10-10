@@ -13,9 +13,13 @@
           tags: [always]
       tags: [always]
   tasks:
+    # Tarama çıktısı konumu: hardening_scan_dir (varsayılan: repodaki scans/). Altında <host>/<tarih>/ oluşur;
+    # <host> ve <tarih> dizinleri 0700, dosyalar 0600 yapılır (rapor hostname, paket, kullanıcı adı içerir).
     - name: Fix scan directory for this run
       ansible.builtin.set_fact:
-        scan_dir: "{{ playbook_dir }}/../scans/{{ inventory_hostname }}/{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
+        scan_dir: >-
+          {{ (hardening_scan_dir | default(playbook_dir ~ '/../scans')) }}/{{ inventory_hostname }}/{{
+          lookup('pipe', 'date +%Y%m%d-%H%M%S') }}
       delegate_to: localhost
 
     - name: Install lynis
@@ -25,11 +29,31 @@
         update_cache: true
         cache_valid_time: 3600
 
+    # --check modunda lynis kurulmaz (simüle edilir), bu yüzden tarama/toplama/özet ATLANIR.
+    - name: Note that check mode does not scan
+      ansible.builtin.debug:
+        msg: "--check modunda tarama yapılmaz (lynis kurulmaz); rapor ve summary.json üretilmez."
+      when: ansible_check_mode
+
     - name: Run lynis audit
       ansible.builtin.command: lynis audit system --quiet --no-colors
       register: lynis_run
       changed_when: false
       failed_when: lynis_run.rc not in [0, 1]
+      when: not ansible_check_mode
+
+    - name: Create scan directories (host ve tarih dizinleri 0700)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "{{ item.mode }}"
+      loop:
+        - { path: "{{ scan_dir | dirname | dirname }}", mode: null }
+        - { path: "{{ scan_dir | dirname }}", mode: "0700" }
+        - { path: "{{ scan_dir }}", mode: "0700" }
+      delegate_to: localhost
+      become: false
+      when: not ansible_check_mode
 
     - name: Fetch report and log
       ansible.builtin.fetch:
@@ -39,3 +63,54 @@
       loop:
         - lynis-report.dat
         - lynis.log
+      when: not ansible_check_mode
+
+    - name: Restrict fetched files to owner (0600)
+      ansible.builtin.file:
+        path: "{{ scan_dir }}/{{ item }}"
+        mode: "0600"
+      loop:
+        - lynis-report.dat
+        - lynis.log
+      delegate_to: localhost
+      become: false
+      when: not ansible_check_mode
+
+    # summary.json: yalnızca sayılar ve envanterdeki ana makine adı (gizli bilgi yok). Alanlar lynis-report.dat'tan:
+    #   hardening_index   <- "hardening_index=" satırı
+    #   tests_performed   <- "tests_executed=" satırındaki '|' ile ayrılmış test kimliği sayısı
+    #   warnings          <- "warning[]=" satırlarının sayısı
+    #   suggestions       <- "suggestion[]=" satırlarının sayısı
+    # Alan raporda yoksa değer null olur (0 değil). date: özetin üretildiği an, UTC ISO 8601.
+    - name: "Summary: read report on the controller"
+      ansible.builtin.set_fact:
+        hardening_audit_report: "{{ lookup('ansible.builtin.file', scan_dir ~ '/lynis-report.dat') }}"
+      delegate_to: localhost
+      when: not ansible_check_mode
+
+    - name: "Summary: extract fields"
+      ansible.builtin.set_fact:
+        hardening_audit_idx: "{{ hardening_audit_report | regex_search('(?m)^hardening_index=([0-9]+)', '\\1', multiline=True) }}"
+        hardening_audit_tests: "{{ hardening_audit_report | regex_search('(?m)^tests_executed=(.*)$', '\\1', multiline=True) }}"
+        hardening_audit_warnings: "{{ hardening_audit_report | regex_findall('(?m)^warning\\[\\]=', multiline=True) | length }}"
+        hardening_audit_suggestions: "{{ hardening_audit_report | regex_findall('(?m)^suggestion\\[\\]=', multiline=True) | length }}"
+      delegate_to: localhost
+      when: not ansible_check_mode
+
+    - name: "Summary: write summary.json (0600)"
+      ansible.builtin.copy:
+        dest: "{{ scan_dir }}/summary.json"
+        mode: "0600"
+        content: |
+          {{ {
+            'host': inventory_hostname,
+            'date': lookup('pipe', 'date -u +%Y-%m-%dT%H:%M:%SZ'),
+            'hardening_index': (hardening_audit_idx | first | int) if hardening_audit_idx else none,
+            'tests_performed': (hardening_audit_tests | first).split('|') | select | list | length
+                               if hardening_audit_tests else none,
+            'warnings': hardening_audit_warnings | int,
+            'suggestions': hardening_audit_suggestions | int
+          } | to_nice_json }}
+      delegate_to: localhost
+      become: false
+      when: not ansible_check_mode

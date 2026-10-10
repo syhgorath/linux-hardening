@@ -156,6 +156,26 @@ Aynısını sunucuda elle de görebilirsin (aynı sonucu verir, 77 bunun doğrul
 sudo lynis audit system
 ```
 
+Her taramanın klasöründe ayrıca makine-okunur bir **`summary.json`** üretilir:
+
+```json
+{ "date": "2026-10-10T11:12:21Z", "hardening_index": 77, "host": "test-vm-01",
+  "suggestions": 25, "tests_performed": 264, "warnings": 0 }
+```
+
+| Alan | Kaynak (`lynis-report.dat`) |
+|---|---|
+| `host` | envanterdeki ana makine adı |
+| `date` | özetin üretildiği an (UTC, ISO 8601) |
+| `hardening_index` | `hardening_index=` satırı |
+| `tests_performed` | `tests_executed=` satırındaki `\|` ile ayrılmış test sayısı |
+| `warnings` / `suggestions` | `warning[]=` / `suggestion[]=` satır sayısı |
+
+Rapordan okunamayan alan `null` olur (0 değil). Dosyada yalnızca sayılar ve ana makine adı vardır.
+Çıktı konumunu `hardening_scan_dir` ile değiştirebilirsin (varsayılan repodaki `scans/`); `<host>` ve `<tarih>`
+dizinleri 0700, dosyalar 0600 yazılır. `audit.yml` her çalışmada yeni bir tarih klasörü ürettiği için
+**idempotent değildir** (bu beklenen); `--check` modunda tarama yapılmaz ve rapor/özet üretilmez.
+
 Skor tek başına hedef değil. Önemli olan **uyarı sayısı (0)** ve bilerek yapılmayanların `docs/decisions.md`'de kayıtlı olması.
 
 ---

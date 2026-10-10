@@ -35,3 +35,9 @@
 # hardening_ssh_allow_tcp_forwarding: "no"
 # Ek açılacak portlar, örn: ["443/tcp"]
 # hardening_ufw_extra_allow: []
+
+# --- audit ---
+# Tarama çıktısının yazılacağı dizin (varsayılan: repodaki scans/). Altında <host>/<tarih>/ oluşur; <host> ve
+# <tarih> dizinleri 0700, dosyalar 0600. lynis-report.dat hostname, paket ve kullanıcı adı içerir; taşınabilir
+# bir ortama (USB) yazacaksanız şifreli bir birim kullanın.
+# hardening_scan_dir: /yol/scans
