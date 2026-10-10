@@ -44,6 +44,7 @@ ansible-playbook playbooks/audit.yml
 
 Detailed usage, sudo/production notes and troubleshooting: **[HOWTO.md](HOWTO.md)** (Turkish).
 Decisions and exceptions: [docs/decisions.md](docs/decisions.md) (Turkish).
+Live verification log: [docs/verification-log.md](docs/verification-log.md); roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) (Turkish).
 
 > **`hardening_ssh_allow_from` is required** (its default is intentionally empty). If it is empty, invalid, or the source
 > IP Ansible connects from is not inside these networks, `harden.yml` stops without touching the firewall/SSH. You also

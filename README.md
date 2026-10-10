@@ -41,6 +41,7 @@ ansible-playbook playbooks/audit.yml
 
 Ayrıntılı kullanım, sudo/üretim notları ve sorun giderme: **[HOWTO.md](HOWTO.md)**.
 Alınan kararlar ve istisnalar: [docs/decisions.md](docs/decisions.md).
+Canlı doğrulama kayıtları: [docs/verification-log.md](docs/verification-log.md). Yol haritası: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 > **`hardening_ssh_allow_from` zorunludur** (varsayılanı bilerek boş). Boşsa, geçersizse ya da Ansible'ın bağlandığı
 > kaynak IP bu ağlarda değilse `harden.yml` firewall/SSH'a dokunmadan durur. Ayrıca root olarak bağlanılamaz.
