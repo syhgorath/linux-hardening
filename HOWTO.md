@@ -194,7 +194,7 @@ Bilerek yapılmayanlar ve nedenleri: `docs/decisions.md`.
 
 ## 7a. Erişim kaybı korumaları (otomatik)
 
-`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (`--tags ufw` veya `ssh` ile çalışırken):
+`harden.yml` firewall/SSH değiştirmeden önce ve sonra şunları yapar (tam çalıştırmada ve `--tags ufw` / `--tags ssh` ile çalışırken; OS/sürüm preflight'ı ise **her** `--tags` çalıştırmasında da yapılır):
 
 **Önce (durdurur, `--check`'te de çalışır):**
 - `hardening_ssh_allow_from` boş/tanımsız/geçersizse durur.
@@ -214,6 +214,7 @@ Sınırlar (bilerek açık yazıyoruz):
 - `authorized_keys` kontrolü varsayılan konuma bakar (özel `AuthorizedKeysFile` ayarını bilmez) ve sadece dosyanın dolu olduğunu doğrular, bağlandığın anahtarın içinde olduğunu değil.
 - `ufw` komutları `--check` modunda çalışmaz; önizleme firewall değişikliğini göstermez.
 - `--check` modunda servis başlatma (auditd, fail2ban) ve `restart fail2ban` handler'ı **atlanır**; temiz bir sunucuda paketler henüz kurulu olmadığı için bunlar simüle edilemez. Önizleme servis durumunu göstermez.
+- **SSH portu değiştirilmez/desteklenmez.** ufw kuralı sshd'nin *gerçekten dinlediği* porttan (`ss`) yazılır; `hardening_ssh_port` kaldırıldı. sshd bulunamazsa ufw'ye dokunulmaz ve playbook durur.
 
 ---
 

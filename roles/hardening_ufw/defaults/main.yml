@@ -1,8 +1,8 @@
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # ZORUNLU: SSH'a izin verilen ağlar; diğer her şey gelen trafikte engellenir.
 # Bilerek BOŞ: boşken harden.yml (ufw/ssh) hata verip durur (bkz. roles/hardening_preflight/tasks/access.yml).
+# NOT: hardening_ssh_port KALDIRILDI; ufw kuralı sshd'nin gerçekten dinlediği porttan yazılır, port değiştirme desteklenmez.
 # Bu değişkeni preflight da okur (kaynak IP kontrolü); tek sahibi bu rol, orada tanımsızsa boş sayılır.
 hardening_ssh_allow_from: []
-hardening_ssh_port: 22
 # Ek açılacak portlar, örn: ["443/tcp"]
 hardening_ufw_extra_allow: []

@@ -26,7 +26,6 @@
 # ZORUNLU: varsayılan boş; boşken harden.yml (ufw/ssh) durur. Yönetim ağınızı yazın.
 # hardening_ssh_allow_from:
 #   - 192.168.1.0/24
-# hardening_ssh_port: 22
 # hardening_ssh_disable_password: true
 # Ek açılacak portlar, örn: ["443/tcp"]
 # hardening_ufw_extra_allow: []

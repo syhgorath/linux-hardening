@@ -4,9 +4,42 @@
     name: ufw
     state: present
 
+# Port DEĞİŞTİRME desteklenmez. Ubuntu'da sshd çoğunlukla ssh.socket ile (socket activation) başlar; bu durumda
+# sshd_config'teki Port yok sayılır, bu yüzden "port ayarı" yazmak yanıltıcıdır. Bunun yerine gerçekten
+# dinlenen sshd portu okunur ve firewall kuralı ona göre yazılır (kural ile dinlenen port ASLA ayrışmaz).
+- name: Read ports sshd is really listening on (ss, sshd süreci)
+  ansible.builtin.command: ss -H -tln -p
+  register: hardening_ufw_ss
+  changed_when: false
+  check_mode: false
+
+- name: Derive SSH ports from listening sockets
+  ansible.builtin.set_fact:
+    hardening_ufw_ssh_ports: >-
+      {{ hardening_ufw_ss.stdout_lines
+         | select('search', '"sshd"')
+         | map('regex_replace', '^\S+\s+\S+\s+\S+\s+(\S+)\s.*$', '\1')
+         | map('regex_replace', '^.*:([0-9]+)$', '\1')
+         | unique | list }}
+
+- name: A listening sshd must be found (aksi halde ufw SSH izni olmadan açılırdı)
+  ansible.builtin.assert:
+    that:
+      - hardening_ufw_ssh_ports | length > 0
+    fail_msg: >-
+      Dinlenen bir sshd portu bulunamadı (ss çıktısında sshd yok). SSH izni yazılamayacağı için ufw'ye
+      dokunulmadı. sshd çalışıyor mu kontrol edin.
+
+- name: Warn that hardening_ssh_port is no longer used
+  ansible.builtin.debug:
+    msg: >-
+      hardening_ssh_port artık kullanılmıyor ve yok sayılıyor; ufw kuralı sshd'nin gerçekten dinlediği
+      port(lar) için yazılır ({{ hardening_ufw_ssh_ports | join(', ') }}). Port değiştirme desteklenmez.
+  when: hardening_ssh_port is defined
+
 - name: Allow SSH from management networks (enable'dan ÖNCE)
-  ansible.builtin.command: "ufw allow from {{ item }} to any port {{ hardening_ssh_port }} proto tcp"
-  loop: "{{ hardening_ssh_allow_from }}"
+  ansible.builtin.command: "ufw allow from {{ item.0 }} to any port {{ item.1 }} proto tcp"
+  loop: "{{ hardening_ssh_allow_from | product(hardening_ufw_ssh_ports) | list }}"
   register: hardening_ufw_ssh
   changed_when: "'Skipping' not in hardening_ufw_ssh.stdout"
 
