@@ -1,0 +1,50 @@
+# sshpocket bileşen sözleşmesi (makine-okunur). sshpocket yalnızca bunu okuyup eylemleri çalıştırır.
+# Tutarlılık (VERSION, profiller, destek matrisi, değişkenler) scripts/check-consistency.py ile denetlenir.
+id: linux-hardening
+version: 0.1.0            # VERSION dosyasıyla aynı olmalı
+sshpocket_api: 1
+
+requires:
+  control:                # komutu çalıştıran makine (Mac)
+    python: ">=3.12"      # ansible-core 2.21.5 Requires-Python bilgisiyle aynı
+    packages: [ansible-core]   # sürüm/hash: requirements.txt
+  target:                 # sertleştirilen sunucu
+    python: ">=3.9"       # ansible-core 2.21 modüllerinin hedefte gerektirdiği alt sınır
+
+# Hedef sunucuların inventory'de yazılması gereken grup (eski 'ubuntu' grubu geçiş için kabul edilir).
+inventory_group: hardening
+
+profiles:                 # status: supported | planned
+  - { id: ubuntu-26.04, status: supported }
+  - { id: rpi,          status: planned }
+  - { id: proxmox,      status: planned }
+
+actions:
+  # effects: [] | installs-package | changes-config
+  audit:
+    cmd: "ansible-playbook playbooks/audit.yml"
+    effects: [installs-package]        # hedefe lynis paketini kurar; yapılandırmayı değiştirmez
+    requires_sudo: true
+    outputs:
+      dir_var: hardening_scan_dir      # varsayılan: scans/ (repo içinde)
+      summary: "<dir>/<host>/<tarih>/summary.json"
+  preview:
+    cmd: "ansible-playbook playbooks/harden.yml --check --diff"
+    effects: []
+    requires_sudo: true
+  apply:
+    cmd: "ansible-playbook playbooks/harden.yml"
+    effects: [installs-package, changes-config]
+    requires_sudo: true
+    requires: [preview]                # sshpocket önce preview çalıştırıp göstermeli
+
+# sshpocket'in -e ile verebileceği değişkenler. hardening_ssh_port YOKTUR (kaldırıldı, port değiştirme desteklenmiyor).
+vars: [hardening_ssh_allow_from, hardening_scan_dir]
+
+# sshpocket'in yukarıdaki cmd'nin sonuna eklediği argümanlar.
+invoke:
+  append:
+    - { arg: "-i", value: "<üretilen geçici inventory>", required: true }
+    - { arg: "--limit", value: "<sunucu>", required: true }
+    - { arg: "--ask-become-pass", required: true, interactive: true }   # sudo parolasını Ansible kendi istemiyle alır
+    - { arg: "-e", value: "@<değişken dosyası>", required: false }      # örn. hardening_ssh_allow_from

@@ -28,7 +28,7 @@ Bu Mac'te zaten yapıldı. Başka bir bilgisayarda yapacaksan:
 git clone https://github.com/syhgorath/linux-hardening.git
 cd linux-hardening
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install --require-hashes -r requirements.txt   # paketler hash ile doğrulanır; Python >= 3.12
 cp inventory/hosts.example.yml inventory/hosts.yml   # sonra düzenle (bölüm 3)
 ```
 
