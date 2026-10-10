@@ -1,5 +1,6 @@
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
-# Kendi yönetim ağını yaz; buradan gelen IP'ler asla banlanmaz (erişim kaybını önler).
-hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1 10.0.0.0/8"
+# Her zaman banlanmayacak adresler. Buna, Ansible'ın bağlandığı kontrol makinesinin sunucunun GÖRDÜĞÜ adresi
+# (SSH_CONNECTION) otomatik eklenir; tüm yönetim ağını muaf tutmak için burada açıkça yazın (önerilmez).
+hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1"
 hardening_fail2ban_maxretry: 5
 hardening_fail2ban_bantime: 1h

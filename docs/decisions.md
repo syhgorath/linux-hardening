@@ -5,6 +5,7 @@
 | 2026-10-09 | login.defs aging/umask | Sadece yeni hesapları etkiler; mevcut kullanıcılara chage uygulanmadı | Test kullanıcısının kilitlenmesini önlemek |
 | 2026-10-09 | sysctl net.ipv4.ip_forward | Bilerek dokunulmadı | LXD/konteyner/router kullanımını bozmamak |
 | 2026-10-09 | fail2ban ignoreip | 10.0.0.0/8 muaf | Yönetim ağından kendini banlamamak; ortama göre daralt |
+| 2026-10-10 | **Davranış değişikliği** fail2ban ignoreip | Varsayılan `127.0.0.1/8 ::1` + yalnızca kontrol makinesinin sunucunun gördüğü adresi (SSH_CONNECTION). `10.0.0.0/8` artık muaf DEĞİL | Tüm yönetim ağını (veya `allow_from`'u) muaf tutmak, o ağdaki ele geçirilmiş bir makinenin SSH brute-force'unu banlanmaz yapardı. Sınır: dinamik IP'den çalıştırılırsa ignoreip her seferinde değişir (yapılandırma değişir, fail2ban yeniden başlar); NAT/jump host'ta sunucunun gördüğü adres eklenir |
 | 2026-10-09 | NOPASSWD sudo (test VM) | Geçici, hardening sonunda kaldırılacak | Ansible'ın non-interactive çalışması |
 | BEKLEYEN | CIS 26.04 hazır rol / SSG 26.04 datastream | Çıkınca karşılaştır | 26.04'e özel hazır içerik henüz yok |
 | 2026-10-09 | MTA | postfix purge, dma kuruldu | postfix kaldırınca apt courier-mta (25/tcp) kurdu; dma port dinlemez, MTA bağımlılığını karşılar |
