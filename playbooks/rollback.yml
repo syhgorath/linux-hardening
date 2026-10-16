@@ -7,6 +7,8 @@
 # status son satırı olarak sabit önekli tek bir sonuç satırı verir (Ansible çıktı biçiminden bağımsız ayrıştırılır):
 #   SSHPOCKET_RESULT linux-hardening.rollback_status installed=yes|no armed=yes|no|unknown timer=<durum>
 #       remaining_seconds=<tamsayı|unknown> timeout_seconds=<tamsayı|unknown>
+# Sonuç mesajları satır sonuyla biter: Ansible bunu katlanmayan literal blok olarak yazar (result_format=yaml uzun satırı
+# 80 sütunda katlar ve ayrıştırmayı bozardı).
 # disarm/now `never` etiketlidir: açıkça --tags ile istenmedikçe ÇALIŞMAZ (varsayılan koşu yalnızca durumu gösterir).
 # Preflight/erişim korumaları bu playbook'ta YOKTUR: amaç kontrol kaybından sonra da çalışabilmektir.
 - name: Rollback safety net control
@@ -28,7 +30,7 @@
     # Makine-okunur sonuç satırı (sshpocket paket standardı 8): betik kurulu değilken de aynı anahtarlar.
     - name: Show status result line when not installed
       ansible.builtin.debug:
-        msg: "SSHPOCKET_RESULT linux-hardening.rollback_status installed=no armed=unknown timer=unknown remaining_seconds=unknown timeout_seconds=unknown"
+        msg: "SSHPOCKET_RESULT linux-hardening.rollback_status installed=no armed=unknown timer=unknown remaining_seconds=unknown timeout_seconds=unknown\n"
       when: not hardening_rollback_ctl_script.stat.exists
       tags: [status]
 
@@ -41,7 +43,7 @@
 
     - name: Show status
       ansible.builtin.debug:
-        msg: "{{ hardening_rollback_ctl_status.stdout_lines }}"
+        msg: "{{ hardening_rollback_ctl_status.stdout }}\n"
       when: hardening_rollback_ctl_script.stat.exists
       tags: [status]
 
