@@ -10,6 +10,7 @@ cat > "$TMP/render.yml" <<Y
   gather_facts: false
   vars:
     hardening_ssh_service: ssh
+    hardening_rollback_timeout: 300
   tasks:
     - ansible.builtin.template:
         src: $ROOT/roles/hardening_rollback/templates/hardening-rollback.sh.j2
@@ -40,7 +41,7 @@ F
 cat > "$BIN/systemctl" <<'F'
 #!/bin/sh
 echo "systemctl $*" >> "$HR_LOG"
-[ "$1" = is-active ] && echo active
+[ "$1" = is-active ] && echo "${HR_TIMER_OUT-active}"
 exit 0
 F
 chmod +x "$BIN"/*
@@ -151,8 +152,21 @@ if log_lacks "logger "; then ok "INVOCATION_ID dolu: logger cagrilmadi"; else ba
 PATH="$BIN:$PATH" INVOCATION_ID="" hr arm >/dev/null
 if log_has "logger -t hardening-rollback"; then ok "INVOCATION_ID bos: logger cagrildi (elle/Ansible)"; else bad "logger cagrilmadi"; fi
 
-echo "-- 8) status ve kullanim"
-setup; out=$(hr status); expect_contains "  armed=no" "$out" "armed=no"
-hr arm >/dev/null; out=$(hr status); expect_contains "  armed=yes" "$out" "armed=yes"
+echo "-- 8) status: TEK satir, kararli anahtarlar (armed degil / armed / eski surum / timer bos)"
+PFX="SSHPOCKET_RESULT linux-hardening.rollback_status installed=yes"
+setup; out=$(HR_NOW=1000 hr status)
+expect_eq "  armed=no" "$PFX armed=no timer=active remaining_seconds=unknown timeout_seconds=300" "$out"
+HR_NOW=1000 hr arm >/dev/null
+out=$(HR_NOW=1088 hr status)
+expect_eq "  armed=yes, kalan 212" "$PFX armed=yes timer=active remaining_seconds=212 timeout_seconds=300" "$out"
+out=$(HR_NOW=9999 hr status)
+expect_eq "  sure dolduysa kalan 0 (negatif degil)" "$PFX armed=yes timer=active remaining_seconds=0 timeout_seconds=300" "$out"
+: > "$R/var/lib/hardening-rollback/armed"
+out=$(HR_NOW=1088 hr status)
+expect_eq "  eski surum (bos armed): kalan unknown" "$PFX armed=yes timer=active remaining_seconds=unknown timeout_seconds=300" "$out"
+out=$(HR_TIMER_OUT="" HR_NOW=1088 hr status)
+expect_eq "  timer bos cikti: unknown" "$PFX armed=yes timer=unknown remaining_seconds=unknown timeout_seconds=300" "$out"
+n=$(printf '%s\n' "$out" | wc -l | tr -d ' ')
+expect_eq "  status tek satir" "1" "$n"
 out=$(hr foo); rc=$?; expect_eq "gecersiz komut cikis 2" "2" "$rc"; expect_contains "  kullanim" "$out" "kullanim:"
 finish

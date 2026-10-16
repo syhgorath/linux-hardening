@@ -4,6 +4,9 @@
 #   ansible-playbook playbooks/rollback.yml --tags disarm   # "değişiklik iyi": geri almayı iptal et
 #   ansible-playbook playbooks/rollback.yml --tags now      # hemen önceki duruma dön (armed ise)
 #
+# status son satırı olarak sabit önekli tek bir sonuç satırı verir (Ansible çıktı biçiminden bağımsız ayrıştırılır):
+#   SSHPOCKET_RESULT linux-hardening.rollback_status installed=yes|no armed=yes|no|unknown timer=<durum>
+#       remaining_seconds=<tamsayı|unknown> timeout_seconds=<tamsayı|unknown>
 # disarm/now `never` etiketlidir: açıkça --tags ile istenmedikçe ÇALIŞMAZ (varsayılan koşu yalnızca durumu gösterir).
 # Preflight/erişim korumaları bu playbook'ta YOKTUR: amaç kontrol kaybından sonra da çalışabilmektir.
 - name: Rollback safety net control
@@ -21,6 +24,13 @@
         msg: "Geri alma güvenlik ağı kurulu değil (/usr/local/sbin/hardening-rollback yok): armed zamanlayıcı yok."
       when: not hardening_rollback_ctl_script.stat.exists
       tags: [status, disarm, now]
+
+    # Makine-okunur sonuç satırı (sshpocket paket standardı 8): betik kurulu değilken de aynı anahtarlar.
+    - name: Show status result line when not installed
+      ansible.builtin.debug:
+        msg: "SSHPOCKET_RESULT linux-hardening.rollback_status installed=no armed=unknown timer=unknown remaining_seconds=unknown timeout_seconds=unknown"
+      when: not hardening_rollback_ctl_script.stat.exists
+      tags: [status]
 
     - name: Read status
       ansible.builtin.command: /usr/local/sbin/hardening-rollback status
