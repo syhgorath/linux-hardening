@@ -1,8 +1,12 @@
 # sshpocket bileşen sözleşmesi (makine-okunur). sshpocket yalnızca bunu okuyup eylemleri çalıştırır.
 # Tutarlılık (VERSION, profiller, destek matrisi, değişkenler) scripts/check-consistency.py ile denetlenir.
+# component.json bu dosyadan TÜRETİLİR (python3 scripts/make-component-json.py) ve pakete o girer; elle düzenlemeyin.
 id: linux-hardening
 version: 0.1.0            # VERSION dosyasıyla aynı olmalı
-sshpocket_api: 1
+sshpocket_api: 1          # sshpocket paket standardı v1 (docs/package-standard.md, sshpocket reposu)
+name: "Linux sertleştirme"
+description: "Ubuntu sunucuları Ansible ile sertleştirir (SSH, ufw, kernel, auditd, fail2ban, AIDE); Lynis denetimi ve geri alma güvenlik ağı içerir"
+runner: ansible           # eylemler ansible-playbook ile çalışır; inventory, -e @dosya ve çalışma dizini sshpocket'ten gelir
 
 requires:
   control:                # komutu çalıştıran makine (Mac)
@@ -21,10 +25,16 @@ profiles:                 # status: supported | planned
 
 actions:
   # effects: [] | installs-package | changes-config
+  # confirm: none | yes-no | type-server-name. sshpocket asgari kuralı uygular (effects boş değilse en az yes-no);
+  # paket yalnızca sıkılaştırabilir. warnings: eylem menüsünde gösterilen açık notlar.
   audit:
     cmd: "ansible-playbook playbooks/audit.yml"
     effects: [installs-package]        # hedefe lynis paketini kurar; yapılandırmayı değiştirmez
     requires_sudo: true
+    confirm: yes-no                    # installs-package olduğu için asgari kural zaten yes-no
+    warnings:
+      - "Hedefe lynis paketini kurar; yapılandırmayı değiştirmez."
+      - "Rapor ve summary.json hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
     outputs:
       dir_var: hardening_scan_dir      # varsayılan: scans/ (repo içinde)
       summary: "<dir>/<host>/<tarih>/summary.json"
@@ -32,11 +42,22 @@ actions:
     cmd: "ansible-playbook playbooks/harden.yml --check --diff"
     effects: []
     requires_sudo: true
+    confirm: none
+    warnings:
+      - "Önizleme ufw (firewall) değişikliğini göstermez: ufw komutları --check modunda çalışmaz."
+      - "Önizleme servis durumunu (auditd, fail2ban başlatma) göstermez."
+      - "Erişim kaybı korumaları (hardening_ssh_allow_from, kaynak IP, root kontrolü) önizlemede de çalışır ve durdurabilir."
   apply:
     cmd: "ansible-playbook playbooks/harden.yml"
     effects: [installs-package, changes-config]
     requires_sudo: true
     requires: [preview]                # sshpocket önce preview çalıştırıp göstermeli
+    confirm: type-server-name
+    warnings:
+      - "SSH ve ufw kurallarını değiştirir; bağlantınız kopabilir. Çalıştırmadan önce anahtarın ssh-agent'ta olduğunu doğrulayın (ssh-add -l)."
+      - "Geri alma güvenlik ağı yalnızca SSH drop-in ve ufw'yi geri alır; paketler, sysctl, auditd, fail2ban ve AIDE geri alınmaz."
+      - "Doğrulama başarısız olursa ya da bağlantı kaybolursa sunucu hardening_rollback_timeout sn sonra kendini önceki duruma döndürür; o sürede erişim olmayabilir."
+      - "hardening_rollback_enabled=false güvenlik ağını kapatır."
 
   # Geri alma güvenlik ağı (hardening_rollback): kontrol kaybından sonra durumu görmek ve iptal etmek için.
   # Bu eylemler preflight/erişim korumalarını çalıştırmaz (kontrol kaybından sonra da çalışabilmeli).
@@ -48,14 +69,25 @@ actions:
       format: keyvalue-line
       prefix: "SSHPOCKET_RESULT linux-hardening.rollback_status"
       keys: [installed, armed, timer, remaining_seconds, timeout_seconds]
+    confirm: none
+    warnings:
+      - "Salt okunur: yalnızca geri alma güvenlik ağının durumunu gösterir. Betik kurulu değilse installed=no döner."
   rollback_disarm:
     cmd: "ansible-playbook playbooks/rollback.yml --tags disarm"
     effects: [changes-config]            # geri alma güvenlik ağını iptal eder (zamanlayıcı/yedek silinir)
     requires_sudo: true
+    confirm: type-server-name
+    warnings:
+      - "Geri almayı İPTAL eder: zamanlayıcı ve önceki durum yedeği silinir; sonrasında sunucu kendini geri almaz."
+      - "Yalnızca değişikliğin iyi olduğundan ve erişiminizin sağlam olduğundan eminseniz kullanın."
   rollback_now:
     cmd: "ansible-playbook playbooks/rollback.yml --tags now"
     effects: [changes-config]            # armed ise sunucuyu hemen önceki duruma döndürür
     requires_sudo: true
+    confirm: type-server-name
+    warnings:
+      - "SSH drop-in ve ufw kurallarını değişiklikten ÖNCEKİ duruma döndürür; diğer roller (sysctl, auditd, fail2ban, AIDE, paketler) geri alınmaz."
+      - "Geri alma güvenlik ağı kurulu ve armed değilse hiçbir şey yapmaz."
 
 # sshpocket'in -e ile verebileceği değişkenler (sshpocket paket standardı §6). hardening_ssh_port YOKTUR (kaldırıldı,
 # port değiştirme desteklenmiyor). Varsayılanlar rollerin defaults/main.yml değerleriyle AYNI olmalı
@@ -80,10 +112,11 @@ vars:
     max: 3600
     description: "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur"
 
-# sshpocket'in yukarıdaki cmd'nin sonuna eklediği argümanlar.
+# sshpocket'in yukarıdaki cmd'nin sonuna eklediği argümanlar. Yer tutucular sshpocket doğrulayıcısının biçimindedir
+# (küçük harf ASCII, <...>). "-e @<değişken dosyası>" burada YOKTUR: runner: ansible için değişken dosyasını sshpocket
+# kendisi verir (paket standardı §7).
 invoke:
   append:
-    - { arg: "-i", value: "<üretilen geçici inventory>", required: true }
-    - { arg: "--limit", value: "<sunucu>", required: true }
+    - { arg: "-i", value: "<inventory>", required: true }              # sshpocket'in ürettiği geçici inventory
+    - { arg: "--limit", value: "<server>", required: true }
     - { arg: "--ask-become-pass", required: true, interactive: true }   # sudo parolasını Ansible kendi istemiyle alır
-    - { arg: "-e", value: "@<değişken dosyası>", required: false }      # örn. hardening_ssh_allow_from

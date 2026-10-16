@@ -12,6 +12,9 @@ bulunmaz**; yalnızca bakımcının makinesindedir.
 ## Adımlar
 1. **Sürümü yükselt:** `VERSION`, `component.yml` içindeki `version` ve `CHANGELOG.md`'ye yeni başlık
    (`## [x.y.z] - YYYY-AA-GG`). Üçü aynı olmalı.
+   **`component.json`'u üret ve commit et:** `python3 -I scripts/make-component-json.py`. Bu dosya `component.yml`'den
+   türetilir, git'te tutulur ve **imzalı pakete o girer** (sshpocket bildirimi YAML ayrıştırmadan `python3 -I` + stdlib
+   `json` ile okur). Elle düzenlemeyin; `check-consistency.py` ve `release.sh` güncel değilse durur.
 2. **Tutarlılığı denetle** (PyYAML'ın kurulu olduğu ortamda, örn. `.venv`):
    ```bash
    python3 -I scripts/check-consistency.py     # "OK: ..." görmelisin
