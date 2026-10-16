@@ -8,7 +8,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | Küçük Lynis maddeleri | `libpam-tmpdir`, `debsums`, `apt-listchanges`, fail2ban `jail.local`, AIDE SHA256. Sunucu davranışını değiştirir: canlı doğrulama gerekir |
 | `hosts: "hardening:ubuntu"` geçişini bitir | Eski `ubuntu` grubu kaldırılınca "host pattern" uyarısı da gider (BREAKING olarak işaretlenir) |
 | Tarama klasörü zaman damgası | Klasör adı yerel saatle, `summary.json` UTC; tek biçime getirilebilir |
-| Yeni sürüm (0.1.x) | `scripts/release.sh` PyYAML/.venv iyileştirmesi (#26) `main`'de, v0.1.0 paketinde **yok** |
+| v0.2.0 yayını | Hazırlandı (`component.json`, `rollback_status` satırı, `vars` üst verisi; `release.sh` PyYAML/.venv iyileştirmesi #26 dahil). Etiket ve imza bakımcıda |
 
 ## Orta
 | İş | Not |
