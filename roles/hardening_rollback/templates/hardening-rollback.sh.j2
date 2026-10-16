@@ -4,9 +4,9 @@
 #   hardening-rollback arm      önceki durumu yedekler (zaten armed ise yedeği korur), zamanlayıcıyı başlatır
 #   hardening-rollback disarm   değişiklik onaylandı: armed'ı ve yedeği siler, zamanlayıcıyı durdurur
 #   hardening-rollback restore  önceki duruma döner (zamanlayıcı bunu çağırır); armed değilse hiçbir şey yapmaz
-#   hardening-rollback status   durumu yazar
+#   hardening-rollback status   durumu TEK satir olarak yazar (kararli anahtarlar; docs/design/rollback-timer.md 4.4)
 #
-# Test için ortam değişkenleri: HR_ROOT (yol öneki), HR_UFW, HR_SSHD, HR_SYSTEMCTL, HR_SSH_SERVICE.
+# Test için ortam değişkenleri: HR_ROOT (yol öneki), HR_UFW, HR_SSHD, HR_SYSTEMCTL, HR_SSH_SERVICE, HR_NOW (epoch saniye).
 set -eu
 
 ROOT="${HR_ROOT:-}"
@@ -20,6 +20,7 @@ SYSTEMCTL="${HR_SYSTEMCTL:-systemctl}"
 DEFAULT_SSH_SERVICE='{{ hardening_ssh_service | default("ssh") }}'
 SSH_SERVICE="${HR_SSH_SERVICE:-$DEFAULT_SSH_SERVICE}"
 TIMER="hardening-rollback.timer"
+TIMEOUT_SECONDS={{ hardening_rollback_timeout | int }}
 UFW_FILES="ufw.conf user.rules user6.rules"
 
 # systemd altinda (INVOCATION_ID dolu) stdout zaten journal'a (hardening-rollback etiketiyle) gider; logger'i da
@@ -61,6 +62,8 @@ do_arm() {
   fi
   "$SYSTEMCTL" enable "$TIMER" >/dev/null 2>&1 || true
   "$SYSTEMCTL" restart "$TIMER"
+  # armed dosyasina bitis zamani (epoch) yazilir: status kalan sureyi buradan hesaplar (dosyanin varligi hala armed demektir)
+  echo $(( ${HR_NOW:-$(date +%s)} + TIMEOUT_SECONDS )) > "$ARMED"
   log "armed"
 }
 
@@ -109,9 +112,21 @@ do_restore() {
 }
 
 do_status() {
-  if [ -e "$ARMED" ]; then echo "armed=yes"; else echo "armed=no"; fi
-  echo "timer=$("$SYSTEMCTL" is-active "$TIMER" 2>/dev/null || true)"
-  "$SYSTEMCTL" list-timers "$TIMER" --no-legend 2>/dev/null | head -n 1 || true
+  armed=no remaining=unknown
+  if [ -e "$ARMED" ]; then
+    armed=yes
+    deadline=$(cat "$ARMED" 2>/dev/null || true)
+    case "$deadline" in
+      ''|*[!0-9]*) ;;   # bos ya da sayi degil (eski surum): bilinmiyor
+      *)
+        remaining=$(( deadline - ${HR_NOW:-$(date +%s)} ))
+        if [ "$remaining" -lt 0 ]; then remaining=0; fi
+        ;;
+    esac
+  fi
+  timer=$("$SYSTEMCTL" is-active "$TIMER" 2>/dev/null || true)
+  if [ -z "$timer" ]; then timer=unknown; fi
+  echo "SSHPOCKET_RESULT linux-hardening.rollback_status installed=yes armed=$armed timer=$timer remaining_seconds=$remaining timeout_seconds=$TIMEOUT_SECONDS"
 }
 
 case "${1:-}" in

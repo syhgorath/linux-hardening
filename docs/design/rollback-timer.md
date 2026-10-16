@@ -78,6 +78,23 @@ başlatmada kaybolur (bkz. §6, senaryo 4).
 | `playbooks/rollback.yml -t disarm` | "Değişiklik iyi": `armed`'ı siler, timer'ı durdurur |
 | `playbooks/rollback.yml -t now` | Hemen geri al (elle) |
 
+`status` çıktısı (makine-okunur sözleşme, `component.yml` `rollback_status.outputs`): her zaman **tek satır**,
+sabit önekli, Ansible çıktı biçiminden bağımsız:
+
+```
+SSHPOCKET_RESULT linux-hardening.rollback_status installed=yes armed=yes timer=active remaining_seconds=212 timeout_seconds=300
+```
+
+| Anahtar | Değerler |
+|---|---|
+| `installed` | `yes` \| `no` (betik `/usr/local/sbin/hardening-rollback` yoksa `no`; diğer anahtarlar `unknown`) |
+| `armed` | `yes` \| `no` \| `unknown` |
+| `timer` | `systemctl is-active` çıktısı (`active`, `inactive`, …) ya da `unknown` |
+| `remaining_seconds` | tamsayı (süre dolduysa `0`) ya da `unknown` (armed değil ya da eski sürümde kayıtlı bitiş zamanı yok) |
+| `timeout_seconds` | kurulu betikteki `hardening_rollback_timeout` ya da `unknown` |
+
+Kalan süre, `armed` dosyasına `arm` sırasında yazılan bitiş zamanından (epoch) hesaplanır; dosyanın varlığı yine tek başına `armed` demektir.
+
 ### 4.5 Değişkenler
 | Değişken | Varsayılan | Anlam |
 |---|---|---|

@@ -44,6 +44,10 @@ actions:
     cmd: "ansible-playbook playbooks/rollback.yml"
     effects: []
     requires_sudo: true
+    outputs:                             # Ansible çıktı biçiminden bağımsız tek satır (sshpocket paket standardı §8)
+      format: keyvalue-line
+      prefix: "SSHPOCKET_RESULT linux-hardening.rollback_status"
+      keys: [installed, armed, timer, remaining_seconds, timeout_seconds]
   rollback_disarm:
     cmd: "ansible-playbook playbooks/rollback.yml --tags disarm"
     effects: [changes-config]            # geri alma güvenlik ağını iptal eder (zamanlayıcı/yedek silinir)
