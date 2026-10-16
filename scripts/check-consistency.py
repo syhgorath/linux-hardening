@@ -100,17 +100,55 @@ for prof in comp.get("profiles", []):
     if prof["status"] == "planned" and "planlandı" not in status_cell:
         err(f"docs/SUPPORT.md: {pid} 'Planlandı' görünmüyor")
 
-# 4) vars: gerçekten tanımlı mı (sözleşme yalan söylemesin)
-defined = set()
+# 4) vars: gerçekten tanımlı mı; üst veri (tür, varsayılan, aralık) rol varsayılanlarıyla tutarlı mı
+VAR_TYPES = {"string", "bool", "int", "path", "cidr", "enum"}
+defaults = {}
 for f in (ROOT / "roles").glob("*/defaults/main.yml"):
-    defined |= set(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
+    defaults.update(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
 # hardening_scan_dir bir playbook değişkenidir (audit.yml), rol defaults'ında değil
 playbook_text = (ROOT / "playbooks/audit.yml").read_text(encoding="utf-8")
+seen_vars = set()
 for v in comp.get("vars", []):
-    if v == "hardening_ssh_port":
+    meta = v if isinstance(v, dict) else {"name": v}      # eski biçim (yalnızca ad) kabul edilir
+    name = meta.get("name")
+    if name in seen_vars:
+        err(f"component.yml vars: {name} birden çok kez yazılmış")
+    seen_vars.add(name)
+    if name == "hardening_ssh_port":
         err("component.yml vars içinde hardening_ssh_port olmamalı (kaldırıldı)")
-    if v not in defined and v not in playbook_text:
-        err(f"component.yml vars: {v} hiçbir rol defaults'ında/audit.yml'de geçmiyor")
+    in_roles = name in defaults
+    if not in_roles and name not in playbook_text:
+        err(f"component.yml vars: {name} hiçbir rol defaults'ında/audit.yml'de geçmiyor")
+    if not isinstance(v, dict):
+        continue
+    vtype = meta.get("type", "")
+    base = vtype[5:-1] if vtype.startswith("list[") and vtype.endswith("]") else vtype
+    if base not in VAR_TYPES:
+        err(f"component.yml vars: {name} türü geçersiz: {vtype!r}")
+    if not str(meta.get("description", "")).strip():
+        err(f"component.yml vars: {name} için description yok")
+    if "default" in meta:
+        if not in_roles:
+            err(f"component.yml vars: {name} default taşıyor ama rol defaults'ında yok")
+        elif defaults[name] != meta["default"]:
+            err(f"component.yml vars: {name} default ({meta['default']!r}) rol varsayılanından ({defaults[name]!r}) farklı")
+        if meta.get("required"):
+            err(f"component.yml vars: {name} hem required hem default taşıyor")
+    elif in_roles and not meta.get("required") and defaults[name] not in ([], "", None):
+        err(f"component.yml vars: {name} rol varsayılanı {defaults[name]!r} ama default yazılmamış")
+    if meta.get("required") and in_roles and defaults[name] not in ([], "", None):
+        err(f"component.yml vars: {name} required ama rol varsayılanı boş değil ({defaults[name]!r})")
+    lo, hi = meta.get("min"), meta.get("max")
+    if (lo is not None or hi is not None) and vtype != "int":
+        err(f"component.yml vars: {name} min/max yalnızca int için")
+    if lo is not None and hi is not None and lo > hi:
+        err(f"component.yml vars: {name} min > max")
+    dv = meta.get("default")
+    if isinstance(dv, int) and not isinstance(dv, bool):
+        if (lo is not None and dv < lo) or (hi is not None and dv > hi):
+            err(f"component.yml vars: {name} default ({dv}) min/max aralığı dışında")
+    if "warn_if" in meta and vtype != "bool":
+        err(f"component.yml vars: {name} warn_if yalnızca bool için")
 
 # 5) eylemler
 for name, act in comp.get("actions", {}).items():
