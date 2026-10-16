@@ -28,6 +28,7 @@ mutate "vars yinelenen ad"         component.yml           's/name: hardening_sc
 mutate "bilinmeyen effect"         component.yml           's/effects: \[\]/effects: [yikar]/'   "effects geçersiz"
 mutate "eylemin --tags degeri playbook'ta yok" component.yml 's/--tags disarm/--tags yok-boyle-etiket/' "bir etiket olarak yok"
 mutate "bilinmeyen playbook" component.yml 's#playbooks/rollback.yml"$#playbooks/yok.yml"#' "yok"
+# shellcheck disable=SC2016  # $TIMEOUT_SECONDS sed kalibinda, kabuk genislemesi istenmiyor
 mutate "rollback_status anahtari betikte yok" roles/hardening_rollback/templates/hardening-rollback.sh.j2 's/ timeout_seconds=\$TIMEOUT_SECONDS//' "anahtarlar"
 mutate "rollback_status anahtari playbook'ta farkli" playbooks/rollback.yml 's/remaining_seconds=unknown/kalan=unknown/' "anahtarlar"
 mutate "component.json eski (yml'den farkli)" component.json 's/"runner": "ansible"/"runner": "script"/' "component.json, component.yml ile aynı değil"
