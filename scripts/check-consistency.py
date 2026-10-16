@@ -134,6 +134,22 @@ for name, act in comp.get("actions", {}).items():
     if bad:
         err(f"actions.{name}.effects geçersiz: {sorted(bad)}")
 
+# 6) rollback_status çıktı sözleşmesi: bildirilen anahtarlar betiğin ve playbook'un yazdığı satırla aynı olmalı
+outs = comp.get("actions", {}).get("rollback_status", {}).get("outputs")
+if outs:
+    prefix = outs.get("prefix", "")
+    keys = outs.get("keys", [])
+    for label, path in (("betik", "roles/hardening_rollback/templates/hardening-rollback.sh.j2"),
+                        ("playbook", "playbooks/rollback.yml")):
+        text = (ROOT / path).read_text(encoding="utf-8")
+        m = re.search(rf'(?:msg: |echo )"{re.escape(prefix)}((?: [a-z_]+=\S+)+)', text)
+        if not m:
+            err(f"rollback_status outputs.prefix '{prefix}' {path} ({label}) içinde bulunamadı")
+            continue
+        found = [kv.split("=")[0] for kv in m.group(1).split()]
+        if found != keys:
+            err(f"rollback_status outputs.keys {keys} ile {label} satırındaki anahtarlar {found} aynı değil")
+
 if errors:
     print("TUTARSIZLIK:")
     for e in errors:
