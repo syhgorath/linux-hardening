@@ -1,0 +1,15 @@
+# Bileşen değişkenleri (`component.yml` → `vars`)
+
+sshpocket bu değişkenleri kullanıcıdan alır, **kendisi doğrular** ve `-e @dosya` ile geçirir. Alan şeması sshpocket paket
+standardının §6'sıyla aynıdır; varsayılanlar rollerin `defaults/main.yml` dosyalarıyla **aynı** olmak zorundadır
+(`scripts/check-consistency.py` denetler). Eski biçim (yalnızca ad listesi) geçiş için kabul edilir.
+
+| Değişken | Tür | Zorunlu | Varsayılan | Anlam / dikkat |
+|---|---|---|---|---|
+| `hardening_ssh_allow_from` | `list[cidr]` | **evet** | yok (`[]`) | SSH'a izin verilen yönetim ağları. Boşken `harden.yml` (ufw/ssh) **durur**. Kontrol makinesinin sunucudan görünen adresi bu listede olmalı, yoksa erişim koruması durdurur. |
+| `hardening_scan_dir` | `path` | hayır | bileşen içindeki `scans/` | Lynis raporları ve `summary.json` buraya yazılır. **Hassas veri:** dizin 0700, dosyalar 0600. |
+| `hardening_rollback_enabled` | `bool` | hayır | `true` | `false` = geri alma güvenlik ağı **kapalı**; erişim kaybında sunucu kendini geri almaz. `warn_if: false` → arayüz uyarı göstermeli. |
+| `hardening_rollback_timeout` | `int` (30–3600) | hayır | `300` | Doğrulanmazsa sunucunun kendini geri alma süresi (saniye). Aralık dışı ya da sayı olmayan değerde playbook, ufw/ssh'a **dokunmadan** durur. |
+
+`min`/`max` sınırlarını bileşen sahibi belirler; değerler önerisi değil, rolün uyguladığı doğrulamayla aynıdır
+(`roles/hardening_rollback/tasks/main.yml`).

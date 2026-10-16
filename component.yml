@@ -57,8 +57,28 @@ actions:
     effects: [changes-config]            # armed ise sunucuyu hemen önceki duruma döndürür
     requires_sudo: true
 
-# sshpocket'in -e ile verebileceği değişkenler. hardening_ssh_port YOKTUR (kaldırıldı, port değiştirme desteklenmiyor).
-vars: [hardening_ssh_allow_from, hardening_scan_dir, hardening_rollback_enabled, hardening_rollback_timeout]
+# sshpocket'in -e ile verebileceği değişkenler (sshpocket paket standardı §6). hardening_ssh_port YOKTUR (kaldırıldı,
+# port değiştirme desteklenmiyor). Varsayılanlar rollerin defaults/main.yml değerleriyle AYNI olmalı
+# (scripts/check-consistency.py denetler); min/max sınırlarını bileşen sahibi belirler.
+vars:
+  - name: hardening_ssh_allow_from
+    type: list[cidr]
+    required: true                     # boşken harden.yml (ufw/ssh) durur; varsayılan yok
+    description: "SSH'a izin verilen yönetim ağları (CIDR listesi); kontrol makinesinin sunucudan görünen adresi bu listede olmalı"
+  - name: hardening_scan_dir
+    type: path
+    description: "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse bileşen içindeki scans/ kullanılır"
+  - name: hardening_rollback_enabled
+    type: bool
+    default: true
+    warn_if: false                     # false = geri alma güvenlik ağı KAPALI (bilinçli kaçış)
+    description: "false: sunucu erişim kaybında kendini geri ALMAZ; yalnızca ne yaptığınızı biliyorsanız"
+  - name: hardening_rollback_timeout
+    type: int
+    default: 300
+    min: 30
+    max: 3600
+    description: "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur"
 
 # sshpocket'in yukarıdaki cmd'nin sonuna eklediği argümanlar.
 invoke:
