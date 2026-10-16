@@ -52,6 +52,9 @@ echo "-- paket icerigi"
 list=$(tar -tzf "$TMP/r/dist/linux-hardening-$V.tar.gz")
 expect_eq "tek kok dizin" "linux-hardening-$V" "$(printf '%s\n' "$list" | cut -d/ -f1 | sort -u)"
 expect_contains "  component.yml var" "$list" "linux-hardening-$V/component.yml"
+expect_contains "  component.json var" "$list" "linux-hardening-$V/component.json"
+cj=$(tar -xzOf "$TMP/r/dist/linux-hardening-$V.tar.gz" "linux-hardening-$V/component.json" | python3 -I -c 'import json,sys; d=json.load(sys.stdin); print(d["id"], d["version"], d["runner"])')
+expect_eq "  component.json id/version/runner" "linux-hardening $V ansible" "$cj"
 expect_not_contains "  scripts/ yok" "$list" "linux-hardening-$V/scripts/"
 expect_not_contains "  test/ yok" "$list" "linux-hardening-$V/test/"
 
@@ -72,6 +75,10 @@ expect_fail "gecersiz VERSION" "$(rel)"
 fresh; (cd "$TMP/r" && sed -i.bak "s/^## \[$V\]/## [9.9.9]/" CHANGELOG.md && rm -f CHANGELOG.md.bak && git add -A \
   && git -c user.email=t@t -c user.name=t commit -qm c && git tag -d "v$V" >/dev/null && git -c user.email=t@t -c user.name=t tag -a "v$V" -m t)
 expect_fail "CHANGELOG basligi eksik" "$(rel)"
+
+fresh; (cd "$TMP/r" && echo '{}' > component.json && git add -A && git -c user.email=t@t -c user.name=t commit -qm j \
+  && git tag -d "v$V" >/dev/null && git -c user.email=t@t -c user.name=t tag -a "v$V" -m t)
+expect_fail "component.json eski/yml ile uyumsuz" "$(rel)"
 
 echo "-- python/PyYAML"
 fresh

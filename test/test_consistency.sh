@@ -30,7 +30,25 @@ mutate "eylemin --tags degeri playbook'ta yok" component.yml 's/--tags disarm/--
 mutate "bilinmeyen playbook" component.yml 's#playbooks/rollback.yml"$#playbooks/yok.yml"#' "yok"
 mutate "rollback_status anahtari betikte yok" roles/hardening_rollback/templates/hardening-rollback.sh.j2 's/ timeout_seconds=\$TIMEOUT_SECONDS//' "anahtarlar"
 mutate "rollback_status anahtari playbook'ta farkli" playbooks/rollback.yml 's/remaining_seconds=unknown/kalan=unknown/' "anahtarlar"
+mutate "component.json eski (yml'den farkli)" component.json 's/"runner": "ansible"/"runner": "script"/' "component.json, component.yml ile aynı değil"
+mutate "runner yanlis"             component.yml           's/^runner: ansible/runner: script/'  "runner 'ansible' olmalı"
+mutate "confirm eksik"             component.yml           '/confirm: none/d'                    "confirm None geçersiz"
+mutate "effects dolu iken confirm none" component.yml      's/confirm: yes-no/confirm: none/'    "en az yes-no"
+mutate "warnings eksik"            component.yml           '/Salt okunur: yalnızca/d'            "warnings boş olmayan"
+mutate "invoke yer tutucusu dogrulayiciya uymuyor" component.yml 's/<inventory>/<üretilen envanter>/' "doğrulayıcısının biçimine"
 mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinmiyor/'           "Desteklenir"
+
+# component.json uretici: gercek depoda guncel; component.yml degisirse --check yakalar
+out=$("$PY" -I scripts/make-component-json.py --check 2>&1); rc=$?
+expect_eq "component.json guncel (--check)" "0" "$rc"
+rm -rf "$TMP/m" && mkdir -p "$TMP/m" && git archive HEAD | tar -x -C "$TMP/m" && cp -R scripts "$TMP/m/"
+sed -i.bak 's/^name: "Linux sertleştirme"/name: "Baska ad"/' "$TMP/m/component.yml" && rm -f "$TMP/m/component.yml.bak"
+out=$(cd "$TMP/m" && "$PY" -I scripts/make-component-json.py --check 2>&1); rc=$?
+expect_eq "component.yml degisince --check yakalar" "1" "$rc"
+expect_contains "  mesaj" "$out" "güncel değil"
+# json yalnizca stdlib ile okunur ve id/version dosyayla ayni
+out=$(python3 -I -c 'import json; d = json.load(open("component.json")); print(d["id"], d["version"])')
+expect_eq "component.json stdlib ile okunur (id version)" "linux-hardening $(tr -d '[:space:]' < VERSION)" "$out"
 
 # Gecis: eski bicim (yalnizca ad listesi) kabul edilir
 rm -rf "$TMP/m" && mkdir -p "$TMP/m" && git archive HEAD | tar -x -C "$TMP/m" && cp -R scripts "$TMP/m/"
@@ -41,6 +59,7 @@ a = s.index("vars:\n"); b = s.index("# sshpocket'in yukarıdaki cmd")
 s = s[:a] + "vars: [hardening_ssh_allow_from, hardening_scan_dir, hardening_rollback_enabled, hardening_rollback_timeout]\n\n" + s[b:]
 open(p, "w", encoding="utf-8").write(s)
 PYEOF
+(cd "$TMP/m" && "$PY" -I scripts/make-component-json.py >/dev/null)
 o=$(cd "$TMP/m" && "$PY" -I scripts/check-consistency.py 2>&1); rc=$?
 expect_eq "eski bicim (ad listesi) kabul" "0" "$rc"
 finish

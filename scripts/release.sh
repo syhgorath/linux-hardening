@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # release.sh - Etiketli sürümden imzalı sürüm paketi üretir (bakımcı aracı, yerelde çalışır).
 #
-#   1) VERSION, component.yml ve CHANGELOG.md'yi güncelleyin; commit + etiket: git tag -a vX.Y.Z -m "..."
+#   1) VERSION, component.yml ve CHANGELOG.md'yi güncelleyin, component.json'u üretin (scripts/make-component-json.py); commit + etiket: git tag -a vX.Y.Z -m "..."
 #   2) LH_SIGNING_KEY=~/.ssh/<ozel_anahtar> scripts/release.sh
 #   3) dist/ içindeki .tar.gz ve .tar.gz.sig dosyalarını GitHub Release'e yükleyin.
 #
@@ -38,6 +38,10 @@ fi
 "$PY" -I scripts/check-consistency.py >/dev/null \
     || die "scripts/check-consistency.py başarısız; bulguyu görmek için: $PY -I scripts/check-consistency.py"
 
+# component.json (pakete giren makine-okunur bildirim) component.yml'den türetilmiş ve güncel olmalı
+"$PY" -I scripts/make-component-json.py --check >/dev/null \
+    || die "component.json güncel değil: $PY -I scripts/make-component-json.py ile üretip commit edin (sonra etiketi yeniden atın)"
+
 mkdir -p dist
 ARCHIVE="dist/linux-hardening-$VERSION.tar.gz"
 rm -f "$ARCHIVE" "$ARCHIVE.sig"
@@ -48,6 +52,9 @@ roots=$(tar -tzf "$ARCHIVE" | cut -d/ -f1 | sort -u)
 [ "$roots" = "linux-hardening-$VERSION" ] || die "pakette beklenmeyen kök dizin(ler): $roots"
 inner=$(tar -xzOf "$ARCHIVE" "linux-hardening-$VERSION/VERSION" | tr -d '[:space:]')
 [ "$inner" = "$VERSION" ] || die "paket içindeki VERSION ($inner) etiketle ($VERSION) aynı değil"
+tar -xzOf "$ARCHIVE" "linux-hardening-$VERSION/component.json" 2>/dev/null \
+    | "$PY" -I -c 'import json, sys; d = json.load(sys.stdin); sys.exit(0 if d["id"] == "linux-hardening" and d["version"] == sys.argv[1] else 1)' "$VERSION" \
+    || die "pakette component.json yok ya da id/version etiketle ($VERSION) uyuşmuyor"
 if tar -tzf "$ARCHIVE" | grep -qE "^linux-hardening-$VERSION/(\.github/|test/|scripts/|scans/|\.gitattributes)"; then
     die "pakette geliştirme dosyaları var (.gitattributes export-ignore kontrol edin)"
 fi

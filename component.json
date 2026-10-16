@@ -1,0 +1,172 @@
+{
+  "id": "linux-hardening",
+  "version": "0.1.0",
+  "sshpocket_api": 1,
+  "name": "Linux sertleştirme",
+  "description": "Ubuntu sunucuları Ansible ile sertleştirir (SSH, ufw, kernel, auditd, fail2ban, AIDE); Lynis denetimi ve geri alma güvenlik ağı içerir",
+  "runner": "ansible",
+  "requires": {
+    "control": {
+      "python": ">=3.12",
+      "packages": [
+        "ansible-core"
+      ]
+    },
+    "target": {
+      "python": ">=3.9"
+    }
+  },
+  "inventory_group": "hardening",
+  "profiles": [
+    {
+      "id": "ubuntu-26.04",
+      "status": "supported"
+    },
+    {
+      "id": "rpi",
+      "status": "planned"
+    },
+    {
+      "id": "proxmox",
+      "status": "planned"
+    }
+  ],
+  "actions": {
+    "audit": {
+      "cmd": "ansible-playbook playbooks/audit.yml",
+      "effects": [
+        "installs-package"
+      ],
+      "requires_sudo": true,
+      "confirm": "yes-no",
+      "warnings": [
+        "Hedefe lynis paketini kurar; yapılandırmayı değiştirmez.",
+        "Rapor ve summary.json hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
+      ],
+      "outputs": {
+        "dir_var": "hardening_scan_dir",
+        "summary": "<dir>/<host>/<tarih>/summary.json"
+      }
+    },
+    "preview": {
+      "cmd": "ansible-playbook playbooks/harden.yml --check --diff",
+      "effects": [],
+      "requires_sudo": true,
+      "confirm": "none",
+      "warnings": [
+        "Önizleme ufw (firewall) değişikliğini göstermez: ufw komutları --check modunda çalışmaz.",
+        "Önizleme servis durumunu (auditd, fail2ban başlatma) göstermez.",
+        "Erişim kaybı korumaları (hardening_ssh_allow_from, kaynak IP, root kontrolü) önizlemede de çalışır ve durdurabilir."
+      ]
+    },
+    "apply": {
+      "cmd": "ansible-playbook playbooks/harden.yml",
+      "effects": [
+        "installs-package",
+        "changes-config"
+      ],
+      "requires_sudo": true,
+      "requires": [
+        "preview"
+      ],
+      "confirm": "type-server-name",
+      "warnings": [
+        "SSH ve ufw kurallarını değiştirir; bağlantınız kopabilir. Çalıştırmadan önce anahtarın ssh-agent'ta olduğunu doğrulayın (ssh-add -l).",
+        "Geri alma güvenlik ağı yalnızca SSH drop-in ve ufw'yi geri alır; paketler, sysctl, auditd, fail2ban ve AIDE geri alınmaz.",
+        "Doğrulama başarısız olursa ya da bağlantı kaybolursa sunucu hardening_rollback_timeout sn sonra kendini önceki duruma döndürür; o sürede erişim olmayabilir.",
+        "hardening_rollback_enabled=false güvenlik ağını kapatır."
+      ]
+    },
+    "rollback_status": {
+      "cmd": "ansible-playbook playbooks/rollback.yml",
+      "effects": [],
+      "requires_sudo": true,
+      "outputs": {
+        "format": "keyvalue-line",
+        "prefix": "SSHPOCKET_RESULT linux-hardening.rollback_status",
+        "keys": [
+          "installed",
+          "armed",
+          "timer",
+          "remaining_seconds",
+          "timeout_seconds"
+        ]
+      },
+      "confirm": "none",
+      "warnings": [
+        "Salt okunur: yalnızca geri alma güvenlik ağının durumunu gösterir. Betik kurulu değilse installed=no döner."
+      ]
+    },
+    "rollback_disarm": {
+      "cmd": "ansible-playbook playbooks/rollback.yml --tags disarm",
+      "effects": [
+        "changes-config"
+      ],
+      "requires_sudo": true,
+      "confirm": "type-server-name",
+      "warnings": [
+        "Geri almayı İPTAL eder: zamanlayıcı ve önceki durum yedeği silinir; sonrasında sunucu kendini geri almaz.",
+        "Yalnızca değişikliğin iyi olduğundan ve erişiminizin sağlam olduğundan eminseniz kullanın."
+      ]
+    },
+    "rollback_now": {
+      "cmd": "ansible-playbook playbooks/rollback.yml --tags now",
+      "effects": [
+        "changes-config"
+      ],
+      "requires_sudo": true,
+      "confirm": "type-server-name",
+      "warnings": [
+        "SSH drop-in ve ufw kurallarını değişiklikten ÖNCEKİ duruma döndürür; diğer roller (sysctl, auditd, fail2ban, AIDE, paketler) geri alınmaz.",
+        "Geri alma güvenlik ağı kurulu ve armed değilse hiçbir şey yapmaz."
+      ]
+    }
+  },
+  "vars": [
+    {
+      "name": "hardening_ssh_allow_from",
+      "type": "list[cidr]",
+      "required": true,
+      "description": "SSH'a izin verilen yönetim ağları (CIDR listesi); kontrol makinesinin sunucudan görünen adresi bu listede olmalı"
+    },
+    {
+      "name": "hardening_scan_dir",
+      "type": "path",
+      "description": "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse bileşen içindeki scans/ kullanılır"
+    },
+    {
+      "name": "hardening_rollback_enabled",
+      "type": "bool",
+      "default": true,
+      "warn_if": false,
+      "description": "false: sunucu erişim kaybında kendini geri ALMAZ; yalnızca ne yaptığınızı biliyorsanız"
+    },
+    {
+      "name": "hardening_rollback_timeout",
+      "type": "int",
+      "default": 300,
+      "min": 30,
+      "max": 3600,
+      "description": "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur"
+    }
+  ],
+  "invoke": {
+    "append": [
+      {
+        "arg": "-i",
+        "value": "<inventory>",
+        "required": true
+      },
+      {
+        "arg": "--limit",
+        "value": "<server>",
+        "required": true
+      },
+      {
+        "arg": "--ask-become-pass",
+        "required": true,
+        "interactive": true
+      }
+    ]
+  }
+}

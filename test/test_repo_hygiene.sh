@@ -24,7 +24,7 @@ expect_eq "VERSION == component.yml version" "$v" "$(grep -E '^version:' compone
 
 echo "-- paket icerigi (git archive)"
 tar_list=$(git archive --format=tar --prefix=linux-hardening-"$v"/ HEAD | tar -t)
-for must in VERSION component.yml CHANGELOG.md LICENSE requirements.txt requirements.in playbooks/harden.yml playbooks/audit.yml roles/hardening_ssh/tasks/main.yml docs/SUPPORT.md; do
+for must in VERSION component.yml component.json CHANGELOG.md LICENSE requirements.txt requirements.in playbooks/harden.yml playbooks/audit.yml roles/hardening_ssh/tasks/main.yml docs/SUPPORT.md; do
   if printf '%s\n' "$tar_list" | grep -qx "linux-hardening-$v/$must"; then ok "pakette var: $must"; else bad "pakette EKSIK: $must"; fi
 done
 for mustnot in '\.gitattributes' '\.gitignore' '\.ansible-lint' '\.github/' 'scripts/' 'scans/' 'test/' 'docs/RELEASING\.md' 'requirements-dev'; do

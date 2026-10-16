@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""component.yml, VERSION, CHANGELOG, destek matrisi ve rol varsayılanları arasındaki tutarlılığı denetler.
+"""component.yml (ve ondan türetilen component.json), VERSION, CHANGELOG, destek matrisi ve rol varsayılanları arasındaki tutarlılığı denetler.
 
 Kullanım (repo kökünde, PyYAML'ın kurulu olduğu ortamda; ansible-core ile gelir):
     python3 -I scripts/check-consistency.py
@@ -12,6 +12,7 @@ Profil eşleme kuralı (AÇIK):
   Dağıtım adı eşlemesi DISTRO_MAP içindedir (küçük harfli id öneki -> Ansible'ın ansible_distribution değeri).
   status: planned profiller hardening_supported_os içinde OLMAMALIDIR, ama docs/SUPPORT.md'de görünmelidir.
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -171,6 +172,34 @@ for name, act in comp.get("actions", {}).items():
     bad = set(act.get("effects", [])) - {"installs-package", "changes-config"}
     if bad:
         err(f"actions.{name}.effects geçersiz: {sorted(bad)}")
+
+# 5b) paket standardı v1: runner, confirm, warnings (sshpocket asgari kuralı: effects boş değilse en az yes-no)
+CONFIRMS = ["none", "yes-no", "type-server-name"]
+if comp.get("sshpocket_api") != 1:
+    err(f"component.yml sshpocket_api 1 olmalı (paket standardı v1): {comp.get('sshpocket_api')!r}")
+if comp.get("runner") != "ansible":
+    err(f"component.yml runner 'ansible' olmalı: {comp.get('runner')!r}")
+for name, act in comp.get("actions", {}).items():
+    confirm = act.get("confirm")
+    if confirm not in CONFIRMS:
+        err(f"actions.{name}: confirm {confirm!r} geçersiz ({'|'.join(CONFIRMS)})")
+    elif act.get("effects") and CONFIRMS.index(confirm) < 1:
+        err(f"actions.{name}: effects boş değilken confirm en az yes-no olmalı")
+    warns = act.get("warnings")
+    if not isinstance(warns, list) or not warns or any(not str(w).strip() for w in warns):
+        err(f"actions.{name}: warnings boş olmayan bir metin listesi olmalı")
+for item in comp.get("invoke", {}).get("append", []):
+    val = str(item.get("value", ""))
+    if val and not re.fullmatch(r"<[a-z0-9_ -]{1,40}>|[A-Za-z0-9_./:@=,+-]{1,200}", val):
+        err(f"invoke.append {item.get('arg')}: value {val!r} sshpocket doğrulayıcısının biçimine uymuyor")
+
+# 5c) component.json, component.yml'den türetilmiş ve ona eşit olmalı (pakete component.json girer)
+cj_path = ROOT / "component.json"
+if not cj_path.exists():
+    err("component.json yok: python3 -I scripts/make-component-json.py")
+else:
+    if json.loads(cj_path.read_text(encoding="utf-8")) != comp:
+        err("component.json, component.yml ile aynı değil: python3 -I scripts/make-component-json.py")
 
 # 6) rollback_status çıktı sözleşmesi: bildirilen anahtarlar betiğin ve playbook'un yazdığı satırla aynı olmalı
 outs = comp.get("actions", {}).get("rollback_status", {}).get("outputs")
