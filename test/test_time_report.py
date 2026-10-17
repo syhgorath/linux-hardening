@@ -94,6 +94,46 @@ check("   hepsi bozuksa kaynak yok sayılır: warn", "warn", o.get("status"))
 rc, o = run({**base, "sources": ["^,+,a.example,2,6,377,5,0.001,0.001,0.01"]})
 check("9) hiç '*' (seçili) kaynak yok, ofset küçük: warn (senkron değil)", ("warn", False), (o.get("status"), o.get("selected")))
 
+# 11) GERÇEK vaka (test VM'i, snapshot dönüşü): saat ~8 gün geride, ama kaynaklar '~' (çok değişken) ve ofset yalnızca -9,2 sn gösterdi, '*' yok.
+TILDE = [
+    "^,~,185.125.190.122,2,6,377,44,-9.224942207,-9.224942207,0.036573015",
+    "^,~,185.125.190.123,2,6,377,46,-9.226245880,-9.226245880,0.037203822",
+    "^,~,91.189.91.112,2,6,377,49,-9.225152969,-9.225152969,0.089674123",
+]
+rc, o = run({**base, "sources": TILDE})
+m = " ".join(o.get("messages", []))
+check("11) '~' kaynaklar, seçili yok: warn", "warn", o.get("status"))
+check("    ofset 'kesin kayma' diye YAZILMAZ (güvenilmez denir)", (True, False), ("GÜVENİLMEZ" in m, "Saat kaynaklara göre" in m))
+check("    'hiçbir kaynak seçilmedi' ve düzeltme önerisi", (True, True), ("seçilmedi" in m, "restart chrony" in m))
+NOW = 1792000000
+rc, o = run({**base, "sources": TILDE, "controller_epoch": NOW, "target_epoch": NOW - 8 * 86400 - 3600})
+m = " ".join(o.get("messages", []))
+check("    kontrol makinesi çapraz kontrolü gerçek kaymayı yakalar (~8 gün geride)", (True, True, True), ("8 gün" in m, "geride" in m, "kontrol makinesi" in m))
+check("    ...ve kontrol makinesinin de yanlış olabileceğini söyler", True, "yanlış olabilir" in m)
+
+rc, o = run({**base, "controller_epoch": NOW, "target_epoch": NOW - 8 * 86400})
+check("12) kaynaklar sağlıklı ama sunucu saati 8 gün geride: yine warn", ("warn", True), (o.get("status"), "8 gün" in " ".join(o.get("messages", []))))
+m = " ".join(o.get("messages", []))
+check("    düzeltme önerisi ve 'synchronized: yes yanıltıcı' notu da gelir", (True, True), ("restart chrony" in m, "yanıltıcı" in m))
+rc, o = run({**base, "controller_epoch": NOW, "target_epoch": NOW + 2 * 3600})
+check("    ileride ise 'ileride' yazar", True, "ileride" in " ".join(o.get("messages", [])))
+rc, o = run({**base, "controller_epoch": NOW, "target_epoch": NOW - 2})
+check("13) 2 sn fark (komut/ağ gecikmesi): uyarı YOK", "ok", o.get("status"))
+rc, o = run({**base, "controller_epoch": NOW, "target_epoch": NOW - 29})
+check("    29 sn fark (30 sn alt sınırının altında): uyarı YOK", "ok", o.get("status"))
+rc, o = run({**base, "controller_epoch": NOW, "target_epoch": NOW - 31})
+check("    31 sn fark: uyarı", "warn", o.get("status"))
+rc, o = run({**base, "max_offset": 120, "controller_epoch": NOW, "target_epoch": NOW - 100})
+check("    eşik 120 sn iken 100 sn fark: uyarı YOK (eşik 30'dan büyükse eşik kullanılır)", "ok", o.get("status"))
+for label, extra in (("epoch yok", {}), ("boş metin", {"controller_epoch": "", "target_epoch": ""}), ("sayı değil", {"controller_epoch": "x", "target_epoch": "y"}),
+                     ("yalnız biri", {"controller_epoch": NOW})):
+    rc, o = run({**base, **extra})
+    check(f"14) çapraz kontrol atlanır ({label}): ok ve çökme yok", (0, "ok"), (rc, o.get("status")))
+rc, o = run({**base, "service": "inactive", "controller_epoch": NOW, "target_epoch": NOW - 86400})
+check("15) servis kapalıyken de saat farkı raporlanır", True, "gün" in " ".join(o.get("messages", [])))
+rc, o = run({**base, "sources": [], "controller_epoch": NOW, "target_epoch": NOW - 86400})
+check("    kaynak yokken de", True, "gün" in " ".join(o.get("messages", [])))
+
 rc, o = run("bu json degil")
 check("10) girdi okunamazsa unknown + hata, çıkış 0", (0, "unknown", True), (rc, o.get("status"), bool(o.get("error"))))
 rc, o = run({**base, "max_offset": "abc"})
