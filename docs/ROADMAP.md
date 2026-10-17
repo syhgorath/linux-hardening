@@ -23,7 +23,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 ## Uzak
 | İş | Not |
 |---|---|
-| Raspberry Pi / Proxmox profilleri | Firewall (Proxmox `pve-firewall`), `ip_forward`, SD kart yazım aşınması farklı; ayrı roller |
+| Raspberry Pi / Proxmox profilleri | Firewall (Proxmox `pve-firewall`), `ip_forward`, SD kart yazım aşınması farklı; ayrı roller. **Proxmox hostu:** tasarım notu ve boş iskelet var, işlevsiz: [design/proxmox-host.md](design/proxmox-host.md) |
 | Başka Ubuntu sürümü (24.04) | `docs/SUPPORT.md` adımları |
 | Tarama sonuçlarını karşılaştırma | `summary.json`'dan öncesi/sonrası (sshpocket arayüzü ile) |
 

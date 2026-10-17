@@ -1,0 +1,8 @@
+# ISKELET (islevsiz). main.yml bu dosyayi CAGIRMIYOR. Tasarim: docs/design/proxmox-host.md
+# Amac (ileride): operatorun sectigi platform ile sunucunun gercek platformu uyusmuyorsa DURMAK
+# (ornegin 'normal sunucu' secili ama /etc/pve var, ya da 'proxmox hostu' secili ama yok).
+# Platform degiskeni henuz TANIMLI DEGIL (karar bekliyor); adi tasarim notunda.
+- name: Stop because the platform check is not implemented yet
+  ansible.builtin.fail:
+    msg: >-
+      hardening_preflight/platform.yml henüz uygulanmadı (iskelet). docs/design/proxmox-host.md bakınız.
