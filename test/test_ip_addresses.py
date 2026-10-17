@@ -13,7 +13,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 IP = re.compile(r"(?<![0-9A-Za-z.])((?:\d{1,3}\.){3}\d{1,3})(?:/(\d{1,2}))?(?![0-9A-Za-z.])")
-SKIP_FILES = {"requirements.txt", "requirements-dev.txt", "CHANGELOG.md"}
+# cis-esleme.md: CIS madde numaraları (3.3.1.4 gibi) dört sayılı noktalı yazım olduğu için IP gibi görünür; belgede adres yok.
+SKIP_FILES = {"requirements.txt", "requirements-dev.txt", "CHANGELOG.md", "cis-esleme.md"}
 SKIP_PREFIX = ("test/",)  # testlerin sahte adresleri; ayrıca asagida sinanir
 
 def allowed(ip_s, mask):
