@@ -210,6 +210,18 @@ else:
     if json.loads(cj_path.read_text(encoding="utf-8")) != comp:
         err("component.json, component.yml ile aynı değil: python3 -I scripts/make-component-json.py")
 
+# 5d) hardening_ssh_allow_from "yalnızca VPN yazma" uyarısı (#39): apply/preview uyarılarında, değişken açıklamasında ve belgelerde olmalı
+for name in ("preview", "apply"):
+    warns = comp.get("actions", {}).get(name, {}).get("warnings", [])
+    if not any("hardening_ssh_allow_from" in str(w) and "VPN" in str(w) for w in warns):
+        err(f"actions.{name}: warnings içinde hardening_ssh_allow_from + VPN uyarısı yok (tüm bağlantı ağlarını yaz)")
+for v in comp.get("vars", []):
+    if isinstance(v, dict) and v.get("name") == "hardening_ssh_allow_from" and "VPN" not in str(v.get("description", "")):
+        err("component.yml vars: hardening_ssh_allow_from açıklamasında VPN uyarısı yok")
+for doc in ("README.md", "README.en.md", "HOWTO.md", "docs/component-vars.md"):
+    if not re.search(r"hardening_ssh_allow_from[\s\S]{0,1500}VPN", (ROOT / doc).read_text(encoding="utf-8")):
+        err(f"{doc}: hardening_ssh_allow_from için 'yalnızca VPN yazma' uyarısı yok")
+
 # 6) rollback_status çıktı sözleşmesi: bildirilen anahtarlar betiğin ve playbook'un yazdığı satırla aynı olmalı
 outs = comp.get("actions", {}).get("rollback_status", {}).get("outputs")
 if outs:

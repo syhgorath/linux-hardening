@@ -41,6 +41,10 @@ mutate "invoke.append'de -i"       component.yml           's/arg: "--ask-become
 mutate "invoke.append'de --limit"  component.yml           's/arg: "--ask-become-pass"/arg: "--limit"/' "çalıştırıcıya ait bayrak yazılmamalı"
 mutate "invoke.append'de -e"       component.yml           's/arg: "--ask-become-pass"/arg: "-e"/'      "çalıştırıcıya ait bayrak yazılmamalı"
 mutate "cmd'ye --limit eklendi"    component.yml           's#cmd: "ansible-playbook playbooks/audit.yml"#cmd: "ansible-playbook playbooks/audit.yml --limit=x"#' "çalıştırıcıya ait bayrak içeriyor"
+mutate "apply allow_from VPN uyarisi yok" component.yml    '/hardening_ssh_allow_from.a sunucuya BAĞLANABİLECEĞİN/d' "actions.apply: warnings içinde hardening_ssh_allow_from + VPN"
+mutate "preview allow_from VPN uyarisi yok" component.yml  '/hardening_ssh_allow_from eksikse bunu/d'             "actions.preview: warnings içinde hardening_ssh_allow_from + VPN"
+mutate "README allow_from VPN uyarisi yok" README.md       's/VPN/AG/g'                                         "README.md: hardening_ssh_allow_from"
+mutate "HOWTO allow_from VPN uyarisi yok" HOWTO.md         's/VPN/AG/g'                                         "HOWTO.md: hardening_ssh_allow_from"
 mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinmiyor/'           "Desteklenir"
 
 # component.json uretici: gercek depoda guncel; component.yml degisirse --check yakalar
