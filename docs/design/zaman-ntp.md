@@ -13,11 +13,14 @@
 | Konu | Durum | Kaynak |
 |---|---|---|
 | Repoda zaman rolü | **Yok** | `roles/` |
-| Ubuntu 26.04 varsayılan servisi | **chrony** (üçüncü taraf kaynaklar; resmî sürüm notu doğrudan adlandırmıyor). `systemd-timesyncd` yedek/yükseltme durumunda olabilir. **Doğrulanacak:** hedefte `systemctl is-active chrony` ve `chronyc -v` | arama + bizim `chronyc makestep` notumuz |
+| Ubuntu 26.04 varsayılan servisi | **chrony 4.8 (`+NTS`)** aktif ve etkin; `systemd-timesyncd` **kurulu değil** (`not-found`); `ntpsec`/`ntpd-rs` yok | **test VM'inde okundu** (2026-10-17) |
+| Varsayılan kaynaklar | `/etc/chrony/sources.d/ubuntu-ntp-pools.sources`; gözlenen kaynaklar Canonical **NTS** sunucuları (`ntp-nts-*.canonical.com`). `conf.d/ubuntu-nts.conf` bootstrap sertifikasını çok geniş geçerlilikle güvenir: "çok büyük ilk saat kayması olan sistemler NTS kullanabilsin" diye | test VM'inde okundu |
+| Drop-in dizinleri | `chrony.conf` içinde `confdir /etc/chrony/conf.d` ve `sourcedir /etc/chrony/sources.d` **var** (ayrıca `sourcedir /run/chrony-dhcp`: DHCP'den gelen NTP kaynakları da kabul edilir) | test VM'inde okundu |
+| Adımlama politikası | Varsayılan `makestep 1 3` ve `rtcsync` | test VM'inde okundu |
 | `ntpd-rs` | Canonical 26.10 için test, varsayılan değişim daha sonra; 26.04'te **yok** | duyuru; kesin tarih doğrulanmadı |
 | İki servis birlikte | Çakışır; chrony kurulunca timesyncd devre dışı kalır | genel bilgi, doğrulanacak |
 | LAB (Docker) | Hiçbir zaman servisi çalışmıyor; `timedatectl`: `NTP service: n/a`, saat çalıştıran VM'den gelir | LAB'da okundu (2026-10-17) |
-| Test VM (Proxmox) | Ağdan ulaşılamadı; chrony kullandığı **varsayım** (`chronyc makestep` notundan) | doğrulanmadı |
+| Test VM (Proxmox) | Ubuntu 26.04.1; **auditd kurulu değil** (`auditctl` yok; temiz snapshot durumu). Saat **~8 gün geride** (VM `2026-10-09 13:27 UTC`, Mac `2026-10-17 17:09 UTC`) ama `timedatectl` "System clock synchronized: yes" diyor ve `chronyc tracking` bayat bir "0,016 s yavaş" gösteriyor. `journalctl -u chrony`: kaynaklar "Root distance … exceeds maxdistance of 3.000 seconds" ile reddediliyor. **Gözlem:** snapshot dönüşünde `makestep 1 3` ve "synchronized: yes" göstergesi sorunu yakalamadı; chrony'nin bu durumu kendiliğinden düzeltip düzeltmediği bu denemede *izlenmedi* | test VM'inde okundu (2026-10-17) |
 
 ## Hedef (neyi garanti etmek istiyoruz)
 1. Sunucuda **tek** zaman servisi aktif, saat senkron.
@@ -45,25 +48,28 @@ roles/hardening_time/
 vars/ubuntu-26.04.yml      # hardening_time_daemon: chrony   (yeni anahtar)
 playbooks/harden.yml       # roles listesine { role: hardening_time, tags: [time] }
 ```
-Yapılandırma dosya yolları (chrony için `conf.d`/`sources.d` drop-in dizinleri) **doğrulanacak**; dağıtım paketinin gerçekten bu dizinleri
-okuduğuna bakılmadan şablon yazılmaz.
+Yapılandırma dosya yolları **doğrulandı** (26.04 test VM'i): `confdir /etc/chrony/conf.d` ve `sourcedir /etc/chrony/sources.d` ana dosyada tanımlı;
+rol yeni drop-in dosyaları ekler, `chrony.conf` ana dosyasına dokunmaz.
 
 ### Değişkenler (öneri)
 | Değişken | Varsayılan | Anlam |
 |---|---|---|
 | `hardening_time_manage` | `true` | `false` = rol hiçbir şey yapmaz (kaçış anahtarı; "alan başına aç/kapa" fikriyle uyumlu) |
 | `hardening_time_servers` | `[]` | Boşsa **dağıtım varsayılanı** kullanılır; doluysa bu liste |
-| `hardening_time_nts` | `false` | NTS (doğrulamalı zaman). Kaynaklar NTS destekliyorsa açılır; destek yoksa açmak senkronu **bozar**, bu yüzden varsayılan kapalı |
+| `hardening_time_nts` | dağıtım varsayılanı | 26.04'te Canonical kaynakları **zaten NTS**. Rol bunu bozmamalı; kendi `servers` listesi verilirse NTS'siz kaynaklar için `false` gerekir, aksi hâlde senkron bozulur |
 | `hardening_time_makestep` | dağıtım varsayılanı | Büyük kaymada adımlama politikası (snapshot dönüşü için) |
 | `hardening_time_daemon` | OS dosyasından | `chrony` \| `systemd-timesyncd` (kullanıcı değiştirmez; `vars/`) |
 
 Değerler `component.yml` `vars`'a eklenirse tür/varsayılan/açıklama zorunlu (`check-consistency.py`).
 
 ## Etkileşimler ve riskler
-- **auditd gürültüsü (önemli).** Kurallarımızda zaman değişimi izleniyor: `-a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change`
+- **auditd gürültüsü (önemli, ölçülemedi).** Kurallarımızda zaman değişimi izleniyor: `-a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change`
   (`roles/hardening_auditd/templates/hardening.rules.j2`). Zaman servisi saati ayarlarken `adjtimex` çağırır; bu kural **çok sayıda olay**
-  üretebilir. Etkisi **denenmedi** (LAB'da gerçek denetim yok). Ölçülmeden karar verilmez; seçenekler: kuralı servis hesabı hariç tutacak şekilde
-  daraltmak ya da yalnızca `settimeofday`/`clock_settime` izlemek.
+  üretebilir. Etkisi **ölçülmedi**: LAB'da gerçek denetim yok, test VM'inde ise auditd kurulu değil (`auditctl` bulunamadı). Ölçmek için VM'e
+  önce `harden` (auditd dahil) uygulanması gerekir. Seçenekler: kuralı servis hesabı hariç tutacak şekilde daraltmak ya da yalnızca
+  `settimeofday`/`clock_settime` izlemek.
+- **DHCP kaynakları.** `sourcedir /run/chrony-dhcp` ile DHCP sunucusunun verdiği NTP kaynakları kabul edilir. Güvenilmeyen ağlarda bu bir tercih konusudur
+  (sertleştirme bunu kapatmalı mı: açık soru 3).
 - **ufw.** Varsayılan `allow outgoing` olduğundan NTP (UDP 123) ve NTS-KE (TCP 4460) çıkışı çalışır. Operatör çıkışı kapatırsa bu portları açması gerekir; belgelenmeli.
 - **Geri alma güvenlik ağı** yalnızca sshd drop-in ve ufw'yi kapsar; zaman ayarları **geri alınmaz**. Büyük bir adımlama (saat birdenbire değişir) çalışan servisleri,
   `cron` ve token/sertifika süreleri olan uygulamaları etkileyebilir.
@@ -74,15 +80,16 @@ Değerler `component.yml` `vars`'a eklenirse tür/varsayılan/açıklama zorunlu
 1. **Şablonlar:** golden dosya testi (mevcut `test_templates.py` deseni); varsayılan ve doluysa `servers`/`nts` için ayrı golden.
 2. **Birim:** `--check` ile; `hardening_time_manage: false` iken hiçbir görev değişmez.
 3. **LAB:** yalnızca yapılandırma dosyalarının yazıldığını ve servisin **başlatılmadığını** doğrular (çalıştırmak paylaşılan saati etkileyebilir).
-4. **Gerçek sunucu/VM (zorunlu):** kayma simülasyonu (saati elle geri al) ve `makestep` davranışı; auditd olay sayısı ölçümü. Test VM şu an ağdan ulaşılamıyor.
+4. **Gerçek sunucu/VM (zorunlu):** kayma simülasyonu (saati elle geri al; test VM'i zaten ~8 gün geride, gerçek bir örnek) ve `makestep` davranışı; auditd olay sayısı ölçümü (önce auditd kurulmalı).
 
 ## Açık sorular (cevaplanmadan kod yazılmaz)
-1. Hedefte gerçekten chrony mı çalışıyor, hangi sürüm, hangi kaynaklar (`chronyc sources`)? Test VM'inde ve LAB dışı bir 26.04'te doğrulanmalı.
-2. Dağıtımın chrony paketi `conf.d`/`sources.d` drop-in dizinlerini okuyor mu?
-3. Varsayılan kaynak listesi ortamınızda erişilebilir mi (kurumsal/izole ağlarda iç NTP gerekir)?
-4. `makestep` için varsayılan ne olmalı, snapshot dönüşünde otomatik adımlama istenir mi, yoksa elle mi kalmalı (sürpriz saat atlaması riski)?
-5. auditd `time-change` kuralı bu rolle birlikte ne olacak (yukarıdaki gürültü)?
-6. 24.04 / Debian için ne yapılacak (timesyncd mi, chrony mi)? OS katmanı eklendiğinde ayrıca karar.
+1. ~~Hedefte chrony mı, hangi sürüm?~~ **Kapandı:** chrony 4.8 (+NTS), timesyncd kurulu değil (test VM'i, 2026-10-17).
+2. ~~Drop-in dizinleri okunuyor mu?~~ **Kapandı:** `confdir` ve `sourcedir` ana dosyada tanımlı.
+3. DHCP'den gelen NTP kaynakları (`sourcedir /run/chrony-dhcp`) kabul edilsin mi? Güvenilmeyen ağlarda kapatmak mantıklı; değişkenle mi?
+4. `makestep` için varsayılan ne olmalı? Test VM'inde snapshot dönüşünde `makestep 1 3` sorunu çözmedi (saat ~8 gün geride kaldı). Otomatik adımlama (`makestep 1 -1`) sürpriz saat atlaması riski taşır; elle `chronyc makestep` kalsın mı? **Çözüm önerisi de ölçülmeli.**
+5. auditd `time-change` kuralı bu rolle birlikte ne olacak? **Ölçmek için** test VM'ine `harden` uygulanması gerekir (snapshot onayıyla).
+6. Varsayılan kaynak listesi ortamınızda erişilebilir mi (kurumsal/izole ağlarda iç NTP gerekir)?
+7. 24.04 / Debian için ne yapılacak (timesyncd mi, chrony mi)? OS katmanı eklendiğinde ayrıca karar.
 
 ## Kapsam dışı
 - PTP/donanım saati, GPS kaynakları.
