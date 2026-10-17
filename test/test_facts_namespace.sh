@@ -43,8 +43,8 @@ expect_contains "  getent gorevi calisti" "$out" "Login user's real home directo
 echo "-- statik bekci: kodda ust duzey fact adi kalmamali"
 # Fact adlari ansible_facts['...'] ile okunur. Yasak: ansible_<fact> ve getent_passwd (ansible_facts altindaki hali haric).
 bad_pat='\bansible_(distribution[a-z_]*|os_family|hostname|fqdn|nodename|default_ipv[46]|pkg_mgr|service_mgr|architecture|machine|kernel[a-z_]*|virtualization_[a-z]+|memtotal_mb|processor[a-z_]*|date_time|env|mounts|user_id|user_uid|selinux|apparmor|lsb|system|all_ipv[46]_addresses|interfaces|dns)\b'
-hits=$(cd "$ROOT" && grep -rnE "$bad_pat" roles playbooks vars inventory 2>/dev/null | grep -v "ansible_facts" || true)
+hits=$(grep -rnE "$bad_pat" "$ROOT/roles" "$ROOT/playbooks" "$ROOT/vars" "$ROOT/inventory" 2>/dev/null | grep -v "ansible_facts" || true)
 if [ -z "$hits" ]; then ok "ust duzey fact adi yok (roles, playbooks, vars, inventory)"; else bad "ust duzey fact adi var:"; printf '%s\n' "$hits"; fi
-hits=$(cd "$ROOT" && grep -rnE '(^|[^_.[:alnum:]'"'"'])getent_passwd' roles playbooks | grep -v "ansible_facts\['getent_passwd'\]" | grep -v "getent_passwd)" || true)
+hits=$(grep -rnE '(^|[^_.[:alnum:]'"'"'])getent_passwd' "$ROOT/roles" "$ROOT/playbooks" | grep -v "ansible_facts\['getent_passwd'\]" | grep -v "getent_passwd)" || true)
 if [ -z "$hits" ]; then ok "getent_passwd yalnizca ansible_facts altindan"; else bad "ust duzey getent_passwd:"; printf '%s\n' "$hits"; fi
 finish
