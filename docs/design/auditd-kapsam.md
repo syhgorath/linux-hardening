@@ -32,10 +32,12 @@ ufw'yi geri alır; auditd geri alınmaz.
 
 ## Sorunlar
 
-### P1. auditd'den önce başlamış süreçler denetlenmiyor
+### P1. auditd'den önce başlamış süreçler denetlenmiyor — **1c uygulandı (uyarı), çözüm değil**
 Gözlem: yeniden başlatma öncesi sıfır, sonrası olay. Bu, Linux denetiminin bilinen davranışıyla uyumlu (denetim bağlamı süreç oluşturulurken verilir); çekirdek
 mekanizmasını ayrıca doğrulamadık, kanıtımız fark. Sonuç: `harden` bitince `auditd` "aktif" görünür ama ondan önce çalışan uzun ömürlü servisler (chrony,
-sshd ana süreci, cron, rsyslog…) yeniden başlatılana kadar **görünmez**. Yeni oturum süreçlerinin (sshd'nin sonradan fork ettikleri) denetlenip
+sshd ana süreci, cron, rsyslog…) yeniden başlatılana kadar **görünmez**. **Uygulanan (1c):** `hardening_auditd` artık `harden` sırasında, auditd'den önce başlamış süreçleri **salt okunur** olarak listeleyip uyarı veriyor (davranışı değiştirmez, `--check`'te de çalışır; test: `test/test_auditd_unaudited.py`). Test VM'inde `--check` ile 23 program listelendi (`sshd`, `cron`, `rsyslogd`, `systemd-logind`, `snapd`...); VM'de auditd'den sonra yeniden başlatılan `chronyd` listede **yoktu**. Sorunu çözmez, yalnızca görünür kılar; çözüm seçenekleri 1a/1b hâlâ açık.
+
+Yeni oturum süreçlerinin (sshd'nin sonradan fork ettikleri) denetlenip
 denetlenmediği **ölçülmedi** (girişler `USER_LOGIN` olarak göründü, ama bu PAM'in kendi kaydı olabilir).
 
 ### P2. `time-change` kuralı chrony'yi kapsamıyor
