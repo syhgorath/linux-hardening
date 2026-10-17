@@ -1,0 +1,59 @@
+# SALT OKUNUR zaman raporu (davranışı değiştirmez): chrony çalışıyor mu, kaynaklar ulaşılabilir ve seçili mi, saat kaynaklara göre ne kadar kayık?
+# Snapshot dönüşünde `timedatectl` "synchronized: yes" derken saat günlerce kayık olabiliyor (test VM'inde görüldü); bu rapor kaynakların ölçtüğü
+# ofsete bakar. `--check`'te de çalışır (yalnızca okuma). Karar mantığı files/time_report.py (test/test_time_report.py). Tasarım: docs/design/zaman-ntp.md.
+- name: Time report (read-only)
+  when: hardening_time_report | bool
+  block:
+    # state/enabled verilmez: ansible.builtin.systemd yalnızca durumu OKUR (status.ActiveState).
+    - name: Read time service state
+      ansible.builtin.systemd:
+        name: chrony
+      register: hardening_time_service
+      failed_when: false
+      check_mode: false
+
+    - name: Read chrony sources
+      ansible.builtin.command: chronyc -c sources
+      register: hardening_time_sources
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read kernel NTP synchronization flag
+      ansible.builtin.command: timedatectl show -p NTPSynchronized --value
+      register: hardening_time_sync_flag
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Evaluate time synchronization
+      ansible.builtin.script:
+        cmd: >-
+          time_report.py {{ {'service': (hardening_time_service.status | default({})).ActiveState | default(''),
+          'sources': hardening_time_sources.stdout_lines | default([]),
+          'ntp_synchronized': hardening_time_sync_flag.stdout | default('') | trim,
+          'max_offset': hardening_time_max_offset_seconds} | to_json | quote }}
+        executable: python3
+      register: hardening_time_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the time report
+      ansible.builtin.set_fact:
+        hardening_time_result: "{{ hardening_time_raw.stdout | from_json }}"
+
+    - name: Show time report
+      ansible.builtin.debug:
+        msg: "ZAMAN: {{ hardening_time_result.summary }}"
+      when: hardening_time_result.status == 'ok'
+
+    - name: Warn about time synchronization problems
+      ansible.builtin.debug:
+        msg: >-
+          UYARI (zaman): {{ hardening_time_result.messages | join(' ') }}
+      when: hardening_time_result.status == 'warn'
+
+    - name: Note that the time report could not be evaluated
+      ansible.builtin.debug:
+        msg: "UYARI (zaman): rapor değerlendirilemedi: {{ hardening_time_result.error }}"
+      when: hardening_time_result.status == 'unknown'
