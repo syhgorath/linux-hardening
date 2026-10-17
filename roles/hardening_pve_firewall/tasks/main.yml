@@ -1,0 +1,7 @@
+# ISKELET (islevsiz). harden.yml bu role BAGLI DEGIL. Tasarim ve acik sorular: docs/design/proxmox-host.md
+# Yanlislikla baglanirsa sessizce "bir sey yapmis gibi" davranmasin diye durur.
+- name: Stop because the Proxmox firewall role is not implemented yet
+  ansible.builtin.fail:
+    msg: >-
+      hardening_pve_firewall henüz uygulanmadı (iskelet). docs/design/proxmox-host.md içindeki açık soruları kapatmadan
+      kullanmayın.

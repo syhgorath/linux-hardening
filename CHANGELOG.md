@@ -5,6 +5,11 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- Proxmox VE hostu için **işlevsiz iskelet** ve tasarım notu: `docs/design/proxmox-host.md`, boş roller `hardening_pve_firewall` ve
+  `hardening_pve_access`, `hardening_preflight/tasks/platform.yml`. `harden.yml` bunlara bağlı değil; yanlışlıkla çağrılırsa durur.
+  Davranış değişmez.
+
 ### Düzeltildi
 - Playbook'lar (`harden`, `audit`, `rollback`) artık yalnızca envanterde **var olan** `hardening` / `ubuntu` gruplarını hedefler (#35): sshpocket'in
   ürettiği yalnız-`hardening` envanterinde her çalıştırmada çıkan `Could not match supplied host pattern, ignoring: ubuntu` uyarısı kalktı.
