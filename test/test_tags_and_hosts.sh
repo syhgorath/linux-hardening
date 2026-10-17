@@ -86,12 +86,24 @@ all:
       hosts:
         c: {ansible_host: 3.3.3.3}
 Y
-count() { # envanter adi -> "hosts (N)"
+hostlist() { # envanter adi -> ham cikti (uyarilar dahil)
   ANSIBLE_CONFIG="$TESTDIR/ansible-test.cfg" ANSIBLE_ROLES_PATH="$ROOT/roles" \
-    ansible-playbook -i "$TMP/$1.yml" "$HARDEN" --list-hosts 2>&1 </dev/null | cat | grep -oE 'hosts \([0-9]+\)' | head -1
+    ansible-playbook -i "$TMP/$1.yml" "$2" --list-hosts 2>&1 </dev/null | cat
 }
+count() { hostlist "$1" "$HARDEN" | grep -oE 'hosts \([0-9]+\)' | head -1; }
+warns() { hostlist "$1" "$2" | grep -c 'Could not match supplied host pattern'; }
 expect_eq "yalniz 'hardening' grubu -> 1" "hosts (1)" "$(count h)"
 expect_eq "yalniz eski 'ubuntu' grubu -> 1" "hosts (1)" "$(count u)"
 expect_eq "ikisi (kesisen) -> 2 (tekrarsiz)" "hosts (2)" "$(count hu)"
 expect_eq "baska grup -> 0" "hosts (0)" "$(count none)"
+
+echo "-- hosts deseni: olmayan grup icin uyari cikmaz (#35)"
+for pb in harden audit rollback; do
+  P="$ROOT/playbooks/$pb.yml"
+  expect_eq "$pb.yml: yalniz 'hardening' -> uyari yok" "0" "$(warns h "$P")"
+  expect_eq "$pb.yml: yalniz eski 'ubuntu' -> uyari yok" "0" "$(warns u "$P")"
+  expect_eq "$pb.yml: ikisi -> uyari yok" "0" "$(warns hu "$P")"
+  expect_eq "$pb.yml: hicbiri -> tek anlamli uyari" "1" "$(warns none "$P")"
+done
+expect_contains "  hicbiri: uyari 'hardening' der" "$(hostlist none "$HARDEN")" "ignoring: hardening"
 finish

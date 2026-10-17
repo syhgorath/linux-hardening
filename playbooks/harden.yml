@@ -4,7 +4,9 @@
 - name: Harden
   # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
   # kabul edilir. Sistem/sürüm desteği hardening_preflight ile kontrol edilir, grup adıyla değil.
-  hosts: "hardening:ubuntu"
+  # Yalnızca envanterde VAR olan gruplar seçilir: olmayan grup için "Could not match supplied host pattern" uyarısı çıkmaz (#35).
+  # İkisi de yoksa "hardening" kalır (tek, anlamlı uyarı).
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
   pre_tasks:
     - name: Preflight (desteklenen OS/sürüm, sürüm değişkenleri)
       ansible.builtin.include_role:

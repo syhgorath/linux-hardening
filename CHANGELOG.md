@@ -6,6 +6,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Düzeltildi
+- Playbook'lar (`harden`, `audit`, `rollback`) artık yalnızca envanterde **var olan** `hardening` / `ubuntu` gruplarını hedefler (#35): sshpocket'in
+  ürettiği yalnız-`hardening` envanterinde her çalıştırmada çıkan `Could not match supplied host pattern, ignoring: ubuntu` uyarısı kalktı.
+  Eski `ubuntu` grubu hâlâ kabul edilir (davranış değişmez); hiçbiri yoksa `hardening` için tek uyarı verilir.
 - ansible-core 2.24 hazırlığı (#36): fact'ler artık `ansible_facts['distribution']`, `ansible_facts['distribution_version']` ve
   `ansible_facts['getent_passwd']` ile okunur (`hardening_preflight` OS denetimi, `hardening_ssh` anahtar kontrolü).
   2.24'te üst düzey `ansible_distribution` / `getent_passwd` tanımsız olacağından bu erişim kaybı korumaları kırılırdı.

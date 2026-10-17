@@ -12,7 +12,9 @@
 # disarm/now `never` etiketlidir: açıkça --tags ile istenmedikçe ÇALIŞMAZ (varsayılan koşu yalnızca durumu gösterir).
 # Preflight/erişim korumaları bu playbook'ta YOKTUR: amaç kontrol kaybından sonra da çalışabilmektir.
 - name: Rollback safety net control
-  hosts: "hardening:ubuntu"
+  # Yalnızca envanterde VAR olan gruplar seçilir: olmayan grup için "Could not match supplied host pattern" uyarısı çıkmaz (#35).
+  # İkisi de yoksa "hardening" kalır (tek, anlamlı uyarı).
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
   gather_facts: false
   vars:
     hardening_rollback_ctl_path: /usr/local/sbin/hardening-rollback   # testlerde sahte betikle değiştirilir
