@@ -63,11 +63,15 @@ rol yeni drop-in dosyaları ekler, `chrony.conf` ana dosyasına dokunmaz.
 Değerler `component.yml` `vars`'a eklenirse tür/varsayılan/açıklama zorunlu (`check-consistency.py`).
 
 ## Etkileşimler ve riskler
-- **auditd gürültüsü (önemli, ölçülemedi).** Kurallarımızda zaman değişimi izleniyor: `-a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change`
-  (`roles/hardening_auditd/templates/hardening.rules.j2`). Zaman servisi saati ayarlarken `adjtimex` çağırır; bu kural **çok sayıda olay**
-  üretebilir. Etkisi **ölçülmedi**: LAB'da gerçek denetim yok, test VM'inde ise auditd kurulu değil (`auditctl` bulunamadı). Ölçmek için VM'e
-  önce `harden` (auditd dahil) uygulanması gerekir. Seçenekler: kuralı servis hesabı hariç tutacak şekilde daraltmak ya da yalnızca
-  `settimeofday`/`clock_settime` izlemek.
+- **auditd gürültüsü (ölçüldü, beklenenin tersi çıktı).** Kurallarımızda zaman değişimi izleniyor: `-a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change`
+  (`roles/hardening_auditd/templates/hardening.rules.j2`). Test VM'inde (Ubuntu 26.04.1, x86_64, auditd 4.1.2) `harden` sonrası **21 dakika** boyunca
+  chrony çalışırken `time-change` anahtarlı gerçek (`type=SYSCALL`) olay sayısı **0**. Yani gürültü sorunu **yok**. Ama dikkat:
+  - **Araç doğrulandı (pozitif kontrol):** `date -s` ile saat aynı saniyeye ayarlanınca tam 1 olay (`syscall=227`, `comm="date"`) düştü.
+  - **Kuralımız chrony'nin kendi adımlamasını GÖRMEDİ.** chrony günlüğü `17:36:03 System clock was stepped by -0.000292 seconds` diyor, denetim günlüğünde karşılığı yok.
+    Geçici bir `clock_adjtime` kuralı da (hem o adımlama anında hem 6 dk'lık sakin dönemde) **0 olay** verdi. Yani chrony'nin saati hangi syscall'la ayarladığı
+    **belirlenemedi** (`strace`/`perf` bu VM'de kurulu değil, kurmadık).
+  - Sonuç: `time-change` kuralı chrony kaynaklı değişiklikleri **izlemiyor**; bu bir görünürlük boşluğu olabilir, ama nedeni bilinmeden kural değiştirilmez.
+  - Ölçüm koşulları: tek VM, x86_64; çekirdek `7.0.0-38-generic`; chrony 4.8; Canonical NTS kaynakları. Başka mimari/sürümde farklı olabilir.
 - **DHCP kaynakları.** `sourcedir /run/chrony-dhcp` ile DHCP sunucusunun verdiği NTP kaynakları kabul edilir. Güvenilmeyen ağlarda bu bir tercih konusudur
   (sertleştirme bunu kapatmalı mı: açık soru 3).
 - **ufw.** Varsayılan `allow outgoing` olduğundan NTP (UDP 123) ve NTS-KE (TCP 4460) çıkışı çalışır. Operatör çıkışı kapatırsa bu portları açması gerekir; belgelenmeli.
@@ -80,14 +84,14 @@ Değerler `component.yml` `vars`'a eklenirse tür/varsayılan/açıklama zorunlu
 1. **Şablonlar:** golden dosya testi (mevcut `test_templates.py` deseni); varsayılan ve doluysa `servers`/`nts` için ayrı golden.
 2. **Birim:** `--check` ile; `hardening_time_manage: false` iken hiçbir görev değişmez.
 3. **LAB:** yalnızca yapılandırma dosyalarının yazıldığını ve servisin **başlatılmadığını** doğrular (çalıştırmak paylaşılan saati etkileyebilir).
-4. **Gerçek sunucu/VM (zorunlu):** kayma simülasyonu (saati elle geri al; test VM'i zaten ~8 gün geride, gerçek bir örnek) ve `makestep` davranışı; auditd olay sayısı ölçümü (önce auditd kurulmalı).
+4. **Gerçek sunucu/VM (zorunlu):** kayma simülasyonu (saati elle geri al; test VM'i zaten ~8 gün geride, gerçek bir örnek) ve `makestep` davranışı; auditd olay sayısı ölçümü **yapıldı** (yukarıda); chrony'nin kullandığı syscall tespiti kaldı.
 
 ## Açık sorular (cevaplanmadan kod yazılmaz)
 1. ~~Hedefte chrony mı, hangi sürüm?~~ **Kapandı:** chrony 4.8 (+NTS), timesyncd kurulu değil (test VM'i, 2026-10-17).
 2. ~~Drop-in dizinleri okunuyor mu?~~ **Kapandı:** `confdir` ve `sourcedir` ana dosyada tanımlı.
 3. DHCP'den gelen NTP kaynakları (`sourcedir /run/chrony-dhcp`) kabul edilsin mi? Güvenilmeyen ağlarda kapatmak mantıklı; değişkenle mi?
 4. `makestep` için varsayılan ne olmalı? Test VM'inde snapshot dönüşünde `makestep 1 3` sorunu çözmedi (saat ~8 gün geride kaldı), elle `chronyc makestep` çözdü. Seçenekler: (a) varsayılanı korumak ve durumu yalnızca **uyarmak/raporlamak** (`audit`/`status` "chrony ofseti > N sn, `chronyc makestep` gerekli" der), (b) otomatik adımlama (`makestep 1 -1`), sürpriz saat atlaması riski taşır (cron, token/sertifika süreleri). Öneri: önce (a); (b) ölçülmeden önerilmez.
-5. auditd `time-change` kuralı bu rolle birlikte ne olacak? **Ölçmek için** test VM'ine `harden` uygulanması gerekir (snapshot onayıyla).
+5. ~~auditd `time-change` gürültüsü?~~ **Ölçüldü: 0 olay** (21 dk). Yeni soru: kural chrony'nin saat ayarlarını neden **görmüyor** (hangi syscall kullanılıyor)? Karar öncesi `strace -f -e trace=%clock,adjtimex -p $(pidof chronyd)` ya da `perf trace` ile bakılmalı. Bu çözülmeden `time-change` kuralı değiştirilmez.
 6. Varsayılan kaynak listesi ortamınızda erişilebilir mi (kurumsal/izole ağlarda iç NTP gerekir)?
 7. 24.04 / Debian için ne yapılacak (timesyncd mi, chrony mi)? OS katmanı eklendiğinde ayrıca karar.
 
