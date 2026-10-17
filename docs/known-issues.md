@@ -66,6 +66,6 @@ sudo ls /etc/ssh/sshd_config.d/ && sudo sshd -T | grep -iE 'allowtcpforwarding|a
   sonucunu etkilemez. Deneme sonunda Docker ve iptables kalıntıları temizlendi.
 
 ## Bu tablo neyi kapsamıyor
-- Proxmox hostu, Raspberry Pi: bkz. [design/proxmox-host.md](design/proxmox-host.md) (henüz işlevsiz).
+- Proxmox hostu ve Raspberry Pi profilleri: bkz. [ROADMAP.md](ROADMAP.md) (henüz yok).
 - Uygulama düzeyinde (nginx, MySQL vb.) sertleştirme bu projenin kapsamında değil.
 - ⚠️ işaretli etkiler genel Linux bilgisine dayanır (yukarıdaki "denenemeyenler"); sizin ortamınızda doğrulanmadan kesin kabul etmeyin. "LAB'da denendi" olanlar da tek bir ortamda gözlemlendi.
