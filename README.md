@@ -104,6 +104,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |
 | `test_tags_and_hosts.sh` | `--tags` ile preflight/korumaların atlanmaması, `hardening`/`ubuntu` grubu seçimi ve olmayan grup için uyarı çıkmaması |
 | `test_facts_namespace.sh` | Fact'ler yalnızca `ansible_facts[...]` ile okunur (`INJECT_FACTS_AS_VARS=False` altında OS denetimi), üst düzey fact adı yasağı |
+| `test_time_report.py` | zaman raporu kararı (gerçek `chronyc -c sources` biçimiyle): sağlıklı, bayat/kayık saat, servis kapalı, kaynak yok, eşik, bozuk satır |
+| `test_time_tasks.py` | zaman rolü salt okunur kalır: yalnızca okuma modülleri, `--check`'te çalışır, kapatılabilir, saati değiştiren komut yok |
 | `test_ufw_stale_rules.py` | ufw eski SSH kuralı kararı: ağ normalleştirme, kontrol makinesi/boş allow_from/extra_allow korumaları, eksik kural tespiti |
 | `test_ufw_prune_tasks.py` | ufw silme görevlerinin yapısı: varsayılan kapalı, `--check`'te silmez, silme sonrası doğrulama ufw enable'dan önce |
 | `test_auditd_unaudited.py` | auditd'den önce başlamış süreçlerin salt okunur tespiti (sahte `ps`/`systemctl` ile), çekirdek iş parçacıkları ve eşik dışarıda |

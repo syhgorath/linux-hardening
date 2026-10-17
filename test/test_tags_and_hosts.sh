@@ -14,7 +14,7 @@ runp() { # playbook tags...
     -e ansible_become=false -e "ansible_python_interpreter=$PYBIN" 2>&1 </dev/null | cat
 }
 echo "-- etiketli calistirmada preflight atlanmamali"
-for tag in kernel ssh ufw base auth fail2ban auditd aide; do
+for tag in kernel ssh ufw base auth fail2ban auditd aide time; do
   out=$(runp "$HARDEN" --tags "$tag")
   expect_contains "harden.yml --tags $tag: preflight durdurdu" "$out" "Desteklenmeyen sistem"
 done
