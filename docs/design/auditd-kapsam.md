@@ -46,7 +46,11 @@ değişimini mi yakalamak istiyoruz? Bu karar kuralın biçimini belirler (aşa�
 `augenrules --load` handler olduğundan, `auditd` başladıktan sonra play bitene kadar kurallar yok (bu denemede ~11 dk, çünkü arada AIDE ilk veritabanı üretildi).
 Bu sürede `fail2ban`, `aide`, `ufw`, `ssh` rollerinin yaptığı değişiklikler izlenmiyor.
 
-**Uygulanan düzeltme:** handler kaldırıldı. `auditd` başladıktan hemen sonra `auditctl -l` ile mevcut kurallar okunur; kural dosyası değiştiyse **ya da** hiç kural yüklü değilse (`No rules`) `augenrules --load` görev olarak çalışır. `--check`'te atlanır; `meta: flush_handlers` kullanılmaz (önceki rollerin bekleyen handler'larını da öne çekerdi). Statik test: `test/test_auditd_rules_order.py` (3 mutasyonla sınandı). **Gerçek VM'de uçtan uca doğrulama:** `--check` ile yapıldı; gerçek uygulama ayrıca doğrulanacak.
+**Uygulanan düzeltme:** handler kaldırıldı. `auditd` başladıktan hemen sonra `auditctl -l` ile mevcut kurallar okunur; kural dosyası değiştiyse **ya da** hiç kural yüklü değilse (`No rules`) `augenrules --load` görev olarak çalışır. `--check`'te atlanır; `meta: flush_handlers` kullanılmaz (önceki rollerin bekleyen handler'larını da öne çekerdi). Statik test: `test/test_auditd_rules_order.py` (3 mutasyonla sınandı). **Gerçek VM'de doğrulama (2026-10-17, `--tags auditd`):** (A) kural dosyası yedeğe taşınıp yüklü kurallar silinince rol dosyayı yazdı ve kuralları
+hemen yükledi (13 kural; görev sırası: `Audit rules` changed → `Enable and start auditd` → `Read currently loaded audit rules` → `Load audit rules` changed);
+(B) dosya yerindeyken yalnızca yüklü kurallar silinince `No rules` yolu kuralları yeniden yükledi; (C) hiçbir şey değişmeyince `Load audit rules` atlandı
+(`changed=0`). **Doğrulanmayan:** tam bir `harden` koşusunda (temiz kurulum) kuralların fail2ban/aide/ufw/ssh'tan **önce** devreye girdiği ayrıca ölçülmedi;
+bu deneme yalnızca auditd rolünü çalıştırdı. Bunu bir handler'ın artık var olmaması (statik test) güvence altına alıyor.
 
 ## Seçenekler
 
