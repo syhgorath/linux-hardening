@@ -139,9 +139,7 @@
 
 - name: Default policies
   ansible.builtin.command: "ufw default {{ item.value }} {{ item.key }}"
-  loop:
-    - { key: incoming, value: deny }
-    - { key: outgoing, value: allow }
+  loop: "{{ [{'key': 'incoming', 'value': 'deny'}, {'key': 'outgoing', 'value': 'allow'}] + ([{'key': 'routed', 'value': 'deny'}] if hardening_ufw_routed_deny | bool else []) }}"
   changed_when: false
 
 - name: Read ufw current state

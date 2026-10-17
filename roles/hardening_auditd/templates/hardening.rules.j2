@@ -10,5 +10,7 @@
 -w /var/log/lastlog -p wa -k logins
 -w /var/run/faillock -p wa -k logins
 -a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change
+# clock_adjtime yalnızca kullanıcı oturumundan gelirse izlenir: chronyd (auid unset) her ayarında kayıt üretmesin (docs/design/auditd-kapsam.md P2, seçenek 2c)
+-a always,exit -F arch=b64 -S clock_adjtime -F auid>=1000 -F auid!=unset -k time-change
 -a always,exit -F arch=b64 -S init_module,finit_module,delete_module -k modules
 -w /etc/localtime -p wa -k time-change

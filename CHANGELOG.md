@@ -6,6 +6,11 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- CIS 26.04 eşlemesinden çıkan "kolay kazançlar" (`docs/cis-esleme.md`), **hepsi `test_cis_quickwins.py` ile sınandı**:
+  - `hardening_kernel`: `secure_redirects=0` (CIS 3.3.1.10/11), `route_localnet=0` (3.3.1.19); modül yasağı `cramfs`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `firewire-core` (1.1.1.x) ve `atm`, `can` (3.2.1/3.2.2). `hardening_kernel_disable_ipv6_ra` (varsayılan `false`): `accept_ra=0` (3.3.2.7/8), IPv6'sını RA'dan alan sunucuyu kesebileceği için kapalı.
+  - `hardening_ufw`: `ufw default deny routed` (4.1.5), `hardening_ufw_routed_deny` (varsayılan `true`) ile kapatılabilir.
+  - `hardening_auditd`: `clock_adjtime` kuralı yalnız kullanıcı oturumundan gelirse (`auid>=1000`, chronyd gürültüsü yok); `hardening_auditd_restart_services` (varsayılan `[]`, `ssh`/`sshd` reddedilir) ve `hardening_auditd_grub_audit` (varsayılan `false`, `audit=1`, yeniden başlatma gerekir, geri alma kapsamında değil).
+  Varsayılan davranış değişiklikleri: yeni sysctl satırları, yeni modül yasakları ve `routed deny` **varsayılan açıktır**; bkz. `docs/known-issues.md`.
 - `hardening_time` (yeni rol, etiket `time`): **salt okunur** zaman raporu. chrony çalışıyor mu, kaynaklar ulaşılabilir ve seçili mi, saat kaynaklara göre ne kadar kayık? `harden` çıktısında `ZAMAN:` ya da `UYARI (zaman):` verir.
   Snapshot dönüşünde `timedatectl` "synchronized: yes" derken saatin günlerce kayık olduğu görüldü; rapor bunu kaynakların ölçtüğü ofsetten yakalar. Saati ya da yapılandırmayı **değiştirmez**, `--check`'te de çalışır.
   Değişkenler: `hardening_time_report` (varsayılan `true`), `hardening_time_max_offset_seconds` (varsayılan `5`). Testler: `test_time_report.py`, `test_time_tasks.py`.

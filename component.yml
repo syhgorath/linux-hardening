@@ -117,6 +117,25 @@ vars:
     default: false
     warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
     description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
+  - name: hardening_kernel_disable_ipv6_ra
+    type: bool
+    default: false
+    warn_if: true                      # true = IPv6 yönlendirici duyurularını (RA) kabul etmez
+    description: "true: IPv6 yönlendirici duyurularını (accept_ra = 0) kapatır (CIS 3.3.2, accept_ra). IPv6 adresini/yolunu yalnızca RA'dan alan sunucu IPv6 bağlantısını KAYBEDER"
+  - name: hardening_ufw_routed_deny
+    type: bool
+    default: true
+    warn_if: false                     # false = ufw'nin routed ilkesine dokunulmaz
+    description: "true: yönlendirilen (forward) trafik için ufw varsayılanı deny (CIS 4.1.5; Ubuntu'da zaten böyledir). false: dokunulmaz; ufw ile yönlendirme/NAT yapan ve bunu ACCEPT bırakmış sunucular için"
+  - name: hardening_auditd_restart_services
+    type: list[string]
+    default: []
+    description: "Kurallar yüklendikten sonra yeniden başlatılacak servisler (auditd'den önce başlayanlar yeniden başlatılana kadar denetlenmez). Boş = hiçbiri. Servis kesintisi yaratır; ssh/sshd yazılamaz (rol reddeder)"
+  - name: hardening_auditd_grub_audit
+    type: bool
+    default: false
+    warn_if: true                      # true = GRUB'a audit=1 yazar, yeniden başlatma gerekir, geri alma kapsamında değil
+    description: "true: GRUB_CMDLINE_LINUX'a audit=1 ekler ve update-grub çalıştırır; etkisi YENİDEN BAŞLATMADAN sonra başlar ve geri alma güvenlik ağı kapsamında DEĞİLDİR (elle geri alınır)"
   - name: hardening_rollback_enabled
     type: bool
     default: true

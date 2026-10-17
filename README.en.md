@@ -108,6 +108,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |
+| `test_cis_quickwins.py` | CIS quick wins: module lists, ufw `routed` policy, `audit=1` (real `replace` module, idempotent), ssh restart refusal, risky options default to off |
 | `test_time_report.py` | time report decision (real `chronyc -c sources` format): healthy, stale/skewed clock, service down, no sources, threshold, malformed lines |
 | `test_time_tasks.py` | the time role stays read-only: read-only modules only, works in `--check`, can be disabled, no command changes the clock |
 | `test_ufw_stale_rules.py` | ufw stale SSH rule decision: network normalization, controller/empty allow_from/extra_allow safeguards, missing-rule detection |
