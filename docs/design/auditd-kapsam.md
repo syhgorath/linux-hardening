@@ -4,7 +4,7 @@
 > x86_64, çekirdek 7.0.0-38-generic, auditd 4.1.2) 2026-10-17'de ölçüldü; başka ortamlarda doğrulanmadı. "Doğrulanmadı" işaretli yerler kontrol edilmeden kod yazılmaz.
 
 ## Rol bugün ne yapıyor (koddan)
-`roles/hardening_auditd/`: değişken yok (`defaults/` yok), tek şablon, tek handler.
+`roles/hardening_auditd/`: değişken yok (`defaults/` yok), tek şablon. *(Aşağıdaki P3 düzeltildi: kural yükleme artık handler değil, auditd başladıktan hemen sonra çalışan bir görev. Bu bölüm ve ölçümler düzeltme **öncesi** durumu anlatır.)*
 
 | Adım | Ne | Not |
 |---|---|---|
@@ -42,9 +42,15 @@ denetlenmediği **ölçülmedi** (girişler `USER_LOGIN` olarak göründü, ama 
 chrony saati `clock_adjtime` ile ayarlıyor, kural bunu izlemiyor. Kuralın amacı net değil: **kullanıcı müdahalesini** mi (elle `date -s`) yoksa **her** saat
 değişimini mi yakalamak istiyoruz? Bu karar kuralın biçimini belirler (aşağıda).
 
-### P3. Kurallar play sonunda yükleniyor
+### P3. Kurallar play sonunda yükleniyor — **DÜZELTİLDİ (3a uygulandı)**
 `augenrules --load` handler olduğundan, `auditd` başladıktan sonra play bitene kadar kurallar yok (bu denemede ~11 dk, çünkü arada AIDE ilk veritabanı üretildi).
 Bu sürede `fail2ban`, `aide`, `ufw`, `ssh` rollerinin yaptığı değişiklikler izlenmiyor.
+
+**Uygulanan düzeltme:** handler kaldırıldı. `auditd` başladıktan hemen sonra `auditctl -l` ile mevcut kurallar okunur; kural dosyası değiştiyse **ya da** hiç kural yüklü değilse (`No rules`) `augenrules --load` görev olarak çalışır. `--check`'te atlanır; `meta: flush_handlers` kullanılmaz (önceki rollerin bekleyen handler'larını da öne çekerdi). Statik test: `test/test_auditd_rules_order.py` (3 mutasyonla sınandı). **Gerçek VM'de doğrulama (2026-10-17, `--tags auditd`):** (A) kural dosyası yedeğe taşınıp yüklü kurallar silinince rol dosyayı yazdı ve kuralları
+hemen yükledi (13 kural; görev sırası: `Audit rules` changed → `Enable and start auditd` → `Read currently loaded audit rules` → `Load audit rules` changed);
+(B) dosya yerindeyken yalnızca yüklü kurallar silinince `No rules` yolu kuralları yeniden yükledi; (C) hiçbir şey değişmeyince `Load audit rules` atlandı
+(`changed=0`). **Doğrulanmayan:** tam bir `harden` koşusunda (temiz kurulum) kuralların fail2ban/aide/ufw/ssh'tan **önce** devreye girdiği ayrıca ölçülmedi;
+bu deneme yalnızca auditd rolünü çalıştırdı. Bunu bir handler'ın artık var olmaması (statik test) güvence altına alıyor.
 
 ## Seçenekler
 
