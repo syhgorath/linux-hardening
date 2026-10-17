@@ -50,6 +50,12 @@ Live verification log: [docs/verification-log.md](docs/verification-log.md); roa
 > IP Ansible connects from is not inside these networks, `harden.yml` stops without touching the firewall/SSH. You also
 > cannot connect as `root`.
 > Example: `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'`
+>
+> **Do not list only your VPN:** put **every network you may connect to the server from** in the list (VPN + LAN + ...). ufw
+> allows SSH only from these networks and blocks the rest, while the guard only checks the source of the *current* connection.
+> If you list only the VPN, SSH from the LAN times out (ping/ARP still work). The rollback safety net does not catch this
+> either: its verification runs from the control machine, i.e. over the path that still works.
+>
 > Try it on a test server first, take a snapshot, and look at `--check --diff`.
 
 ## Tests

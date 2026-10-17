@@ -97,7 +97,7 @@ Ağ ayarlarını kontrol et (varsayılanı rol `defaults/`'ında, örnek `invent
 
 | Değişken | Anlamı | Dikkat |
 |---|---|---|
-| `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **ZORUNLU, varsayılan boş.** Boşsa veya Ansible'ın bağlandığı IP burada değilse playbook durur. NAT/jump host varsa sunucunun *gördüğü* adresi yaz. Örn. `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` |
+| `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **ZORUNLU, varsayılan boş.** Boşsa veya Ansible'ın bağlandığı IP burada değilse playbook durur. NAT/jump host varsa sunucunun *gördüğü* adresi yaz. **Sunucuya bağlanabileceğin TÜM ağları yaz (VPN + LAN + ...):** ufw yalnızca bunlardan SSH'a izin verir; yalnızca VPN yazarsan LAN'dan SSH kesilir (ping/ARP çalışır, ssh zaman aşar) ve geri alma güvenlik ağı bunu yakalamaz. Örn. `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` |
 | `hardening_fail2ban_ignoreip` | Asla banlanmayacak adresler (varsayılan `127.0.0.1/8 ::1`) | Ansible'ın bağlandığı kontrol makinesinin **sunucunun gördüğü adresi** otomatik eklenir; tüm yönetim ağını muaf tutmak istersen açıkça yaz (önerilmez). Dinamik IP'den çalıştırırsan dosya her çalıştırmada değişir ve fail2ban yeniden başlar |
 | `hardening_ssh_disable_password` | SSH parola girişini kapat | Anahtar yoksa rol zaten durur |
 | `hardening_ssh_kbdinteractive` | 2FA/TOTP için `keyboard-interactive` (varsayılan `false`) | `true` ise `AuthenticationMethods publickey,keyboard-interactive` yazılır. PAM 2FA'sı **sizin kurmanız gerekir**; yanlışsa erişim kesilir. Bağlantı doğrulaması yalnızca banner'ı sınar |
