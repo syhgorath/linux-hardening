@@ -39,7 +39,7 @@ ignore = role_names | {"hardening_profile", "hardening_index"}
 missing = {k: v for k, v in used.items() if k not in defined and k not in ignore}
 # bilerek tanimsiz birakilanlar: kullanicinin vermesi beklenen/opsiyonel
 # - hardening_ssh_port: kaldirildi; yalniz 'is defined' uyarisinda gecer
-# - hardening_scan_dir: opsiyonel; audit.yml `| default(playbook_dir ~ '/../scans')` ile okur
+# - hardening_scan_dir: opsiyonel; audit.yml verilmezse kullanıcı klasörünü ($XDG_DATA_HOME ya da $HOME/.local/share)/linux-hardening/scans kullanır
 allowed_optional = {"hardening_ssh_port", "hardening_scan_dir"}
 missing = {k: v for k, v in missing.items() if k not in allowed_optional}
 if missing:

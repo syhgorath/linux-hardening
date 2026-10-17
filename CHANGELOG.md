@@ -15,6 +15,11 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
   `ansible.cfg` artık `inject_facts_as_vars = False` ayarlar (2.21'deki `DEPRECATION WARNING` kalkar); testler de bunu zorlar.
 
 ### Değişti
+- **Davranış değişikliği** (#37): `hardening_scan_dir` verilmezse `audit.yml` çıktıyı artık paketin `scans/` klasörüne değil **kullanıcı klasörüne**
+  yazar: `$XDG_DATA_HOME/linux-hardening/scans`, yoksa `~/.local/share/linux-hardening/scans` (uygulama dizini ve `scans/` 0700; `<host>`/`<tarih>` 0700,
+  dosyalar 0600). Gerekçe: rapor hassas veri içerir, paket klasörü USB/paylaşımlı olabilir. sshpocket üzerinden çalıştırınca değişen bir şey yok
+  (sshpocket değeri zaten kendi kullanıcı klasörüne yönlendirir). Doğrudan `ansible-playbook` kullananlar: eski çıktılar repodaki `scans/` içinde
+  kalır; eski konumu istiyorsan `-e hardening_scan_dir=$PWD/scans` ver. HOME/XDG tanımsız ve değer verilmemişse playbook durur.
 - `hardening_ssh_allow_from` için görünür uyarı (#39): sunucuya bağlanabileceğin **tüm** ağları yaz (VPN + LAN + ...); ufw yalnızca bu ağlardan
   SSH'a izin verir, yalnızca VPN yazılırsa LAN'dan SSH kesilir ve geri alma güvenlik ağı bunu yakalamaz. README (TR/EN), HOWTO,
   `docs/component-vars.md` ve `component.yml` (`preview`/`apply` `warnings`, değişken açıklaması); `check-consistency.py` uyarının yerinde olduğunu denetler.
