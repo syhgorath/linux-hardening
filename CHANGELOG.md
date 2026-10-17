@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_ssh`: açık yazılan CIS 5.1.x seçenekleri: `DisableForwarding yes` (yalnız `hardening_ssh_allow_tcp_forwarding=no` iken), `GSSAPIAuthentication no`, `HostbasedAuthentication no`, `IgnoreRhosts yes`, `PermitUserEnvironment no`, `UsePAM yes`, `MaxStartups 10:30:60` ve `MACs` için zayıf listenin çıkarılması. Çoğu varsayılan zaten uygundu (test VM'inde `sshd -T`); açık yazmak denetlenebilirlik içindir. **Davranışı değiştirenler:** `MaxStartups` (Ubuntu varsayılanı `10:30:100`), `MACs` (umac-64/umac-128-etm kapanır), `DisableForwarding` (StreamLocal da kapanır). Bkz. `docs/known-issues.md`.
 - CIS 26.04 eşlemesinden çıkan "kolay kazançlar" (`docs/cis-esleme.md`), **hepsi `test_cis_quickwins.py` ile sınandı**:
   - `hardening_kernel`: `secure_redirects=0` (CIS 3.3.1.10/11), `route_localnet=0` (3.3.1.19); modül yasağı `cramfs`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `firewire-core` (1.1.1.x) ve `atm`, `can` (3.2.1/3.2.2). `hardening_kernel_disable_ipv6_ra` (varsayılan `false`): `accept_ra=0` (3.3.2.7/8), IPv6'sını RA'dan alan sunucuyu kesebileceği için kapalı.
   - `hardening_ufw`: `ufw default deny routed` (4.1.5), `hardening_ufw_routed_deny` (varsayılan `true`) ile kapatılabilir.

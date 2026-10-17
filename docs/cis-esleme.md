@@ -34,7 +34,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 3.2 | Ağ çekirdek modülleri | 7 | 6 |  |  | 1 |
 | 3.3 | Ağ çekirdek parametreleri | 27 | 20 | 2 | 5 |  |
 | 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |
-| 5.1 | SSH sunucusu | 24 | 8 | 1 |  | 15 |
+| 5.1 | SSH sunucusu | 24 | 16 | 3 |  | 5 |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 |  |  |  | 6 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 18 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 4 |  | 11 |
@@ -42,9 +42,9 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  | 1 |
 | 7.1 | Sistem dosyası izinleri | 13 |  |  |  | 13 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 11 |
-| | **Toplam** | **274** | **62** | **12** | **5** | **195** |
+| | **Toplam** | **274** | **70** | **14** | **5** | **185** |
 
-Yani Level 1 Server maddelerinin yaklaşık %23'i ✅, %27'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %26'i ✅, %31'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -101,12 +101,20 @@ Yani Level 1 Server maddelerinin yaklaşık %23'i ✅, %27'i en azından kısmen
 | 4.1.5 | routed varsayılanı: deny (hardening_ufw_routed_deny, varsayılan true) | `roles/hardening_ufw/tasks/main.yml` |
 | 5.1.6 | Banner /etc/issue.net | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.8 | ClientAliveInterval 300, ClientAliveCountMax 2 (ikisi de sıfırdan büyük) | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.9 | DisableForwarding yes (yalnızca AllowTcpForwarding=no iken; değişkenle local/remote seçilirse yazılmaz) | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.10 | GSSAPIAuthentication no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.11 | HostbasedAuthentication no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.12 | IgnoreRhosts yes | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.15 | LoginGraceTime 60 | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.16 | LogLevel VERBOSE | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.17 | MACs: zayıf listesi çıkarılır (umac-64, umac-64-etm, umac-128-etm, sha1-96, md5, ripemd160) | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.18 | MaxAuthTries 3 (en çok 4 isteniyor) | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.19 | MaxSessions 4 (en çok 10 isteniyor) | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.20 | MaxStartups 10:30:60 | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.21 | PermitEmptyPasswords no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.22 | PermitRootLogin no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.23 | PermitUserEnvironment no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
+| 5.1.24 | UsePAM yes | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.3.3.2.2 | minlen 14 | `roles/hardening_auth/templates/pwquality.conf.j2` |
 | 5.3.3.2.3 | minclass 3 | `roles/hardening_auth/templates/pwquality.conf.j2` |
 | 5.3.3.2.4 | maxrepeat 3 | `roles/hardening_auth/templates/pwquality.conf.j2` |
@@ -121,7 +129,9 @@ Yani Level 1 Server maddelerinin yaklaşık %23'i ✅, %27'i en azından kısmen
 | 2.1.22 | postfix/courier kaldırılır, dinlemeyen `dma` kurulur; belirli bir MTA'nın yalnız-yerel ayarı denetlenmez |
 | 3.3.2.7 | `accept_ra = 0` yalnızca `hardening_kernel_disable_ipv6_ra=true` ile (varsayılan kapalı: RA ile IPv6 alan sunucu bağlantıyı kaybeder) |
 | 3.3.2.8 | `accept_ra = 0` yalnızca `hardening_kernel_disable_ipv6_ra=true` ile (varsayılan kapalı: RA ile IPv6 alan sunucu bağlantıyı kaybeder) |
-| 5.1.9 | X11, ajan ve TCP yönlendirme kapalı; `DisableForwarding yes` yazılmıyor |
+| 5.1.7 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
+| 5.1.13 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
+| 5.1.14 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
 | 5.3.1.3 | libpam-pwquality kurulur; 'son sürüm' denetlenmez |
 | 5.3.2.3 | paket kurulur ve pwquality.conf yazılır; pam-configs'te etkin olduğu doğrulanmadı |
 | 5.3.3.2.7 | `enforcing = 1` yazılır; pam-configs'te `enforcing=0` kalmadığı denetlenmez |
@@ -159,7 +169,7 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 2.4 | Zamanlanmış işler (cron, at) | 2.4.1.1, 2.4.1.2, 2.4.1.3, 2.4.1.4, 2.4.1.5, 2.4.1.6, 2.4.1.7, 2.4.1.8, 2.4.1.9, 2.4.2.1 |
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1, 3.1.2, 3.1.3 |
 | 3.2 | Ağ çekirdek modülleri | 3.2.7 |
-| 5.1 | SSH sunucusu | 5.1.1, 5.1.2, 5.1.3, 5.1.4, 5.1.5, 5.1.7, 5.1.10, 5.1.11, 5.1.12, 5.1.13, 5.1.14, 5.1.17, 5.1.20, 5.1.23, 5.1.24 |
+| 5.1 | SSH sunucusu | 5.1.1, 5.1.2, 5.1.3, 5.1.4, 5.1.5 |
 | 5.2 | Yetki yükseltme (sudo, su) | 5.2.1, 5.2.2, 5.2.3, 5.2.5, 5.2.6, 5.2.7 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.1, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.3, 5.3.3.4.4 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.5, 5.4.1.6, 5.4.2.1, 5.4.2.2, 5.4.2.3, 5.4.2.4, 5.4.2.5, 5.4.2.6, 5.4.2.7, 5.4.2.8, 5.4.3.2 |
@@ -178,7 +188,7 @@ Projenin CIS Level 1 Server'da **karşılığı olmayan** (ya da daha ileri gide
 
 ## Sonraki adım için notlar
 
-- Yapılan kolay kazançlar: `ufw default deny routed` (4.1.5), `secure_redirects`/`route_localnet` (3.3.1.10/11/19), kullanılmayan dosya sistemi ve ağ modülleri (1.1.1.x, 3.2.1, 3.2.2). Kalanlar: SSH'ta açıkça yazılmayan seçenekler (5.1.10–5.1.14, 5.1.17, 5.1.20, 5.1.23, 5.1.24; sunucunun varsayılanları `sshd -T` ile doğrulanmadı), `pam_faillock`/`pwhistory` (5.3.x), sudo (5.2.x), dosya izinleri (7.1.x).
+- Yapılan kolay kazançlar: `ufw default deny routed` (4.1.5), `secure_redirects`/`route_localnet` (3.3.1.10/11/19), kullanılmayan dosya sistemi ve ağ modülleri (1.1.1.x, 3.2.1, 3.2.2), SSH seçenekleri (5.1.9–5.1.12, 5.1.17, 5.1.20, 5.1.23, 5.1.24). Kalanlar: SSH erişim kısıtı (5.1.5) ve dosya izinleri (5.1.1–5.1.4), `pam_faillock`/`pwhistory` (5.3.x), sudo (5.2.x), dosya izinleri (7.1.x), günlük kaydı (6.1.x).
 - Davranışı değiştirenler önce tartışılmalı: bölüm/bağlama seçenekleri (1.1.2.x), `pam_faillock` (kilitlenme riski), sudo ayarları, ssh şifre/kex listeleri (eski istemcileri bozabilir).
 - Madde numarası etiket yapılacaksa (ör. `--tags cis-3.3.1.4`), mevcut `ufw`/`ssh` koruma etiketleriyle karışmaması için ayrı ad alanı gerekir.
 

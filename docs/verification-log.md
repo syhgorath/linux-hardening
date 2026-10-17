@@ -63,6 +63,13 @@ auditd etkin; "auditd'den önce başlamış süreç" uyarısı **23-28 programda
 gerçekten denetim günlüğüne düştüğü (yalnızca başlangıç zamanı ölçütü), `clock_adjtime` kuralının tetiklenmesi, `deny routed`'ın gerçek yönlendirmede etkisi.
 Docker LAB'da (Ubuntu 26.04 konteyner) aynı kod uygulandı; `auditctl -l` konteynerde rc=255 verdiği için okuma görevi `failed_when: false` yapıldı (gerçek VM'de rc=0).
 
+**13. SSH CIS 5.1.x seçenekleri, gerçek VM (2026-10-18).** `--tags ssh` (geri alma güvenlik ağı devrede, doğrulama sonrası `armed=no`): `ok=32 changed=2 failed=0`, ikinci koşu `changed=0`.
+`sshd -T`: `disableforwarding yes`, `maxstartups 10:30:60`, `gssapiauthentication no`, `hostbasedauthentication no`, `ignorerhosts yes`, `permituserenvironment no`, `usepam yes`;
+`macs` listesinden `umac-64`, `umac-64-etm`, `umac-128-etm` çıktı, `hmac-sha2-*-etm` kaldı. İstemciden: `-c aes256-ctr -o MACs=umac-64-etm@openssh.com` → "no matching MAC found";
+`hmac-sha2-256-etm` ile bağlanıldı. (AEAD şifre `chacha20-poly1305` MAC kullanmadığı için MAC testi `aes256-ctr` ile zorlandı.) Unix soket yönlendirmesi denendi: dinleyici açıldı,
+sunucu tarafı kanalı reddetti (`open failed`); nedenin `DisableForwarding` olduğu ayrıca ayrıştırılmadı. Varsayılanlar (`sshd -T`, OpenSSH 10.2): şifre/KEX/MAC listelerinde CBC/3DES/SHA1-KEX yok;
+`maxstartups` varsayılanı `10:30:100`. **Ölçülmedi:** `MaxStartups`'ın paralel bağlantılı otomasyonda etkisi, eski istemcilerle MAC uyumu.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
