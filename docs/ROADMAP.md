@@ -6,7 +6,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | İş | Not |
 |---|---|
 | Küçük Lynis maddeleri | `libpam-tmpdir`, `debsums`, `apt-listchanges`, fail2ban `jail.local`, AIDE SHA256. Sunucu davranışını değiştirir: canlı doğrulama gerekir |
-| `hosts: "hardening:ubuntu"` geçişini bitir | Eski `ubuntu` grubu kaldırılınca "host pattern" uyarısı da gider (BREAKING olarak işaretlenir) |
+| Eski `ubuntu` grubunu kaldır | Uyarı artık çıkmıyor (#35, olmayan grup seçilmiyor); kaldırmak yalnızca bir temizlik ve BREAKING olarak işaretlenir |
 | Tarama klasörü zaman damgası | Klasör adı yerel saatle, `summary.json` UTC; tek biçime getirilebilir |
 | v0.2.0 yayını | Hazırlandı (`component.json`, `rollback_status` satırı, `vars` üst verisi; `release.sh` PyYAML/.venv iyileştirmesi #26 dahil). Etiket ve imza bakımcıda |
 
