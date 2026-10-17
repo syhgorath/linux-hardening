@@ -36,7 +36,11 @@ mutate "runner yanlis"             component.yml           's/^runner: ansible/r
 mutate "confirm eksik"             component.yml           '/confirm: none/d'                    "confirm None geçersiz"
 mutate "effects dolu iken confirm none" component.yml      's/confirm: yes-no/confirm: none/'    "en az yes-no"
 mutate "warnings eksik"            component.yml           '/Salt okunur: yalnızca/d'            "warnings boş olmayan"
-mutate "invoke yer tutucusu dogrulayiciya uymuyor" component.yml 's/<inventory>/<üretilen envanter>/' "doğrulayıcısının biçimine"
+mutate "invoke yer tutucusu dogrulayiciya uymuyor" component.yml 's/{ arg: "--ask-become-pass", required: true/{ arg: "--ask-become-pass", value: "<üretilen envanter>", required: true/' "doğrulayıcısının biçimine"
+mutate "invoke.append'de -i"       component.yml           's/arg: "--ask-become-pass"/arg: "-i"/'      "çalıştırıcıya ait bayrak yazılmamalı"
+mutate "invoke.append'de --limit"  component.yml           's/arg: "--ask-become-pass"/arg: "--limit"/' "çalıştırıcıya ait bayrak yazılmamalı"
+mutate "invoke.append'de -e"       component.yml           's/arg: "--ask-become-pass"/arg: "-e"/'      "çalıştırıcıya ait bayrak yazılmamalı"
+mutate "cmd'ye --limit eklendi"    component.yml           's#cmd: "ansible-playbook playbooks/audit.yml"#cmd: "ansible-playbook playbooks/audit.yml --limit=x"#' "çalıştırıcıya ait bayrak içeriyor"
 mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinmiyor/'           "Desteklenir"
 
 # component.json uretici: gercek depoda guncel; component.yml degisirse --check yakalar
