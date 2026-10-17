@@ -46,6 +46,9 @@ mutate "preview allow_from VPN uyarisi yok" component.yml  '/hardening_ssh_allow
 mutate "README allow_from VPN uyarisi yok" README.md       's/VPN/AG/g'                                         "README.md: hardening_ssh_allow_from"
 mutate "HOWTO allow_from VPN uyarisi yok" HOWTO.md         's/VPN/AG/g'                                         "HOWTO.md: hardening_ssh_allow_from"
 mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinmiyor/'           "Desteklenir"
+mutate "README EN 'Ne yapmaz' satiri eksik" README.en.md '/^| fail2ban | Limited/d' "TR 20 satır, EN 19 satır"
+mutate "README TR 'Ne yapmaz' satiri eksik" README.md '/^| AppArmor profilleri/d' "TR 19 satır, EN 20 satır"
+mutate "README EN 'Ne yapmaz' bolumu yok" README.en.md 's/^## What it does not do/## Other/' "'## What it does not do' bölümü yok"
 
 # component.json uretici: gercek depoda guncel; component.yml degisirse --check yakalar
 out=$("$PY" -I scripts/make-component-json.py --check 2>&1); rc=$?

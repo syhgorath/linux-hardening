@@ -238,6 +238,22 @@ if outs:
         if found != keys:
             err(f"rollback_status outputs.keys {keys} ile {label} satırındaki anahtarlar {found} aynı değil")
 
+# 7) README TR/EN "Ne yapmaz" tabloları aynı satır sayısında olmalı (biri güncellenip öteki unutulmasın)
+def scope_rows(doc, heading):
+    text = (ROOT / doc).read_text(encoding="utf-8")
+    m = re.search(rf"^## {re.escape(heading)}.*?\n(.*?)(?=^## )", text, re.S | re.M)
+    if not m:
+        err(f"{doc}: '## {heading}' bölümü yok")
+        return None
+    rows = [l for l in m.group(1).splitlines() if l.startswith("|")]
+    return len(rows) - 2  # başlık + ayırıcı satırı sayılmaz
+
+
+tr_rows = scope_rows("README.md", "Ne yapmaz")
+en_rows = scope_rows("README.en.md", "What it does not do")
+if tr_rows is not None and en_rows is not None and tr_rows != en_rows:
+    err(f"README 'Ne yapmaz' tablosu: TR {tr_rows} satır, EN {en_rows} satır (eşit olmalı)")
+
 if errors:
     print("TUTARSIZLIK:")
     for e in errors:

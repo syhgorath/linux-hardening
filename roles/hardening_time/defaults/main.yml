@@ -1,0 +1,5 @@
+# Zaman senkronizasyonu RAPORU (salt okunur; saati ya da yapılandırmayı DEĞİŞTİRMEZ). Tasarım: docs/design/zaman-ntp.md (seçenek A).
+# false = rapor hiç çalışmaz.
+hardening_time_report: true
+# Saniye: kaynakların ölçtüğü ofset bunu aşarsa uyarır (varsayılan 5 sn). Snapshot dönüşü gibi büyük kaymalar için anlamlı.
+hardening_time_max_offset_seconds: 5
