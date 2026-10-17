@@ -54,6 +54,7 @@
       "requires_sudo": true,
       "confirm": "none",
       "warnings": [
+        "hardening_ssh_allow_from eksikse bunu önizlemede göremezsin (ufw komutları --check'te çalışmaz): sunucuya bağlanabileceğin TÜM ağları (VPN + LAN + ...) yaz; yalnızca VPN yazarsan ufw LAN'dan SSH'ı keser.",
         "Önizleme ufw (firewall) değişikliğini göstermez: ufw komutları --check modunda çalışmaz.",
         "Önizleme servis durumunu (auditd, fail2ban başlatma) göstermez.",
         "Erişim kaybı korumaları (hardening_ssh_allow_from, kaynak IP, root kontrolü) önizlemede de çalışır ve durdurabilir."
@@ -71,6 +72,7 @@
       ],
       "confirm": "type-server-name",
       "warnings": [
+        "hardening_ssh_allow_from'a sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...). ufw yalnızca bunlardan SSH'a izin verir; yalnızca VPN yazarsan LAN'dan SSH kesilir (ping/ARP çalışır, ssh zaman aşar) ve geri alma güvenlik ağı bunu yakalamaz.",
         "SSH ve ufw kurallarını değiştirir; bağlantınız kopabilir. Çalıştırmadan önce anahtarın ssh-agent'ta olduğunu doğrulayın (ssh-add -l).",
         "Geri alma güvenlik ağı yalnızca SSH drop-in ve ufw'yi geri alır; paketler, sysctl, auditd, fail2ban ve AIDE geri alınmaz.",
         "Doğrulama başarısız olursa ya da bağlantı kaybolursa sunucu hardening_rollback_timeout sn sonra kendini önceki duruma döndürür; o sürede erişim olmayabilir.",
@@ -127,7 +129,7 @@
       "name": "hardening_ssh_allow_from",
       "type": "list[cidr]",
       "required": true,
-      "description": "SSH'a izin verilen yönetim ağları (CIDR listesi); kontrol makinesinin sunucudan görünen adresi bu listede olmalı"
+      "description": "SSH'a izin verilen yönetim ağları (CIDR listesi). Sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...): ufw yalnızca bunlardan SSH'a izin verir, yalnızca VPN yazarsan LAN'dan SSH kesilir. Kontrol makinesinin sunucudan görünen adresi de listede olmalı"
     },
     {
       "name": "hardening_scan_dir",

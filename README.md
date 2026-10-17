@@ -46,6 +46,12 @@ Canlı doğrulama kayıtları: [docs/verification-log.md](docs/verification-log.
 > **`hardening_ssh_allow_from` zorunludur** (varsayılanı bilerek boş). Boşsa, geçersizse ya da Ansible'ın bağlandığı
 > kaynak IP bu ağlarda değilse `harden.yml` firewall/SSH'a dokunmadan durur. Ayrıca root olarak bağlanılamaz.
 > Örn: `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'`
+>
+> **Yalnızca VPN yazma:** listeye sunucuya **bağlanabileceğin tüm ağları** yaz (VPN + LAN + ...). ufw yalnızca bu ağlardan SSH'a
+> izin verir, gerisini keser; koruma ise yalnızca *şu anki* bağlantının kaynağını denetler. Yalnızca VPN yazarsan LAN'dan SSH
+> zaman aşımına uğrar (ping/ARP çalışır). Geri alma güvenlik ağı bunu yakalamaz: doğrulama kontrol makinesinden, yani çalışan
+> yoldan yapılır.
+>
 > Önce test sunucusunda deneyin, snapshot alın, `--check --diff` ile bakın.
 
 ## Testler
