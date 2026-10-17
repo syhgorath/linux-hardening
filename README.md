@@ -65,6 +65,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_templates.py` | Şablonların varsayılan çıktısı (golden dosyalar) ve güvenli varsayılanlar |
 | `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |
 | `test_tags_and_hosts.sh` | `--tags` ile preflight/korumaların atlanmaması, `hardening:ubuntu` deseni |
+| `test_facts_namespace.sh` | Fact'ler yalnızca `ansible_facts[...]` ile okunur (`INJECT_FACTS_AS_VARS=False` altında OS denetimi), üst düzey fact adı yasağı |
 | `test_handlers.py` | Her `notify` bir handler'a bağlı |
 | `test_vars_defined.py` | `group_vars` olmadan değişkenler tanımlı, güvenli varsayılanlar |
 | `test_consistency.sh` | `VERSION`/`component.yml`/destek matrisi tutarlılığı (kasıtlı bozmalar yakalanır) |
