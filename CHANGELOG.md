@@ -5,10 +5,8 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
-### Düzeltildi
-- `hardening_auditd`: denetim kuralları artık auditd başladıktan **hemen sonra** yükleniyor (handler yerine görev; `auditctl -l` ile kural yoksa da yeniden yüklenir). Eskiden kurallar play sonunda yükleniyordu; test VM'inde auditd başlangıcından 652 sn sonra, yani `fail2ban`/`aide`/`ufw`/`ssh` değişiklikleri izlenmiyordu. Davranış tek yönlü iyileşir. Test: `test_auditd_rules_order.py`.
-
 ### Eklendi
+- `hardening_ufw`: `hardening_ssh_allow_from`'dan çıkarılan ağın SSH kuralı artık **fark ediliyor**. Eskiden rol yalnızca kural ekliyordu; çıkarılan ağın kuralı firewall'da kalıyor, sunucu değişkende yazandan daha açık oluyordu. Varsayılan davranış yalnızca **uyarır**; `hardening_ufw_prune_ssh: true` ile siler (yalnızca bu rolün yazdığı biçimdeki SSH kuralları; kontrol makinesinin adresini kapsayanlara, `extra_allow`'dakilere dokunmaz; `allow_from` boşsa ya da adres bilinmiyorsa silmez; silmeden sonra eksik kural varsa `ufw enable`'dan önce durur). Karar mantığı `roles/hardening_ufw/files/stale_ssh_rules.py`. Testler: `test_ufw_stale_rules.py`, `test_ufw_prune_tasks.py`.
 - `hardening_auditd`: `harden` sırasında **salt okunur** bir uyarı: auditd'den ÖNCE başlamış ve yeniden başlatılmamış programları listeler (denetlenmezler; örn. `sshd`, `cron`, `rsyslogd`). Davranışı değiştirmez, `--check`'te de çalışır; auditd kurulu değilse sessizdir. Test: `test_auditd_unaudited.py`.
 - `docs/known-issues.md`: sertleştirmenin meşru kullanımları bozabileceği yerler (ufw+Docker, SSH yönlendirme, mail sunucusu kaldırma, umask vb.) ve her biri için kaçış değişkeni ya da "anahtar yok" notu. Birçok satır Docker LAB'ında denendi; denenemeyenler ⚠️ olarak işaretli.
 - auditd kapsamı için tasarım notu: `docs/design/auditd-kapsam.md` (kod yok). Test VM'inde ölçülen üç bulgu: kurallar play sonunda yükleniyor, auditd'den önce başlayan süreçler denetlenmiyor, `time-change` kuralı chrony'yi (`clock_adjtime`) kapsamıyor.
@@ -16,6 +14,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 - Proxmox VE hostu için **işlevsiz iskelet** ve tasarım notu: `docs/design/proxmox-host.md`, boş roller `hardening_pve_firewall` ve
   `hardening_pve_access`, `hardening_preflight/tasks/platform.yml`. `harden.yml` bunlara bağlı değil; yanlışlıkla çağrılırsa durur.
   Davranış değişmez.
+
+### Düzeltildi
+- `hardening_auditd`: denetim kuralları artık auditd başladıktan **hemen sonra** yükleniyor (handler yerine görev; `auditctl -l` ile kural yoksa da yeniden yüklenir). Eskiden kurallar play sonunda yükleniyordu; test VM'inde auditd başlangıcından 652 sn sonra, yani `fail2ban`/`aide`/`ufw`/`ssh` değişiklikleri izlenmiyordu. Davranış tek yönlü iyileşir. Test: `test_auditd_rules_order.py`.
 
 ## [0.2.1] - 2026-10-17
 
