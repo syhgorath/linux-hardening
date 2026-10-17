@@ -54,6 +54,37 @@ Canlı doğrulama kayıtları: [docs/verification-log.md](docs/verification-log.
 >
 > Önce test sunucusunda deneyin, snapshot alın, `--check --diff` ile bakın.
 
+## Ne yapmaz (kapsam sınırları)
+
+Bu proje **tam CIS Benchmark uyumu iddia etmez**: hedef "Level 1 Server *yaklaşımı*". Hangi CIS maddelerinin karşılandığı henüz **madde numarasıyla eşlenmedi**
+(eşleme CIS Benchmark PDF'iyle çıkarılacak, bkz. [docs/ROADMAP.md](docs/ROADMAP.md)); bu yüzden aşağıdaki tablo madde değil **alan** bazlıdır ve yalnızca kodda
+doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır; diğerleri **henüz yapılmadı**, atlandığı anlamına gelmez. Eksik bir alan görürseniz issue açın.
+
+| Alan | Durum | Not |
+|---|---|---|
+| SSH portunu değiştirmek | Bilerek yok | ufw kuralı sshd'nin gerçekten dinlediği porttan yazılır ([decisions.md](docs/decisions.md)) |
+| Otomatik yeniden başlatma | Bilerek yok | Otomatik güvenlik güncellemesi açılır, reboot **yok** ([HOWTO.md](HOWTO.md)) |
+| Kullanıcı, parola, anahtar yönetimi | Tasarım gereği yok | Kullanıcıyı siz oluşturursunuz; rol yalnızca parola girişini kapatmadan önce `authorized_keys`'in dolu olduğunu doğrular |
+| Uygulama sertleştirmesi (nginx, MySQL vb.) | Kapsam dışı | Yalnızca işletim sistemi |
+| Başka dağıtım/sürüm | Şimdilik yok | Yalnızca Ubuntu 26.04; Raspberry Pi/Proxmox planlı ([SUPPORT.md](docs/SUPPORT.md)) |
+| Geri alma | Kısmi | Yalnızca sshd drop-in ve ufw geri alınır; paketler, sysctl, auditd, fail2ban, AIDE geri alınmaz |
+| Bölüm/bağlama seçenekleri (`/tmp`, `nodev`, `noexec`, `hidepid`) | Henüz yok | |
+| Önyükleyici (GRUB parolası, `audit=1`) | Henüz yok | `audit=1` için tasarım notu: [auditd-kapsam.md](docs/design/auditd-kapsam.md) |
+| AppArmor profilleri | Henüz yok | |
+| Günlük yönetimi (rsyslog, journald, logrotate, uzak günlük) | Henüz yok | |
+| `cron`/`at` kısıtları, `sudo` yapılandırması | Henüz yok | `sudoers` değişimleri yalnızca auditd ile **izlenir** |
+| IPv6'yı kapatmak | Henüz yok | |
+| Core dump | Kısmi | Yalnızca `fs.suid_dumpable = 0`; `systemd-coredump` ayarı yok |
+| Kullanılmayan servis/paket kaldırma | Kısmi | Yalnızca `postfix`/`courier-*` kaldırılır; avahi, cups vb. yok |
+| Nadir dosya sistemi modülleri (`cramfs`, `udf`, `squashfs`…) | Henüz yok | Yalnızca `dccp`, `sctp`, `rds`, `tipc` ve `usb-storage` engellenir |
+| SUID/SGID envanteri | Henüz yok | |
+| AIDE zamanlanmış kontrol | Henüz yok | Yalnızca ilk veritabanı üretilir; zamanlama paket varsayılanıdır (doğrulanmadı) |
+| Zaman senkronizasyonu | Henüz yok | Tasarım notu: [zaman-ntp.md](docs/design/zaman-ntp.md) |
+| Denetim (auditd) kapsamı | Sınırlı | 6 kural grubu (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); `-e 2` yok; komut yürütme/dosya silme izlenmez; auditd'den **önce** başlamış süreçler yeniden başlatılana kadar denetlenmez |
+| fail2ban | Sınırlı | Yalnızca `sshd` jail |
+
+Bilinen çakışmalar (sertleştirmenin meşru kullanımları bozabileceği yerler): [docs/known-issues.md](docs/known-issues.md).
+
 ## Testler
 `test/` altındaki testler her PR'da CI'da (`.github/workflows/ci.yml`) çalışır; yerelde:
 
