@@ -16,6 +16,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | Gerçek ağ/ufw düzeyi kesinti denemesi | Mevcut denemeler sshd katmanında engelle yapıldı |
 | İkinci sunucu/yapılandırma | Tek VM ile sınırlı kanıtı genişletmek |
 | CIS Ubuntu 26.04 Benchmark karşılaştırması | Hazır rol/OpenSCAP içeriği çıkınca; şimdilik "yaklaşım" |
+| auditd kapsamı | Kurallar play sonunda yükleniyor (P3), auditd'den önce başlayan süreçler denetlenmiyor (P1), `time-change` kuralı chrony'yi kapsamıyor (P2). **Tasarım notu var (kod yok):** [design/auditd-kapsam.md](design/auditd-kapsam.md) |
 | Zaman senkronizasyonu rolü | Snapshot dönüşünde saat geride kaldı; `chrony` yapılandırması bir hardening maddesi olabilir |
 | Çok sunuculu çalıştırma | `serial`/`any_errors_fatal`: bir sunucudaki hata diğerlerini durdurmalı mı |
 

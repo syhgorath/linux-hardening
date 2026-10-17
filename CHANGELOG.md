@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- auditd kapsamı için tasarım notu: `docs/design/auditd-kapsam.md` (kod yok). Test VM'inde ölçülen üç bulgu: kurallar play sonunda yükleniyor, auditd'den önce başlayan süreçler denetlenmiyor, `time-change` kuralı chrony'yi (`clock_adjtime`) kapsamıyor.
+
 ## [0.2.1] - 2026-10-17
 
 sshpocket ile gerçek çalıştırmalarda çıkan sorunların düzeltildiği ve ansible-core 2.24'e hazırlanan sürüm. Davranış değişikliği: doğrudan
