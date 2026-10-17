@@ -35,3 +35,31 @@
   when: >-
     not ansible_check_mode and
     (hardening_auditd_rules_file is changed or 'No rules' in hardening_auditd_loaded.stdout)
+
+# Denetim kapsamı raporu (SALT OKUNUR; davranışı değiştirmez): auditd'den ÖNCE başlamış süreçler, yeniden başlatılana kadar denetlenmez
+# (test VM'inde chronyd ile ölçüldü; çekirdek komut satırında audit=1 yoktu). Tasarım: docs/design/auditd-kapsam.md (P1, seçenek 1c).
+# Çekirdek iş parçacıkları (ppid 2 / pid 2), auditd'in kendisi ve auditd'den en çok 5 sn önce başlayanlar sayılmaz.
+# `--check`'te de çalışır (okuma): auditd kurulu değilse çıktı boştur.
+- name: List processes started before auditd
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      pid=$(systemctl show -p MainPID --value auditd 2>/dev/null)
+      [ -n "$pid" ] && [ "$pid" != 0 ] || exit 0
+      t=$(ps -o etimes= -p "$pid" | tr -d ' ')
+      [ -n "$t" ] || exit 0
+      ps -eo etimes=,ppid=,pid=,comm= | awk -v t="$t" '$2 != 2 && $3 != 2 && $1 > t + 5 { $1=$2=$3=""; sub(/^ +/, ""); print }' | sort -u
+    executable: /bin/bash
+  register: hardening_auditd_unaudited
+  changed_when: false
+  check_mode: false
+
+- name: Warn that processes started before auditd are not audited
+  ansible.builtin.debug:
+    msg: >-
+      UYARI (denetim kapsamı): {{ hardening_auditd_unaudited.stdout_lines | length }} program auditd'den ÖNCE başlamış ve yeniden başlatılana kadar
+      denetlenmez, yani audit kuralları bunların sistem çağrılarını görmez
+      (örnekler: {{ hardening_auditd_unaudited.stdout_lines[:12] | join(', ') }}). Önemli servisleri yeniden başlatın (örn. systemctl restart <servis>);
+      sunucuyu yeniden başlatmak çoğunu kapsar ama çekirdek komut satırında audit=1 yoksa önyüklemenin erken süreçleri kapsam dışı kalabilir
+      (doğrulanmadı). Ayrıntı: docs/design/auditd-kapsam.md (P1).
+  when: hardening_auditd_unaudited.stdout_lines | length > 0

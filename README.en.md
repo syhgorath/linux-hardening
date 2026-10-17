@@ -77,6 +77,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |
+| `test_auditd_unaudited.py` | read-only detection of processes started before auditd (fake `ps`/`systemctl`); kernel threads and threshold excluded |
 | `test_auditd_rules_order.py` | auditd rules are loaded right after the service starts (not via a handler at play end) and skipped in `--check` |
 | `test_handlers.py` | every `notify` is bound to a handler |
 | `test_vars_defined.py` | variables defined without `group_vars`, safe defaults |
