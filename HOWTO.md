@@ -199,6 +199,8 @@ Bilerek yapılmayanlar ve nedenleri: `docs/decisions.md`.
 
 ## 7. Sorun giderme
 
+Sertleştirmenin **meşru kullanımları bozabileceği** yerler (Docker, mail sunucusu, SSH yönlendirme, ufw vb.) ve kaçış yolları: [docs/known-issues.md](docs/known-issues.md).
+
 | Durum | Ne yap |
 |---|---|
 | Sunucuya SSH ile giremiyorum (firewall/SSH sonrası) | **Proxmox konsolundan** gir: `sudo ufw disable` veya `/etc/ssh/sshd_config.d/00-hardening.conf` dosyasını düzelt. Olmazsa snapshot'a dön |

@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `docs/known-issues.md`: sertleştirmenin meşru kullanımları bozabileceği yerler (ufw+Docker, SSH yönlendirme, mail sunucusu kaldırma, umask vb.) ve her biri için kaçış değişkeni ya da "anahtar yok" notu.
+
 ### Düzeltildi
 - Playbook'lar (`harden`, `audit`, `rollback`) artık yalnızca envanterde **var olan** `hardening` / `ubuntu` gruplarını hedefler (#35): sshpocket'in
   ürettiği yalnız-`hardening` envanterinde her çalıştırmada çıkan `Could not match supplied host pattern, ignoring: ubuntu` uyarısı kalktı.
