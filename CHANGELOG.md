@@ -5,6 +5,13 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.2.2] - 2026-10-17
+
+Denetim ve firewall tarafında iki davranış iyileştirmesi ve belge ağırlıklı bir sürüm. Varsayılan davranışlar korunur: yeni özellik opt-in
+(`hardening_ufw_prune_ssh`, varsayılan `false`), yeni çıktılar yalnızca uyarıdır. Dikkat edilecekler: (1) `hardening_auditd` kuralları artık
+auditd başlar başlamaz yükler (eskiden play sonunda); (2) `harden` çıktısında iki yeni uyarı görünebilir (ufw'de `allow_from`'da olmayan SSH kuralı,
+auditd'den önce başlamış süreçler); (3) `component.yml` `vars` listesine bir bool değişken eklendi (`sshpocket_api` değişmedi).
+
 ### Eklendi
 - `hardening_ufw`: `hardening_ssh_allow_from`'dan çıkarılan ağın SSH kuralı artık **fark ediliyor**. Eskiden rol yalnızca kural ekliyordu; çıkarılan ağın kuralı firewall'da kalıyor, sunucu değişkende yazandan daha açık oluyordu. Varsayılan davranış yalnızca **uyarır**; `hardening_ufw_prune_ssh: true` ile siler (yalnızca bu rolün yazdığı biçimdeki SSH kuralları; kontrol makinesinin adresini kapsayanlara, `extra_allow`'dakilere dokunmaz; `allow_from` boşsa ya da adres bilinmiyorsa silmez; silmeden sonra eksik kural varsa `ufw enable`'dan önce durur). Karar mantığı `roles/hardening_ufw/files/stale_ssh_rules.py`. Testler: `test_ufw_stale_rules.py`, `test_ufw_prune_tasks.py`.
 - `hardening_auditd`: `harden` sırasında **salt okunur** bir uyarı: auditd'den ÖNCE başlamış ve yeniden başlatılmamış programları listeler (denetlenmezler; örn. `sshd`, `cron`, `rsyslogd`). Davranışı değiştirmez, `--check`'te de çalışır; auditd kurulu değilse sessizdir. Test: `test_auditd_unaudited.py`.
@@ -91,7 +98,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.2.1...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/syhgorath/linux-hardening/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/syhgorath/linux-hardening/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/syhgorath/linux-hardening/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/syhgorath/linux-hardening/releases/tag/v0.1.0

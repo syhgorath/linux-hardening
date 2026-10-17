@@ -8,7 +8,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | Küçük Lynis maddeleri | `libpam-tmpdir`, `debsums`, `apt-listchanges`, fail2ban `jail.local`, AIDE SHA256. Sunucu davranışını değiştirir: canlı doğrulama gerekir |
 | Eski `ubuntu` grubunu kaldır | Uyarı artık çıkmıyor (#35, olmayan grup seçilmiyor); kaldırmak yalnızca bir temizlik ve BREAKING olarak işaretlenir |
 | Tarama klasörü zaman damgası | Klasör adı yerel saatle, `summary.json` UTC; tek biçime getirilebilir |
-| v0.2.1 yayını | Hazırlandı (#35 grup uyarısı, #36 ansible-core 2.24 hazırlığı, #37 `scan_dir` kullanıcı klasörü, #38 invoke, #39 `allow_from` uyarısı). Etiket, imza ve Release bakımcıda |
+| v0.2.2 yayını | Hazırlandı (ufw eski SSH kuralı uyarısı/opsiyonel silme, auditd kuralları hemen yükleme ve önceki süreçler uyarısı, bilinen çakışmalar belgesi, tasarım notları). Etiket, imza ve Release bakımcıda |
 
 ## Orta
 | İş | Not |
