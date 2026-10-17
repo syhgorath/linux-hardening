@@ -118,6 +118,18 @@ if not UPDATE:
     assert_has("varsayilan: AuthenticationMethods YOK", d_, "AuthenticationMethods", want=False)
     assert_has("varsayilan: AllowTcpForwarding no", d_, "AllowTcpForwarding no")
     assert_has("varsayilan: PermitRootLogin no", d_, "PermitRootLogin no")
+    assert_has("varsayilan: DisableForwarding yes (AllowTcpForwarding no iken)", d_, "DisableForwarding yes")
+    for opt in ("GSSAPIAuthentication no", "HostbasedAuthentication no", "IgnoreRhosts yes", "PermitUserEnvironment no", "UsePAM yes", "MaxStartups 10:30:60"):
+        assert_has(f"varsayilan: {opt}", d_, opt)
+    macs = next((l for l in d_.splitlines() if l.startswith("MACs ")), "")
+    assert_has("MACs: CIS 5.1.17 zayif listesi cikarilir (umac-64, umac-64-etm, umac-128-etm, sha1-96, md5)", macs,
+               "-hmac-md5,hmac-md5-96,hmac-ripemd160,hmac-sha1-96,umac-64@openssh.com")
+    assert_has("MACs: cikarma bicimi (-ile baslar; varsayilan liste korunur)", macs, "MACs -")
+    assert_has("MACs: guclu sha2-etm CIKARILMAZ", macs, "hmac-sha2-256-etm", want=False)
+    assert_has("MACs: sha2-512-etm CIKARILMAZ", macs, "hmac-sha2-512-etm", want=False)
+    f_ = read("sshd-hardening.fwd-local.conf")
+    assert_has("AllowTcpForwarding local iken DisableForwarding YAZILMAZ (degisken ezilmesin)", f_, "DisableForwarding", want=False)
+    assert_has("AllowTcpForwarding local korunur", f_, "AllowTcpForwarding local")
     k = read("sshd-hardening.kbd.conf")
     assert_has("kbd: yes", k, "KbdInteractiveAuthentication yes")
     assert_has("kbd: AuthenticationMethods publickey,keyboard-interactive", k,
