@@ -79,7 +79,7 @@ doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır
 | Nadir dosya sistemi modülleri (`cramfs`, `udf`, `squashfs`…) | Henüz yok | Yalnızca `dccp`, `sctp`, `rds`, `tipc` ve `usb-storage` engellenir |
 | SUID/SGID envanteri | Henüz yok | |
 | AIDE zamanlanmış kontrol | Henüz yok | Yalnızca ilk veritabanı üretilir; zamanlama paket varsayılanıdır (doğrulanmadı) |
-| Zaman senkronizasyonu | Henüz yok | Tasarım notu: [zaman-ntp.md](docs/design/zaman-ntp.md) |
+| Zaman senkronizasyonu | Kısmi | Yalnızca salt okunur rapor (`hardening_time`: saat kayması uyarısı); chrony yapılandırılmaz. Tasarım notu: [zaman-ntp.md](docs/design/zaman-ntp.md) |
 | Denetim (auditd) kapsamı | Sınırlı | 6 kural grubu (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); `-e 2` yok; komut yürütme/dosya silme izlenmez; auditd'den **önce** başlamış süreçler yeniden başlatılana kadar denetlenmez |
 | fail2ban | Sınırlı | Yalnızca `sshd` jail |
 

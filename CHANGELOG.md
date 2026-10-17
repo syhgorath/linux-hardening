@@ -15,6 +15,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
   Snapshot dönüşünde `timedatectl` "synchronized: yes" derken saatin günlerce kayık olduğu görüldü; rapor bunu kaynakların ölçtüğü ofsetten yakalar. Saati ya da yapılandırmayı **değiştirmez**, `--check`'te de çalışır.
   Değişkenler: `hardening_time_report` (varsayılan `true`), `hardening_time_max_offset_seconds` (varsayılan `5`). Testler: `test_time_report.py`, `test_time_tasks.py`.
 - README (TR/EN): **"Ne yapmaz (kapsam sınırları)"** bölümü: alan bazlı tablo; "bilerek" (belgeli karar) ile "henüz yapılmadı" ayrımı. Madde numaralı CIS eşlemesi henüz yok, bölüm bunu açıkça söyler.
+### Düzeltildi
+- `hardening_time`: kaynaklar seçilmemişken (`*` yok; `~` çok değişken, `?` seçilemez) chrony'nin ölçtüğü ofset artık "kesin kayma" diye yazılmaz. Gerçek VM'de snapshot dönüşünde saat ~8 gün geride iken kaynaklar `~` idi ve ofset yalnızca ~9,2 sn görünüyordu; rapor "~9.2 sn kayık" diyordu. Şimdi "bu değere güvenilmez" der ve **sunucu saatini kontrol makinesinin saatiyle de karşılaştırır** (`date +%s`, en az 30 sn eşik; kontrol makinesinin saati de yanlış olabilir, mesaj bunu söyler). Saat dilimi hatası (`now(utc=true).timestamp()` 3 saat kaydırıyordu) gerçek VM'de yakalandı ve testi eklendi.
+
 ## [0.2.2] - 2026-10-17
 
 Denetim ve firewall tarafında iki davranış iyileştirmesi ve belge ağırlıklı bir sürüm. Varsayılan davranışlar korunur: yeni özellik opt-in

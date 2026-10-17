@@ -2,12 +2,15 @@
 """Zaman senkronizasyonu raporu (SALT OKUNUR; hiçbir şeyi değiştirmez, yalnızca karar verir).
 
 Girdi (argv[1], JSON): service (`systemctl is-active chrony` çıktısı), sources (`chronyc -c sources` satırları), ntp_synchronized
-(`timedatectl show -p NTPSynchronized --value`), max_offset (saniye). Çıktı (stdout, JSON): status (ok|warn|unknown), messages, summary,
+(`timedatectl show -p NTPSynchronized --value`), max_offset (saniye); isteğe bağlı target_epoch / controller_epoch (sunucunun ve kontrol makinesinin
+`date +%s` değeri; ikisi de sayıysa çapraz kontrol yapılır). Çıktı (stdout, JSON): status (ok|warn|unknown), messages, summary,
 max_offset, sources, reachable, selected, error.
 
 Neden yalnızca `timedatectl` değil: snapshot dönüşünde "System clock synchronized: yes" derken saat günlerce kayık olabiliyor ve `chronyc tracking` bayat bir
 "0,016 s yavaş" gösteriyor. Güvenilir işaret kaynakların ÖLÇTÜĞÜ ofsettir (`chronyc -c sources`, alanlar: mod,durum,ad,katman,poll,reach,lastrx,ayarlı_ofset,
-ölçülen_ofset,hata; durum `*` seçili, `+` birleşik, `-` birleşmeyen, `?` seçilemez). Python 3.9+ (yalnızca stdlib).
+ölçülen_ofset,hata; durum `*` seçili, `+` birleşik, `-` birleşmeyen, `?` seçilemez). Kaynak seçilmemişse (`*` yok; durumlar `~` çok değişken, `?` seçilemez) ölçülen ofset GÜVENİLİR sayılmaz: test VM'inde snapshot dönüşünde saat ~8 gün geride
+iken kaynaklar `~` ve ofset yalnızca -9,2 sn gösterdi. Bu yüzden büyüklük o durumda "kesin" diye yazılmaz ve sunucu saati kontrol makinesinin saatiyle ayrıca
+karşılaştırılır (kontrol makinesinin saati de yanlış olabilir; mesaj bunu söyler). Python 3.9+ (yalnızca stdlib).
 """
 import json
 import sys
@@ -43,6 +46,20 @@ def parse_sources(lines):
     return out
 
 
+def epoch_skew(cfg, limit):
+    """Sunucu - kontrol makinesi saat farkı (sn) ya da None; eşik en az 30 sn (komut/ağ gecikmesi yanlış alarm vermesin)."""
+    try:
+        diff = float(cfg["target_epoch"]) - float(cfg["controller_epoch"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return diff if abs(diff) > max(limit, 30.0) else None
+
+
+def skew_message(diff):
+    return ("Sunucu saati, kontrol makinesinin saatine göre ~%s %s (kontrol makinesinin saati de yanlış olabilir; `date -u` ile ikisini kıyaslayın)."
+            % (human(diff), "geride" if diff < 0 else "ileride"))
+
+
 def decide(cfg):
     res = {"status": "ok", "messages": [], "summary": "", "max_offset": None, "sources": 0, "reachable": 0, "selected": False, "error": ""}
     try:
@@ -54,25 +71,42 @@ def decide(cfg):
     if service != "active":
         res["status"] = "warn"
         res["messages"].append("Zaman servisi (chrony) çalışmıyor (durum: %s). Saat kayabilir; `systemctl status chrony` ile bakın." % (service or "bilinmiyor"))
+        skew = epoch_skew(cfg, limit)
+        if skew is not None:
+            res["messages"].append(skew_message(skew))
         return res
     srcs = parse_sources(cfg.get("sources"))
     res["sources"] = len(srcs)
     if not srcs:
         res["status"] = "warn"
         res["messages"].append("chrony'nin hiç zaman kaynağı yok ya da okunamadı (`chronyc sources`).")
+        skew = epoch_skew(cfg, limit)
+        if skew is not None:
+            res["messages"].append(skew_message(skew))
         return res
     reach = [s for s in srcs if s["reach"] not in ("0", "")]
     res["reachable"] = len(reach)
     if not reach:
         res["status"] = "warn"
         res["messages"].append("Hiçbir zaman kaynağına ulaşılamıyor (reach=0): ağ/NTP erişimini (UDP 123, NTS için TCP 4460) kontrol edin.")
+        skew = epoch_skew(cfg, limit)
+        if skew is not None:
+            res["messages"].append(skew_message(skew))
         return res
     res["selected"] = any(s["state"] == "*" for s in reach)
     worst = max(abs(s["offset"]) for s in reach)
     res["max_offset"] = worst
     problems = []
+    skew = epoch_skew(cfg, limit)
     if worst > limit:
-        problems.append("Saat kaynaklara göre ~%s kayık (eşik %s sn)." % (human(worst), "%g" % limit))
+        if res["selected"]:
+            problems.append("Saat kaynaklara göre ~%s kayık (eşik %s sn)." % (human(worst), "%g" % limit))
+        else:
+            problems.append("Kaynakların ölçtüğü ofset ~%s ama hiçbir kaynak seçilmediği için bu değere GÜVENİLMEZ (gerçek kayma çok daha büyük olabilir; eşik %s sn)."
+                            % (human(worst), "%g" % limit))
+    if skew is not None:
+        problems.append(skew_message(skew))
+    if worst > limit or skew is not None:
         if str(cfg.get("ntp_synchronized", "")).strip() == "yes":
             problems.append("`timedatectl` \"synchronized: yes\" diyor ama bu yanıltıcı olabilir (snapshot dönüşünde görüldü): `date -u` ile kontrol edin.")
         problems.append("Düzeltme: `sudo chronyc makestep`; kaynaklar `?` ise etkisizdir, `sudo systemctl restart chrony` kullanın.")
