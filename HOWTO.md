@@ -141,11 +141,11 @@ Bitince ikinci kez `harden.yml` çalıştır; `changed=0` çıkmalı (idempotent
 
 ## 5. Sonuç nerede, skor nasıl okunur
 
-Tarama çıktıları Mac'te: `scans/<sunucu>/<tarih>/`
+Tarama çıktıları Mac'te, **kullanıcı klasöründe**: `~/.local/share/linux-hardening/scans/<sunucu>/<tarih>/` (`XDG_DATA_HOME` varsa onun altında). Hassas veri olduğu için paket klasörüne yazılmaz; konumu `hardening_scan_dir` ile değiştirebilirsin. (0.2.0 ve öncesinde varsayılan repodaki `scans/` idi; eski çıktılar orada kalır.)
 
 ```bash
 # En son skor (hardening_index) ve uyarılar
-R=$(ls -d scans/test-vm-01/*/ | tail -1)
+R=$(ls -d ~/.local/share/linux-hardening/scans/test-vm-01/*/ | tail -1)
 grep -E '^hardening_index|^warning\[\]' $R/lynis-report.dat
 grep '^suggestion\[\]' $R/lynis-report.dat | cut -d'|' -f1,2
 ```
@@ -172,8 +172,8 @@ Her taramanın klasöründe ayrıca makine-okunur bir **`summary.json`** üretil
 | `warnings` / `suggestions` | `warning[]=` / `suggestion[]=` satır sayısı |
 
 Rapordan okunamayan alan `null` olur (0 değil). Dosyada yalnızca sayılar ve ana makine adı vardır.
-Çıktı konumunu `hardening_scan_dir` ile değiştirebilirsin (varsayılan repodaki `scans/`); `<host>` ve `<tarih>`
-dizinleri 0700, dosyalar 0600 yazılır. `audit.yml` her çalışmada yeni bir tarih klasörü ürettiği için
+Çıktı konumunu `hardening_scan_dir` ile değiştirebilirsin (varsayılan kullanıcı klasörü, yukarıya bak); `<host>` ve `<tarih>`
+dizinleri 0700, dosyalar 0600 yazılır (varsayılan konumda uygulama dizini ve `scans/` de 0700; verdiğin özel yolun kendi izinlerine dokunulmaz). `audit.yml` her çalışmada yeni bir tarih klasörü ürettiği için
 **idempotent değildir** (bu beklenen); `--check` modunda tarama yapılmaz ve rapor/özet üretilmez.
 
 Skor tek başına hedef değil. Önemli olan **uyarı sayısı (0)** ve bilerek yapılmayanların `docs/decisions.md`'de kayıtlı olması.

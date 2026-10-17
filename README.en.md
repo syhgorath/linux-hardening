@@ -73,6 +73,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_access_guards.sh` | `allow_from` empty/invalid/outside, missing `SSH_CONNECTION`, root, IPv4/IPv6 |
 | `test_expressions.py` | deriving sshd ports from `ss` output, effective fail2ban `ignoreip` |
 | `test_templates.py` | default template output (golden files) and safe defaults |
+| `test_scan_dir.py` | The scan directory defaults to the user folder (HOME/XDG), never the package folder; modes 0700/0600; stops without HOME |
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |

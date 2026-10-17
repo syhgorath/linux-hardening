@@ -1,5 +1,5 @@
 # Baseline tarama. Sistem ayarlarini degistirmez; sadece lynis paketini kurar.
-# Rapor: scans/<host>/<tarih>/lynis-report.dat ve lynis.log
+# Rapor: <hardening_scan_dir>/<host>/<tarih>/lynis-report.dat ve lynis.log (varsayılan konum: aşağıda)
 - name: Audit (Lynis)
   # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
   # kabul edilir. Sistem/sürüm desteği hardening_preflight ile kontrol edilir, grup adıyla değil.
@@ -15,12 +15,27 @@
           tags: [always]
       tags: [always]
   tasks:
-    # Tarama çıktısı konumu: hardening_scan_dir (varsayılan: repodaki scans/). Altında <host>/<tarih>/ oluşur;
-    # <host> ve <tarih> dizinleri 0700, dosyalar 0600 yapılır (rapor hostname, paket, kullanıcı adı içerir).
+    # Tarama çıktısı konumu: hardening_scan_dir; verilmezse KULLANICI klasörü (paket klasörü USB/paylaşımlı olabilir ve rapor hassastır, #37):
+    #   $XDG_DATA_HOME/linux-hardening/scans, yoksa $HOME/.local/share/linux-hardening/scans
+    # Altında <host>/<tarih>/ oluşur; varsayılan konumda uygulama dizini ve scans/ 0700, <host> ve <tarih> dizinleri 0700, dosyalar 0600
+    # yapılır (rapor hostname, paket, kullanıcı adı içerir). Kullanıcının verdiği özel yolun kendi izinlerine dokunulmaz.
+    - name: Scan directory must be resolvable (HOME ya da XDG_DATA_HOME ya da hardening_scan_dir)
+      ansible.builtin.assert:
+        that:
+          - (hardening_scan_dir | default('')) | length > 0 or (lookup('ansible.builtin.env', 'XDG_DATA_HOME') | length > 0) or (lookup('ansible.builtin.env', 'HOME') | length > 0)
+        fail_msg: >-
+          Tarama dizini belirlenemedi: hardening_scan_dir verilmemiş ve ne XDG_DATA_HOME ne de HOME tanımlı.
+          -e hardening_scan_dir=/yol/scans ile verin.
+      delegate_to: localhost
+      become: false
+
     - name: Fix scan directory for this run
       ansible.builtin.set_fact:
+        hardening_scan_dir_is_default: "{{ (hardening_scan_dir | default('')) | length == 0 }}"
         scan_dir: >-
-          {{ (hardening_scan_dir | default(playbook_dir ~ '/../scans')) }}/{{ inventory_hostname }}/{{
+          {{ (hardening_scan_dir | default('')) if (hardening_scan_dir | default('')) | length > 0
+          else ((lookup('ansible.builtin.env', 'XDG_DATA_HOME') | default('', true))
+          or (lookup('ansible.builtin.env', 'HOME') ~ '/.local/share')) ~ '/linux-hardening/scans' }}/{{ inventory_hostname }}/{{
           lookup('pipe', 'date +%Y%m%d-%H%M%S') }}
       delegate_to: localhost
 
@@ -49,10 +64,12 @@
         path: "{{ item.path }}"
         state: directory
         mode: "{{ item.mode }}"
-      loop:
-        - { path: "{{ scan_dir | dirname | dirname }}", mode: null }
-        - { path: "{{ scan_dir | dirname }}", mode: "0700" }
-        - { path: "{{ scan_dir }}", mode: "0700" }
+      # Varsayılan (kullanıcı klasörü) konumda uygulama dizini ve scans/ da 0700; verilen özel yolun dizinine dokunulmaz.
+      loop: >-
+        {{ ([{'path': scan_dir | dirname | dirname | dirname, 'mode': '0700'}] if (hardening_scan_dir_is_default | default(false)) else [])
+        + [{'path': scan_dir | dirname | dirname, 'mode': ('0700' if (hardening_scan_dir_is_default | default(false)) else none)},
+        {'path': scan_dir | dirname, 'mode': '0700'},
+        {'path': scan_dir, 'mode': '0700'}] }}
       delegate_to: localhost
       become: false
       when: not ansible_check_mode

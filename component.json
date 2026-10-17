@@ -134,7 +134,7 @@
     {
       "name": "hardening_scan_dir",
       "type": "path",
-      "description": "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse bileşen içindeki scans/ kullanılır"
+      "description": "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse kullanıcı klasörü kullanılır (~/.local/share/linux-hardening/scans, XDG_DATA_HOME varsa onun altı), paket klasörü değil"
     },
     {
       "name": "hardening_rollback_enabled",

@@ -36,7 +36,7 @@ actions:
       - "Hedefe lynis paketini kurar; yapılandırmayı değiştirmez."
       - "Rapor ve summary.json hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
     outputs:
-      dir_var: hardening_scan_dir      # varsayılan: scans/ (repo içinde)
+      dir_var: hardening_scan_dir      # sshpocket verir; verilmezse kullanıcı klasörü (~/.local/share/linux-hardening/scans)
       summary: "<dir>/<host>/<tarih>/summary.json"
   preview:
     cmd: "ansible-playbook playbooks/harden.yml --check --diff"
@@ -101,7 +101,7 @@ vars:
     description: "SSH'a izin verilen yönetim ağları (CIDR listesi). Sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...): ufw yalnızca bunlardan SSH'a izin verir, yalnızca VPN yazarsan LAN'dan SSH kesilir. Kontrol makinesinin sunucudan görünen adresi de listede olmalı"
   - name: hardening_scan_dir
     type: path
-    description: "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse bileşen içindeki scans/ kullanılır"
+    description: "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse kullanıcı klasörü kullanılır (~/.local/share/linux-hardening/scans, XDG_DATA_HOME varsa onun altı), paket klasörü değil"
   - name: hardening_rollback_enabled
     type: bool
     default: true

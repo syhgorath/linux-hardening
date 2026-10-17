@@ -37,7 +37,8 @@
 # hardening_ufw_extra_allow: []
 
 # --- audit ---
-# Tarama çıktısının yazılacağı dizin (varsayılan: repodaki scans/). Altında <host>/<tarih>/ oluşur; <host> ve
+# Tarama çıktısının yazılacağı dizin (varsayılan: ~/.local/share/linux-hardening/scans, XDG_DATA_HOME varsa onun altı; paket
+# klasörüne YAZILMAZ). Altında <host>/<tarih>/ oluşur; <host> ve
 # <tarih> dizinleri 0700, dosyalar 0600. lynis-report.dat hostname, paket ve kullanıcı adı içerir; taşınabilir
 # bir ortama (USB) yazacaksanız şifreli bir birim kullanın.
 # hardening_scan_dir: /yol/scans
