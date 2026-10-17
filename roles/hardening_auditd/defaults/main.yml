@@ -1,0 +1,6 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# Kurallar yüklendikten sonra yeniden başlatılacak servisler (auditd'den ÖNCE başlayan süreçler yeniden başlatılana kadar denetlenmez).
+# Boş = hiçbir şey yeniden başlatılmaz. Servis kesintisi yaratır; `ssh`/`sshd` yazmayın (bağlantı doğrulaması sonrası elle yapın).
+hardening_auditd_restart_services: []
+# true: GRUB_CMDLINE_LINUX'a `audit=1` ekler ve update-grub çalıştırır; etkisi YENİDEN BAŞLATMADAN sonra başlar, geri alma güvenlik ağı kapsamında DEĞİLDİR.
+hardening_auditd_grub_audit: false

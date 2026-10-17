@@ -20,6 +20,8 @@ fails = 0
 
 DEFAULTS = [
     "roles/hardening_auth/defaults/main.yml",
+    "roles/hardening_kernel/defaults/main.yml",
+    "roles/hardening_auditd/defaults/main.yml",
     "roles/hardening_fail2ban/defaults/main.yml",
     "roles/hardening_ufw/defaults/main.yml",
     "roles/hardening_ssh/defaults/main.yml",
@@ -40,6 +42,7 @@ CASES = [
     ("sshd-hardening.pw-yes.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2",
      {"hardening_ssh_disable_password": False}),
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
+    ("sysctl.ra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_disable_ipv6_ra": True}),
     ("hardening.rules", "roles/hardening_auditd/templates/hardening.rules.j2", {}),
     ("hardening-rollback.sh", "roles/hardening_rollback/templates/hardening-rollback.sh.j2", {}),
     ("hardening-rollback.service", "roles/hardening_rollback/templates/hardening-rollback.service.j2", {}),
@@ -128,6 +131,19 @@ if not UPDATE:
                "ExecStart=/usr/local/sbin/hardening-rollback restore")
     assert_has("rollback: betik ssh servisi varsayilani", read("hardening-rollback.sh"),
                "DEFAULT_SSH_SERVICE='ssh'")
+
+    sy = read("sysctl.conf")
+    for n in ("net.ipv4.conf.all.secure_redirects = 0", "net.ipv4.conf.default.secure_redirects = 0", "net.ipv4.conf.all.route_localnet = 0"):
+        assert_has(f"sysctl varsayilan: {n}", sy, n)
+    assert_has("sysctl varsayilan: accept_ra YAZILMAZ (IPv6 kaybi riski)", sy, "accept_ra", want=False)
+    assert_has("sysctl ip_forward'a dokunulmaz", sy, "ip_forward =", want=False)
+    ra = read("sysctl.ra-off.conf")
+    assert_has("sysctl ra_off: all.accept_ra = 0", ra, "net.ipv6.conf.all.accept_ra = 0")
+    assert_has("sysctl ra_off: default.accept_ra = 0", ra, "net.ipv6.conf.default.accept_ra = 0")
+    ru = read("hardening.rules")
+    assert_has("auditd: clock_adjtime yalniz kullanici oturumundan (auid>=1000, unset degil)", ru,
+               "-S clock_adjtime -F auid>=1000 -F auid!=unset -k time-change")
+    assert_has("auditd: eski time-change kurali korunur", ru, "-S adjtimex,settimeofday,clock_settime -k time-change")
 
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)

@@ -19,7 +19,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 
 | Bölüm | Konu | Level 1 madde | ✅ | 🟡 | ⏸️ | ❌ |
 |---|---|---:|---:|---:|---:|---:|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 1 |  |  | 28 |
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 7 |  |  | 22 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 |  | 1 |  | 14 |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |
 | 1.4 | Önyükleyici | 2 |  |  |  | 2 |
@@ -31,9 +31,9 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 2.3 | Zaman senkronizasyonu | 6 |  |  |  | 6 |
 | 2.4 | Zamanlanmış işler (cron, at) | 10 |  |  |  | 10 |
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3 |  |  |  | 3 |
-| 3.2 | Ağ çekirdek modülleri | 7 | 4 |  |  | 3 |
-| 3.3 | Ağ çekirdek parametreleri | 27 | 17 |  | 5 | 5 |
-| 4.1 | Güvenlik duvarı (ufw) | 4 | 3 |  |  | 1 |
+| 3.2 | Ağ çekirdek modülleri | 7 | 6 |  |  | 1 |
+| 3.3 | Ağ çekirdek parametreleri | 27 | 20 | 2 | 5 |  |
+| 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |
 | 5.1 | SSH sunucusu | 24 | 8 | 1 |  | 15 |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 |  |  |  | 6 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 18 |
@@ -42,14 +42,20 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  | 1 |
 | 7.1 | Sistem dosyası izinleri | 13 |  |  |  | 13 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 11 |
-| | **Toplam** | **274** | **50** | **10** | **5** | **209** |
+| | **Toplam** | **274** | **62** | **12** | **5** | **195** |
 
-Yani Level 1 Server maddelerinin yaklaşık %18'i ✅, %22'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %23'i ✅, %27'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
 | Madde | Ne | Nerede |
 |---|---|---|
+| 1.1.1.1 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
+| 1.1.1.2 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
+| 1.1.1.3 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
+| 1.1.1.4 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
+| 1.1.1.5 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
+| 1.1.1.9 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
 | 1.1.1.10 | usb-storage modülü kapalı | `roles/hardening_base/tasks/main.yml` |
 | 1.5.1 | fs.protected_hardlinks = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 1.5.3 | kernel.yama.ptrace_scope = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
@@ -63,6 +69,8 @@ Yani Level 1 Server maddelerinin yaklaşık %18'i ✅, %22'i en azından kısmen
 | 1.6.7 | banner dosyaları root:root 0644 | `roles/hardening_base/tasks/main.yml` |
 | 1.6.8 | banner dosyaları root:root 0644 | `roles/hardening_base/tasks/main.yml` |
 | 1.6.10 | banner dosyaları root:root 0644 | `roles/hardening_base/tasks/main.yml` |
+| 3.2.1 | atm ve can modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
+| 3.2.2 | atm ve can modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
 | 3.2.3 | dccp, rds, sctp, tipc modülleri kapalı | `roles/hardening_kernel/tasks/main.yml` |
 | 3.2.4 | dccp, rds, sctp, tipc modülleri kapalı | `roles/hardening_kernel/tasks/main.yml` |
 | 3.2.5 | dccp, rds, sctp, tipc modülleri kapalı | `roles/hardening_kernel/tasks/main.yml` |
@@ -73,6 +81,8 @@ Yani Level 1 Server maddelerinin yaklaşık %18'i ✅, %22'i en azından kısmen
 | 3.3.1.7 | icmp_echo_ignore_broadcasts = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.8 | accept_redirects = 0 (IPv4 ve IPv6) | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.9 | accept_redirects = 0 (IPv4 ve IPv6) | `roles/hardening_kernel/templates/sysctl.conf.j2` |
+| 3.3.1.10 | secure_redirects = 0 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
+| 3.3.1.11 | secure_redirects = 0 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.12 | rp_filter = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.13 | rp_filter = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.14 | accept_source_route = 0 (IPv4 ve IPv6) | `roles/hardening_kernel/templates/sysctl.conf.j2` |
@@ -80,6 +90,7 @@ Yani Level 1 Server maddelerinin yaklaşık %18'i ✅, %22'i en azından kısmen
 | 3.3.1.16 | log_martians = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.17 | log_martians = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.1.18 | tcp_syncookies = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
+| 3.3.1.19 | route_localnet = 0 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.2.3 | accept_redirects = 0 (IPv4 ve IPv6) | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.2.4 | accept_redirects = 0 (IPv4 ve IPv6) | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 3.3.2.5 | accept_source_route = 0 (IPv4 ve IPv6) | `roles/hardening_kernel/templates/sysctl.conf.j2` |
@@ -87,6 +98,7 @@ Yani Level 1 Server maddelerinin yaklaşık %18'i ✅, %22'i en azından kısmen
 | 4.1.1 | ufw kurulur | `roles/hardening_ufw/tasks/main.yml` |
 | 4.1.2 | ufw etkinleştirilir | `roles/hardening_ufw/tasks/main.yml` |
 | 4.1.3 | gelen varsayılan: deny | `roles/hardening_ufw/tasks/main.yml` |
+| 4.1.5 | routed varsayılanı: deny (hardening_ufw_routed_deny, varsayılan true) | `roles/hardening_ufw/tasks/main.yml` |
 | 5.1.6 | Banner /etc/issue.net | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.8 | ClientAliveInterval 300, ClientAliveCountMax 2 (ikisi de sıfırdan büyük) | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.15 | LoginGraceTime 60 | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
@@ -107,6 +119,8 @@ Yani Level 1 Server maddelerinin yaklaşık %18'i ✅, %22'i en azından kısmen
 |---|---|
 | 1.2.2.1 | Güvenlik güncellemeleri otomatik (unattended-upgrades); 'tüm güncellemeler kurulu' denetlenmez |
 | 2.1.22 | postfix/courier kaldırılır, dinlemeyen `dma` kurulur; belirli bir MTA'nın yalnız-yerel ayarı denetlenmez |
+| 3.3.2.7 | `accept_ra = 0` yalnızca `hardening_kernel_disable_ipv6_ra=true` ile (varsayılan kapalı: RA ile IPv6 alan sunucu bağlantıyı kaybeder) |
+| 3.3.2.8 | `accept_ra = 0` yalnızca `hardening_kernel_disable_ipv6_ra=true` ile (varsayılan kapalı: RA ile IPv6 alan sunucu bağlantıyı kaybeder) |
 | 5.1.9 | X11, ajan ve TCP yönlendirme kapalı; `DisableForwarding yes` yazılmıyor |
 | 5.3.1.3 | libpam-pwquality kurulur; 'son sürüm' denetlenmez |
 | 5.3.2.3 | paket kurulur ve pwquality.conf yazılır; pam-configs'te etkin olduğu doğrulanmadı |
@@ -132,7 +146,7 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 
 | Bölüm | Konu | Madde numaraları |
 |---|---|---|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.1, 1.1.1.2, 1.1.1.3, 1.1.1.4, 1.1.1.5, 1.1.1.9, 1.1.1.11, 1.1.2.1.1, 1.1.2.1.2, 1.1.2.1.3, 1.1.2.1.4, 1.1.2.2.1, 1.1.2.2.2, 1.1.2.2.3, 1.1.2.2.4, 1.1.2.3.2, 1.1.2.3.3, 1.1.2.4.2, 1.1.2.4.3, 1.1.2.5.2, 1.1.2.5.3, 1.1.2.5.4, 1.1.2.6.2, 1.1.2.6.3, 1.1.2.6.4, 1.1.2.7.2, 1.1.2.7.3, 1.1.2.7.4 |
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11, 1.1.2.1.1, 1.1.2.1.2, 1.1.2.1.3, 1.1.2.1.4, 1.1.2.2.1, 1.1.2.2.2, 1.1.2.2.3, 1.1.2.2.4, 1.1.2.3.2, 1.1.2.3.3, 1.1.2.4.2, 1.1.2.4.3, 1.1.2.5.2, 1.1.2.5.3, 1.1.2.5.4, 1.1.2.6.2, 1.1.2.6.3, 1.1.2.6.4, 1.1.2.7.2, 1.1.2.7.3, 1.1.2.7.4 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.1, 1.2.1.3, 1.2.1.4, 1.2.1.5, 1.2.1.6, 1.2.1.7, 1.2.1.8, 1.2.1.9, 1.2.1.10, 1.2.1.11, 1.2.1.12, 1.2.1.13, 1.2.1.14, 1.2.1.15 |
 | 1.3 | AppArmor | 1.3.1.1, 1.3.1.2, 1.3.1.4 |
 | 1.4 | Önyükleyici | 1.4.1, 1.4.2 |
@@ -144,9 +158,7 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 2.3 | Zaman senkronizasyonu | 2.3.1.1, 2.3.2.1, 2.3.2.2, 2.3.3.1, 2.3.3.2, 2.3.3.3 |
 | 2.4 | Zamanlanmış işler (cron, at) | 2.4.1.1, 2.4.1.2, 2.4.1.3, 2.4.1.4, 2.4.1.5, 2.4.1.6, 2.4.1.7, 2.4.1.8, 2.4.1.9, 2.4.2.1 |
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1, 3.1.2, 3.1.3 |
-| 3.2 | Ağ çekirdek modülleri | 3.2.1, 3.2.2, 3.2.7 |
-| 3.3 | Ağ çekirdek parametreleri | 3.3.1.10, 3.3.1.11, 3.3.1.19, 3.3.2.7, 3.3.2.8 |
-| 4.1 | Güvenlik duvarı (ufw) | 4.1.5 |
+| 3.2 | Ağ çekirdek modülleri | 3.2.7 |
 | 5.1 | SSH sunucusu | 5.1.1, 5.1.2, 5.1.3, 5.1.4, 5.1.5, 5.1.7, 5.1.10, 5.1.11, 5.1.12, 5.1.13, 5.1.14, 5.1.17, 5.1.20, 5.1.23, 5.1.24 |
 | 5.2 | Yetki yükseltme (sudo, su) | 5.2.1, 5.2.2, 5.2.3, 5.2.5, 5.2.6, 5.2.7 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.1, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.3, 5.3.3.4.4 |
@@ -166,7 +178,7 @@ Projenin CIS Level 1 Server'da **karşılığı olmayan** (ya da daha ileri gide
 
 ## Sonraki adım için notlar
 
-- En kolay kazançlar (düşük risk, kodda küçük): `ufw default deny routed` (4.1.5), kalan `sysctl` satırları (3.3.1.10, 3.3.1.11, 3.3.1.19, 3.3.2.7, 3.3.2.8), kullanılmayan dosya sistemi/ağ modülleri (1.1.1.x, 3.2.1, 3.2.2), SSH'ta açıkça yazılmayan seçenekler (5.1.10–5.1.14, 5.1.17, 5.1.20, 5.1.23, 5.1.24; sunucunun varsayılanları `sshd -T` ile doğrulanmadı).
+- Yapılan kolay kazançlar: `ufw default deny routed` (4.1.5), `secure_redirects`/`route_localnet` (3.3.1.10/11/19), kullanılmayan dosya sistemi ve ağ modülleri (1.1.1.x, 3.2.1, 3.2.2). Kalanlar: SSH'ta açıkça yazılmayan seçenekler (5.1.10–5.1.14, 5.1.17, 5.1.20, 5.1.23, 5.1.24; sunucunun varsayılanları `sshd -T` ile doğrulanmadı), `pam_faillock`/`pwhistory` (5.3.x), sudo (5.2.x), dosya izinleri (7.1.x).
 - Davranışı değiştirenler önce tartışılmalı: bölüm/bağlama seçenekleri (1.1.2.x), `pam_faillock` (kilitlenme riski), sudo ayarları, ssh şifre/kex listeleri (eski istemcileri bozabilir).
 - Madde numarası etiket yapılacaksa (ör. `--tags cis-3.3.1.4`), mevcut `ufw`/`ssh` koruma etiketleriyle karışmaması için ayrı ad alanı gerekir.
 

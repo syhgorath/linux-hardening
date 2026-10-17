@@ -26,6 +26,7 @@
   ansible.builtin.command: auditctl -l
   register: hardening_auditd_loaded
   changed_when: false
+  failed_when: false   # çekirdek denetimi yoksa (konteyner/LXC) okuma başarısız olur; o zaman yükleme görevi karar verir
   check_mode: false
   when: not ansible_check_mode
 
@@ -34,7 +35,27 @@
   changed_when: true
   when: >-
     not ansible_check_mode and
-    (hardening_auditd_rules_file is changed or 'No rules' in hardening_auditd_loaded.stdout)
+    (hardening_auditd_rules_file is changed or hardening_auditd_loaded.rc != 0 or 'No rules' in hardening_auditd_loaded.stdout)
+
+# İsteğe bağlı (hardening_auditd_restart_services, varsayılan boş): auditd'den ÖNCE başlamış servisleri kurallar yüklendikten sonra yeniden başlatır,
+# böylece denetlenmeye başlarlar. sshd bilerek yasak: erişim kaybı riski (docs/design/auditd-kapsam.md 1b).
+- name: Refuse to restart ssh through the auditd role
+  ansible.builtin.assert:
+    that: >-
+      hardening_auditd_restart_services
+      | map('regex_replace', '\\.service$', '')
+      | select('in', ['ssh', 'sshd', 'ssh.socket'])
+      | list | length == 0
+    fail_msg: >-
+      hardening_auditd_restart_services içinde ssh/sshd olamaz (erişim kaybı riski). SSH'ı bağlantıyı doğruladıktan sonra elle yeniden başlatın.
+  when: hardening_auditd_restart_services | length > 0
+
+- name: Restart listed services so they are audited
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+  loop: "{{ hardening_auditd_restart_services }}"
+  when: not ansible_check_mode and hardening_auditd_restart_services | length > 0
 
 # Denetim kapsamı raporu (SALT OKUNUR; davranışı değiştirmez): auditd'den ÖNCE başlamış süreçler, yeniden başlatılana kadar denetlenmez
 # (test VM'inde chronyd ile ölçüldü; çekirdek komut satırında audit=1 yoktu). Tasarım: docs/design/auditd-kapsam.md (P1, seçenek 1c).
@@ -63,3 +84,36 @@
       sunucuyu yeniden başlatmak çoğunu kapsar ama çekirdek komut satırında audit=1 yoksa önyüklemenin erken süreçleri kapsam dışı kalabilir
       (doğrulanmadı). Ayrıntı: docs/design/auditd-kapsam.md (P1).
   when: hardening_auditd_unaudited.stdout_lines | length > 0
+
+# İsteğe bağlı (hardening_auditd_grub_audit, varsayılan false): çekirdek komut satırına audit=1. Etkisi YENİDEN BAŞLATMADAN sonra başlar ve
+# geri alma güvenlik ağı kapsamında DEĞİL (docs/design/auditd-kapsam.md 1a). /etc/default/grub yoksa (Raspberry Pi, LXC...) dokunulmaz.
+- name: Check GRUB default file
+  ansible.builtin.stat:
+    path: /etc/default/grub
+  register: hardening_auditd_grub_file
+  when: hardening_auditd_grub_audit | bool
+
+- name: Add audit=1 to GRUB_CMDLINE_LINUX (reboot required)
+  ansible.builtin.replace:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=")((?:(?!\baudit=)[^"])*)"'
+    replace: '\1\2 audit=1"'
+  register: hardening_auditd_grub_edit
+  when: hardening_auditd_grub_audit | bool and hardening_auditd_grub_file.stat.exists
+
+- name: Regenerate GRUB configuration
+  ansible.builtin.command: update-grub
+  changed_when: true
+  when: not ansible_check_mode and hardening_auditd_grub_edit is changed
+
+- name: Tell that audit=1 needs a reboot
+  ansible.builtin.debug:
+    msg: >-
+      UYARI: GRUB_CMDLINE_LINUX'a audit=1 eklendi; etkisi sunucuyu YENİDEN BAŞLATTIKTAN sonra başlar. Bu ayar geri alma güvenlik ağı kapsamında değildir;
+      geri almak için /etc/default/grub içinden audit=1'i silip update-grub çalıştırın.
+  when: (hardening_auditd_grub_edit | default({})).get('changed', false)
+
+- name: Warn that GRUB is not available for audit=1
+  ansible.builtin.debug:
+    msg: "UYARI: hardening_auditd_grub_audit=true ama /etc/default/grub yok (GRUB kullanılmıyor olabilir); audit=1 eklenmedi."
+  when: hardening_auditd_grub_audit | bool and not hardening_auditd_grub_file.stat.exists

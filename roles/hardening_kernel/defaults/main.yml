@@ -1,0 +1,4 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# true: IPv6 yönlendirici duyurularını (RA) kabul etmeyi kapatır (CIS 3.3.2, accept_ra). Adresini/yolunu yalnızca RA'dan alan
+# bir sunucu IPv6 bağlantısını KAYBEDER; bu yüzden varsayılan false.
+hardening_kernel_disable_ipv6_ra: false

@@ -15,7 +15,20 @@
     mode: "0644"
     content: |
       # Ansible tarafından yönetilir
-      {% for m in ['dccp', 'sctp', 'rds', 'tipc'] %}
+      {% for m in ['atm', 'can', 'dccp', 'rds', 'sctp', 'tipc'] %}
+      install {{ m }} /bin/false
+      blacklist {{ m }}
+      {% endfor %}
+
+- name: Disable unused filesystem modules (CIS 1.1.1.x)
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/60-hardening-filesystems.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      {% for m in ['cramfs', 'freevxfs', 'hfs', 'hfsplus', 'jffs2', 'firewire-core'] %}
       install {{ m }} /bin/false
       blacklist {{ m }}
       {% endfor %}

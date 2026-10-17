@@ -62,5 +62,7 @@ if None not in (template_i, start_i, load_i):
     if read_i is not None:
         r = tasks[read_i]
         check("okuma görevi değişiklik sayılmıyor ve --check'te de güvenli", r.get("changed_when") is False)
+        check("okuma başarısız olsa da rol durmuyor (çekirdek denetimi olmayan konteyner/LXC); karar yükleme görevinde", r.get("failed_when") is False)
+        check("okuma başarısızsa (rc != 0) kurallar yüklenmeyi dener", "loaded.rc != 0" in when, f"when={when}")
 
 sys.exit(1 if fails else 0)
