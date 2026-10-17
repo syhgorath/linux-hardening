@@ -206,7 +206,7 @@ Sertleştirmenin **meşru kullanımları bozabileceği** yerler (Docker, mail su
 | Sunucuya SSH ile giremiyorum (firewall/SSH sonrası) | **Proxmox konsolundan** gir: `sudo ufw disable` veya `/etc/ssh/sshd_config.d/00-hardening.conf` dosyasını düzelt. Olmazsa snapshot'a dön |
 | `Permission denied (publickey)` | `ssh-copy-id` yapılmamış ya da yanlış kullanıcı (`ansible_user`) |
 | `sudo: a password is required` | NOPASSWD ayarı yok → `--ask-become-pass` kullan ya da bölüm 2.4 |
-| Proxmox snapshot'ına döndükten sonra `apt`/TLS hataları ya da tuhaf zaman damgaları | VM saati geride kalmış olabilir (snapshot saati). `timedatectl` ile bakın; `sudo chronyc makestep` saati anında düzeltir |
+| Proxmox snapshot'ına döndükten sonra `apt`/TLS hataları ya da tuhaf zaman damgaları | VM saati geride kalmış olabilir (snapshot saati). `timedatectl` ile bakın (**dikkat:** "synchronized: yes" yanıltıcı olabilir, tarihi `date -u` ile karşılaştırın). `sudo chronyc makestep` saati düzeltir, **ama chrony'nin kaynakları henüz seçilmemişse (`chronyc sources` çıktısında `^?`) sessizce hiçbir şey yapmaz**; o zaman `sudo systemctl restart chrony` kullanın (başlangıçtaki `makestep 1 3` büyük adımı birkaç saniyede yapar). İkisi de denendi (test VM'i, ~8 günlük kayma) |
 | Host key hatası | Önce elle `ssh kullanici@IP` ile bağlanıp kabul et |
 | `ansible: command not found` | `source .venv/bin/activate` yapılmamış |
 | `hardening_ssh_allow_from boş veya tanımsız` / `kaynak adres ... içinde değil` | Yönetim ağını `hardening_ssh_allow_from`'a yaz (bölüm 3). Bu kontrol seni kilitlenmeden korur, aşmaya çalışma |
