@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- Zaman senkronizasyonu rolü için tasarım notu: `docs/design/zaman-ntp.md` (kod yok; seçenekler, değişkenler, riskler, açık sorular).
+
 ## [0.2.1] - 2026-10-17
 
 sshpocket ile gerçek çalıştırmalarda çıkan sorunların düzeltildiği ve ansible-core 2.24'e hazırlanan sürüm. Davranış değişikliği: doğrudan
