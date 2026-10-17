@@ -24,7 +24,7 @@
 
 - name: Authorized key must exist before disabling password auth
   ansible.builtin.stat:
-    path: "{{ getent_passwd[hardening_ssh_login_user.stdout][4] }}/.ssh/authorized_keys"
+    path: "{{ ansible_facts['getent_passwd'][hardening_ssh_login_user.stdout][4] }}/.ssh/authorized_keys"
   register: hardening_ssh_keys
   when: hardening_ssh_disable_password
 
@@ -35,7 +35,7 @@
       - hardening_ssh_keys.stat.size > 0
     fail_msg: >-
       {{ hardening_ssh_login_user.stdout }} için
-      {{ getent_passwd[hardening_ssh_login_user.stdout][4] }}/.ssh/authorized_keys yok ya da boş;
+      {{ ansible_facts['getent_passwd'][hardening_ssh_login_user.stdout][4] }}/.ssh/authorized_keys yok ya da boş;
       parola girişi kapatılmadı.
   when: hardening_ssh_disable_password
 

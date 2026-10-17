@@ -6,6 +6,9 @@ TESTDIR="$ROOT/test"
 FAILS=0
 PY="${PYTHON:-python3}"
 export PY
+# ansible-core 2.24'te fact'ler artık üst düzey değişken olarak enjekte edilmez (INJECT_FACTS_AS_VARS=False varsayılan olacak).
+# Testler bunu şimdiden zorlar: ansible_distribution gibi üst düzey fact'e dokunan kod burada kırılır (#36).
+export ANSIBLE_INJECT_FACT_VARS=False   # ansible-core 2.21 env adı (ini: inject_facts_as_vars)
 
 ok()  { printf '  ok   %s\n' "$1"; }
 bad() { printf '  FAIL %s\n' "$1"; FAILS=$((FAILS+1)); }

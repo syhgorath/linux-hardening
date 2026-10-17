@@ -1,0 +1,11 @@
+# hardening_preflight/tasks/main.yml (OS denetimi + vars/ yükleme) yalıtılmış çalıştırır; fact'ler -e ansible_facts ile verilir.
+- name: Preflight OS check (test)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Run preflight OS check
+      ansible.builtin.include_role:
+        name: hardening_preflight
+        tasks_from: main
