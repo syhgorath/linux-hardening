@@ -83,7 +83,7 @@ the code. Rows marked "Deliberately" are documented decisions; the others are **
 | Rare filesystem modules (`cramfs`, `udf`, `squashfs`, …) | Not yet | Only `dccp`, `sctp`, `rds`, `tipc` and `usb-storage` are blocked |
 | SUID/SGID inventory | Not yet | |
 | Scheduled AIDE checks | Not yet | Only the initial database is created; scheduling is the package default (not verified) |
-| Time synchronization | Not yet | Design note: [zaman-ntp.md](docs/design/zaman-ntp.md) (Turkish) |
+| Time synchronization | Partial | Read-only report only (`hardening_time`: clock-drift warning); chrony is not configured. Design note: [zaman-ntp.md](docs/design/zaman-ntp.md) (Turkish) |
 | Audit (auditd) coverage | Limited | 6 rule groups (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); no `-e 2`; command execution/file deletion are not audited; processes started **before** auditd are not audited until restarted |
 | fail2ban | Limited | `sshd` jail only |
 
