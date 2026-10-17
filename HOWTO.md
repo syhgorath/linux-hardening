@@ -190,6 +190,7 @@ Skor tek başına hedef değil. Önemli olan **uyarı sayısı (0)** ve bilerek 
 | `hardening_auditd` | auditd + temel kurallar |
 | `hardening_fail2ban` | SSH jail |
 | `hardening_aide` | Dosya bütünlüğü veritabanı |
+| `hardening_time` | Salt okunur zaman raporu (chrony durumu, kaynaklar, saat kayması); `harden` çıktısında `ZAMAN:` / `UYARI (zaman):`. Hiçbir şeyi değiştirmez |
 | `hardening_ufw` | Gelen trafik varsayılan engelli, SSH sadece yönetim ağından |
 | `hardening_ssh` | Root yok, parola yok, MaxAuthTries 3, forwarding kapalı |
 

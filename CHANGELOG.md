@@ -6,6 +6,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_time` (yeni rol, etiket `time`): **salt okunur** zaman raporu. chrony çalışıyor mu, kaynaklar ulaşılabilir ve seçili mi, saat kaynaklara göre ne kadar kayık? `harden` çıktısında `ZAMAN:` ya da `UYARI (zaman):` verir.
+  Snapshot dönüşünde `timedatectl` "synchronized: yes" derken saatin günlerce kayık olduğu görüldü; rapor bunu kaynakların ölçtüğü ofsetten yakalar. Saati ya da yapılandırmayı **değiştirmez**, `--check`'te de çalışır.
+  Değişkenler: `hardening_time_report` (varsayılan `true`), `hardening_time_max_offset_seconds` (varsayılan `5`). Testler: `test_time_report.py`, `test_time_tasks.py`.
 - README (TR/EN): **"Ne yapmaz (kapsam sınırları)"** bölümü: alan bazlı tablo; "bilerek" (belgeli karar) ile "henüz yapılmadı" ayrımı. Madde numaralı CIS eşlemesi henüz yok, bölüm bunu açıkça söyler.
 ## [0.2.2] - 2026-10-17
 
