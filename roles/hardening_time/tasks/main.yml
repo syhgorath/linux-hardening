@@ -26,12 +26,22 @@
       failed_when: false
       check_mode: false
 
+    # Çapraz kontrol: sunucu saati ile kontrol makinesinin saati. Kaynaklar seçilmemişken (snapshot dönüşü) chrony'nin ofseti yanıltıcı olabiliyor.
+    - name: Read the server clock (epoch seconds)
+      ansible.builtin.command: date +%s
+      register: hardening_time_epoch
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
     - name: Evaluate time synchronization
       ansible.builtin.script:
         cmd: >-
           time_report.py {{ {'service': (hardening_time_service.status | default({})).ActiveState | default(''),
           'sources': hardening_time_sources.stdout_lines | default([]),
           'ntp_synchronized': hardening_time_sync_flag.stdout | default('') | trim,
+          'target_epoch': hardening_time_epoch.stdout | default('') | trim,
+          'controller_epoch': now().timestamp() | int,
           'max_offset': hardening_time_max_offset_seconds} | to_json | quote }}
         executable: python3
       register: hardening_time_raw

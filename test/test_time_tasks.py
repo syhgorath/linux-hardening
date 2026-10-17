@@ -54,10 +54,32 @@ check("varsayılanlar: rapor açık, eşik 5 sn", defaults == {"hardening_time_r
 
 cmds = " ".join(str(t.get("ansible.builtin.command", "")) for t in leaf)
 check("saati değiştiren komut yok (makestep, systemctl restart/start/stop, timedatectl set-*)",
-      not any(x in cmds for x in ("makestep", "restart", "systemctl start", "systemctl stop", "set-time", "set-ntp")), f"komutlar={cmds}")
+      not any(x in cmds for x in ("makestep", "restart", "systemctl start", "systemctl stop", "set-time", "set-ntp", "hwclock", "date -s", "date --set", "ntpdate")), f"komutlar={cmds}")
+dates = [str(t["ansible.builtin.command"]) for t in leaf if mod(t) == "ansible.builtin.command" and str(t["ansible.builtin.command"]).startswith("date")]
+check("`date` yalnızca epoch OKUR (date +%s)", dates == ["date +%s"], f"date komutları={dates}")
 
 roles = [r.get("role") for r in play["roles"] if isinstance(r, dict)]
 entry = next((r for r in play["roles"] if isinstance(r, dict) and r.get("role") == "hardening_time"), None)
 check("harden.yml'de rol var, etiketi `time`", entry is not None and entry.get("tags") == ["time"])
 check("rol, ufw/ssh'tan ÖNCE (erişim kaybı korumalarından bağımsız, yalnızca rapor)", roles.index("hardening_time") < roles.index("hardening_ufw") < roles.index("hardening_ssh"))
+# kontrol makinesi epoch ifadesi: saat diliminden bağımsız doğru olmalı (now(utc=true).timestamp() naive UTC'yi yerel sayar ve saat dilimi kadar kayar; VM'de 3 sa kayma olarak görüldü)
+import os
+import re
+import subprocess
+import tempfile
+import time
+text = (ROOT / "roles/hardening_time/tasks/main.yml").read_text(encoding="utf-8")
+m = re.search(r"'controller_epoch': (.+?\| int),", text)
+check("controller_epoch ifadesi bulundu", bool(m))
+if m:
+    expr = m.group(1)
+    for tz in ("UTC", "Europe/Istanbul", "America/New_York", "Pacific/Auckland"):
+        with tempfile.TemporaryDirectory() as d:
+            pb = Path(d) / "p.yml"
+            pb.write_text("- hosts: localhost\n  connection: local\n  gather_facts: false\n  tasks:\n    - ansible.builtin.debug:\n        msg: \"EPOCH={{ " + expr + " }}\"\n", encoding="utf-8")
+            r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pb)], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                               env={**os.environ, "TZ": tz, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
+        got = re.search(r"EPOCH=(\d+)", r.stdout)
+        check(f"controller_epoch gerçek epoch'a eşit (TZ={tz})", bool(got) and abs(int(got.group(1)) - time.time()) < 30, f"çıktı={got.group(1) if got else r.stdout[-200:]}")
+
 sys.exit(1 if fails else 0)
