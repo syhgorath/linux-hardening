@@ -188,6 +188,15 @@ for name, act in comp.get("actions", {}).items():
     warns = act.get("warnings")
     if not isinstance(warns, list) or not warns or any(not str(w).strip() for w in warns):
         err(f"actions.{name}: warnings boş olmayan bir metin listesi olmalı")
+# -i/--inventory, --limit/-l, -e/--extra-vars çalıştırıcıya aittir (sshpocket ekler): cmd'de ya da invoke.append'de yazılmamalı
+RUNNER_FLAG = re.compile(r"^(-i|--inventory|--limit|-l|-e|--extra-vars)(=.*)?$")
+for name, act in comp.get("actions", {}).items():
+    for tok in str(act.get("cmd", "")).split():
+        if RUNNER_FLAG.match(tok):
+            err(f"actions.{name}: cmd çalıştırıcıya ait bayrak içeriyor ({tok}); sshpocket -i/--limit/-e'yi kendisi ekler")
+for item in comp.get("invoke", {}).get("append", []):
+    if RUNNER_FLAG.match(str(item.get("arg", ""))):
+        err(f"invoke.append {item.get('arg')}: çalıştırıcıya ait bayrak yazılmamalı (sshpocket ekler, paket standardı §14)")
 for item in comp.get("invoke", {}).get("append", []):
     val = str(item.get("value", ""))
     if val and not re.fullmatch(r"<[a-z0-9_ -]{1,40}>|[A-Za-z0-9_./:@=,+-]{1,200}", val):

@@ -112,11 +112,9 @@ vars:
     max: 3600
     description: "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur"
 
-# sshpocket'in yukarıdaki cmd'nin sonuna eklediği argümanlar. Yer tutucular sshpocket doğrulayıcısının biçimindedir
-# (küçük harf ASCII, <...>). "-e @<değişken dosyası>" burada YOKTUR: runner: ansible için değişken dosyasını sshpocket
-# kendisi verir (paket standardı §7).
+# sshpocket'in yukarıdaki cmd'nin sonuna eklediği EK bayraklar. -i (geçici inventory), --limit (sunucu) ve -e @dosya
+# (değişkenler) burada YOKTUR: runner: ansible için bunları sshpocket çalıştırıcısı kendisi ekler (paket standardı §7, §14 madde 7);
+# invoke.append içinde geçerse yok sayılırlar, cmd içinde geçerse paket reddedilir. Denetim: scripts/check-consistency.py.
 invoke:
   append:
-    - { arg: "-i", value: "<inventory>", required: true }              # sshpocket'in ürettiği geçici inventory
-    - { arg: "--limit", value: "<server>", required: true }
     - { arg: "--ask-become-pass", required: true, interactive: true }   # sudo parolasını Ansible kendi istemiyle alır

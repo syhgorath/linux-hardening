@@ -153,16 +153,6 @@
   "invoke": {
     "append": [
       {
-        "arg": "-i",
-        "value": "<inventory>",
-        "required": true
-      },
-      {
-        "arg": "--limit",
-        "value": "<server>",
-        "required": true
-      },
-      {
         "arg": "--ask-become-pass",
         "required": true,
         "interactive": true
