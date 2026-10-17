@@ -10,6 +10,12 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
   `hardening_pve_access`, `hardening_preflight/tasks/platform.yml`. `harden.yml` bunlara bağlı değil; yanlışlıkla çağrılırsa durur.
   Davranış değişmez.
 
+## [0.2.1] - 2026-10-17
+
+sshpocket ile gerçek çalıştırmalarda çıkan sorunların düzeltildiği ve ansible-core 2.24'e hazırlanan sürüm. Davranış değişikliği: doğrudan
+`ansible-playbook` ile çalıştıranlar için `hardening_scan_dir` varsayılan konumu artık kullanıcı klasörüdür (#37, aşağıda); sshpocket üzerinden
+çalıştıranlar etkilenmez.
+
 ### Düzeltildi
 - Playbook'lar (`harden`, `audit`, `rollback`) artık yalnızca envanterde **var olan** `hardening` / `ubuntu` gruplarını hedefler (#35): sshpocket'in
   ürettiği yalnız-`hardening` envanterinde her çalıştırmada çıkan `Could not match supplied host pattern, ignoring: ubuntu` uyarısı kalktı.
@@ -77,6 +83,7 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.2.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/syhgorath/linux-hardening/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/syhgorath/linux-hardening/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/syhgorath/linux-hardening/releases/tag/v0.1.0
