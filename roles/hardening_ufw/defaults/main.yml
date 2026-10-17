@@ -6,3 +6,7 @@
 hardening_ssh_allow_from: []
 # Ek açılacak portlar, örn: ["443/tcp"]
 hardening_ufw_extra_allow: []
+# false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki SSH kuralları için yalnızca UYARIR.
+# true: bu kuralları SİLER (kontrol makinesinin adresini kapsayanlara, extra_allow'dakilere ve biçime uymayanlara dokunulmaz).
+# Silmeden sonra allow_from'daki her ağın kuralı yerinde değilse rol ufw'yi etkinleştirmeden durur.
+hardening_ufw_prune_ssh: false

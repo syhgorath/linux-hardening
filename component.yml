@@ -102,6 +102,11 @@ vars:
   - name: hardening_scan_dir
     type: path
     description: "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse kullanıcı klasörü kullanılır (~/.local/share/linux-hardening/scans, XDG_DATA_HOME varsa onun altı), paket klasörü değil"
+  - name: hardening_ufw_prune_ssh
+    type: bool
+    default: false
+    warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
+    description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
   - name: hardening_rollback_enabled
     type: bool
     default: true

@@ -49,6 +49,94 @@
   register: hardening_ufw_extra
   changed_when: "'Skipping' not in hardening_ufw_extra.stdout"
 
+# allow_from'dan çıkarılan ağın kuralı firewall'da kalırdı (rol yalnızca ekliyordu): sunucu değişkende yazandan daha açık olurdu.
+# Karar mantığı files/stale_ssh_rules.py içindedir (test/test_ufw_stale_rules.py): yalnızca bu rolün yazdığı biçimdeki SSH kuralları,
+# ağlar normalleştirilerek karşılaştırılır; allow_from boşsa, kontrol makinesinin adresi bilinmiyorsa ya da kural onun adresini
+# kapsıyorsa HİÇBİR ŞEY silinmez. Varsayılan yalnızca UYARIR; silmek için hardening_ufw_prune_ssh=true.
+- name: Client address as the server sees it for the stale-rule check (SSH_CONNECTION, become olmadan)
+  ansible.builtin.command: printenv SSH_CONNECTION
+  become: false
+  register: hardening_ufw_ssh_connection
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Read ufw rules added so far
+  ansible.builtin.command: ufw show added
+  register: hardening_ufw_added
+  changed_when: false
+  check_mode: false
+
+- name: Find SSH rules that are not in hardening_ssh_allow_from
+  ansible.builtin.script:
+    cmd: >-
+      stale_ssh_rules.py {{ {'allow_from': hardening_ssh_allow_from, 'ssh_ports': hardening_ufw_ssh_ports,
+      'extra_allow': hardening_ufw_extra_allow,
+      'controller': (hardening_ufw_ssh_connection.stdout | default('')).split(' ')[0],
+      'added': hardening_ufw_added.stdout_lines} | to_json | quote }}
+    executable: python3
+  register: hardening_ufw_stale_raw
+  changed_when: false
+  check_mode: false
+
+- name: Parse the stale-rule result
+  ansible.builtin.set_fact:
+    hardening_ufw_stale: "{{ hardening_ufw_stale_raw.stdout | from_json }}"
+
+- name: Warn about SSH rules that are no longer in hardening_ssh_allow_from
+  ansible.builtin.debug:
+    msg: >-
+      UYARI: ufw'de hardening_ssh_allow_from'da OLMAYAN {{ hardening_ufw_stale.stale | length }} SSH kuralı var
+      ({{ hardening_ufw_stale.stale | map(attribute='src') | join(', ') }}); sunucu değişkende yazandan daha açık.
+      {{ 'Silinecek (hardening_ufw_prune_ssh=true).' if hardening_ufw_prune_ssh | bool else
+      'Silmek için hardening_ufw_prune_ssh=true verin ya da elle: ufw delete allow from <ağ> to any port <port> proto tcp.' }}
+  when: hardening_ufw_stale.stale | length > 0
+
+- name: Warn that stale-rule pruning was skipped for safety
+  ansible.builtin.debug:
+    msg: >-
+      UYARI: eski SSH kuralı temizliği güvenlik nedeniyle yapılmadı:
+      {{ hardening_ufw_stale.error if hardening_ufw_stale.error | length > 0 else
+      'kontrol makinesinin adresini kapsayan kural(lar): ' ~ (hardening_ufw_stale.blocked | map(attribute='src') | join(', ')) }}
+  when: hardening_ufw_prune_ssh | bool and (hardening_ufw_stale.error | length > 0 or hardening_ufw_stale.blocked | length > 0)
+
+- name: Delete SSH rules that are not in hardening_ssh_allow_from
+  ansible.builtin.command:
+    argv: [ufw, --force, delete, allow, from, "{{ item.src }}", to, any, port, "{{ item.port }}", proto, tcp]
+  loop: "{{ hardening_ufw_stale.stale }}"
+  when: hardening_ufw_prune_ssh | bool and not ansible_check_mode and hardening_ufw_stale.error | length == 0
+  changed_when: true
+
+# Silmeden SONRA: allow_from'daki her ağın kuralı yerinde olmalı, yoksa ufw enable'dan ÖNCE durulur (erişim kaybını önler).
+- name: Read ufw rules again after pruning
+  ansible.builtin.command: ufw show added
+  register: hardening_ufw_added_after
+  changed_when: false
+  check_mode: false
+  when: hardening_ufw_prune_ssh | bool and not ansible_check_mode
+
+- name: Verify every allowed network still has its SSH rule
+  ansible.builtin.script:
+    cmd: >-
+      stale_ssh_rules.py {{ {'allow_from': hardening_ssh_allow_from, 'ssh_ports': hardening_ufw_ssh_ports,
+      'extra_allow': hardening_ufw_extra_allow,
+      'controller': (hardening_ufw_ssh_connection.stdout | default('')).split(' ')[0],
+      'added': hardening_ufw_added_after.stdout_lines} | to_json | quote }}
+    executable: python3
+  register: hardening_ufw_verify_raw
+  changed_when: false
+  check_mode: false
+  when: hardening_ufw_prune_ssh | bool and not ansible_check_mode
+
+- name: Stop if an allowed network lost its SSH rule (erişim kaybını önler)
+  ansible.builtin.assert:
+    that:
+      - (hardening_ufw_verify_raw.stdout | from_json).missing | length == 0
+    fail_msg: >-
+      Temizlikten sonra allow_from'daki bazı ağların SSH kuralı eksik: {{ (hardening_ufw_verify_raw.stdout | from_json).missing }}.
+      ufw etkinleştirilmedi.
+  when: hardening_ufw_prune_ssh | bool and not ansible_check_mode
+
 - name: Default policies
   ansible.builtin.command: "ufw default {{ item.value }} {{ item.key }}"
   loop:
