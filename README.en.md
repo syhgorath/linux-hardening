@@ -58,6 +58,37 @@ Live verification log: [docs/verification-log.md](docs/verification-log.md); roa
 >
 > Try it on a test server first, take a snapshot, and look at `--check --diff`.
 
+## What it does not do (scope limits)
+
+This project **does not claim full CIS Benchmark compliance**: the goal is a "Level 1 Server *approach*". Which CIS items are covered has **not yet been mapped by item number**
+(the mapping will be built from the CIS Benchmark PDF, see [docs/ROADMAP.md](docs/ROADMAP.md), Turkish), so the table below is by **area**, not by item, and lists only limits verified in
+the code. Rows marked "Deliberately" are documented decisions; the others are **not done yet**, which does not mean they were skipped on purpose. If you find a missing area, please open an issue.
+
+| Area | Status | Note |
+|---|---|---|
+| Changing the SSH port | Deliberately not done | The ufw rule is written from the port sshd actually listens on ([decisions.md](docs/decisions.md), Turkish) |
+| Automatic reboot | Deliberately not done | Automatic security updates are enabled, no reboot ([HOWTO.md](HOWTO.md), Turkish) |
+| User, password and key management | Not by design | You create the user; the role only checks that `authorized_keys` is non-empty before disabling password login |
+| Application hardening (nginx, MySQL, …) | Out of scope | Operating system only |
+| Other distributions/versions | Not yet | Ubuntu 26.04 only; Raspberry Pi/Proxmox planned ([SUPPORT.md](docs/SUPPORT.md)) |
+| Rollback | Partial | Only the sshd drop-in and ufw are rolled back; packages, sysctl, auditd, fail2ban, AIDE are not |
+| Partition/mount options (`/tmp`, `nodev`, `noexec`, `hidepid`) | Not yet | |
+| Bootloader (GRUB password, `audit=1`) | Not yet | Design note for `audit=1`: [auditd-kapsam.md](docs/design/auditd-kapsam.md) (Turkish) |
+| AppArmor profiles | Not yet | |
+| Log management (rsyslog, journald, logrotate, remote logging) | Not yet | |
+| `cron`/`at` restrictions, `sudo` configuration | Not yet | `sudoers` changes are only **audited** by auditd |
+| Disabling IPv6 | Not yet | |
+| Core dumps | Partial | Only `fs.suid_dumpable = 0`; no `systemd-coredump` settings |
+| Removing unused services/packages | Partial | Only `postfix`/`courier-*` are removed; avahi, cups, etc. are not |
+| Rare filesystem modules (`cramfs`, `udf`, `squashfs`, …) | Not yet | Only `dccp`, `sctp`, `rds`, `tipc` and `usb-storage` are blocked |
+| SUID/SGID inventory | Not yet | |
+| Scheduled AIDE checks | Not yet | Only the initial database is created; scheduling is the package default (not verified) |
+| Time synchronization | Not yet | Design note: [zaman-ntp.md](docs/design/zaman-ntp.md) (Turkish) |
+| Audit (auditd) coverage | Limited | 6 rule groups (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); no `-e 2`; command execution/file deletion are not audited; processes started **before** auditd are not audited until restarted |
+| fail2ban | Limited | `sshd` jail only |
+
+Known conflicts (places where hardening can break legitimate use): [docs/known-issues.md](docs/known-issues.md) (Turkish).
+
 ## Tests
 The tests under `test/` run in CI on every PR (`.github/workflows/ci.yml`); locally:
 
