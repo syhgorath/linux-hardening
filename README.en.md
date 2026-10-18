@@ -107,7 +107,7 @@ When `harden` is applied, the following are **on by default** and can break a le
 
 **Off by default, enable deliberately:** `hardening_kernel_disable_ipv6_ra` (cuts a server that gets IPv6 only from router advertisements), `hardening_auditd_grub_audit` (`audit=1`, needs a reboot, not covered by rollback), `hardening_auditd_restart_services` (service downtime), `hardening_ufw_prune_ssh` (deletes rules).
 
-**Planned, not coded yet (all will default to OFF):** disabling core dumps, shell `TMOUT`, password `INACTIVE`, `noexec` on `/tmp` and `/dev/shm`, restricting `su`, log file permissions, and **removing the `telnet`/`ftp` clients**. Note on the last one: these programs open no ports (no security risk by themselves), but removing them **breaks** scripts that probe ports with `telnet host port` and backup flows that use `ftp`; removal is `apt remove` (not `purge`), and undoing it is `apt install`. Details: [docs/ROADMAP.md](docs/ROADMAP.md) (Turkish).
+**Off by default (Group 2), enable per server type:** `hardening_disable_coredump`, `hardening_shell_timeout_seconds` (`TMOUT`), `hardening_password_inactive_days`, `hardening_log_file_permissions` and **`hardening_remove_legacy_clients`** (removes `telnet`/`ftp`). Note on the last one: these programs open no ports (no security risk by themselves), but removing them **breaks** scripts that probe ports with `telnet host port` and backup flows that use `ftp`; removal is `apt remove` (not `purge`), and undoing it is `apt install`. Details: [docs/ROADMAP.md](docs/ROADMAP.md) (Turkish). **Not coded yet:** `noexec` on `/tmp` and `/dev/shm`, restricting `su`, user dot directories (need design).
 
 ## Tests
 The tests under `test/` run in CI on every PR (`.github/workflows/ci.yml`); locally:
@@ -128,6 +128,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |
+| `test_cis_group2.py` | Group 2 (all off by default): core dumps, `telnet`/`ftp` removal (`remove`, no purge), `TMOUT` and `INACTIVE` bounds and idempotence, existing accounts left alone |
 | `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |
 | `test_files_role.py` | file permissions with real `ansible-playbook` in a temp tree: only ever tightens (0600 stays), never creates files, symlinks not followed, `--check` changes nothing, second run `changed=0` |
 | `test_sudo_role.py` | sudoers drop-in: validated with `visudo -cf` (generated content checked with the real `visudo`), `become` probe, cleanup on failure, no `NOPASSWD` |

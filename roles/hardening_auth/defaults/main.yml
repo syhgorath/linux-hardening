@@ -5,3 +5,11 @@ hardening_pass_min_days: 1
 hardening_pass_warn_age: 7
 hardening_umask: "027"
 hardening_pwquality_minlen: 14
+# Etkileşimli kabuk boşta kalma süresi (saniye, CIS TMOUT): 0 = KAPALI (varsayılan), 1..900. Açılınca /etc/profile.d/60-hardening-tmout.sh yazılır
+# (`readonly TMOUT=N`); boşta kalan kabuk oturumları kapanır (uzun süren elle işler, `screen`/`tmux` dışındaki oturumlar etkilenir).
+hardening_shell_timeout_seconds: 0
+# Parola süresi dolduktan sonra hesabın kilitleneceği gün sayısı (CIS INACTIVE): 0 = KAPALI (varsayılan), 1..365. Açılınca `useradd -D -f N` YENİ hesaplar için
+# varsayılan yapar; MEVCUT hesaplar DEĞİŞTİRİLMEZ (kilitlenme riski), farklı olanlar uyarıyla listelenir.
+hardening_password_inactive_days: 0
+# Yalnızca TEST için: shadow dosyasının yolu.
+hardening_auth_shadow_path: /etc/shadow

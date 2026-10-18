@@ -32,3 +32,37 @@
       install {{ m }} /bin/false
       blacklist {{ m }}
       {% endfor %}
+
+# core dump kapatma (varsayılan KAPALI): kullanıcı sınırı + systemd-coredump. fs.suid_dumpable=0 zaten sysctl şablonunda.
+- name: Disable core dumps (limits)
+  ansible.builtin.copy:
+    dest: /etc/security/limits.d/60-hardening-core.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      * hard core 0
+  when: hardening_disable_coredump | bool
+
+- name: Ensure systemd-coredump drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/coredump.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: hardening_disable_coredump | bool
+
+- name: Disable systemd-coredump storage
+  ansible.builtin.copy:
+    dest: /etc/systemd/coredump.conf.d/60-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      [Coredump]
+      Storage=none
+      ProcessSizeMax=0
+  when: hardening_disable_coredump | bool

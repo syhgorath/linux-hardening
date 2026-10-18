@@ -24,11 +24,11 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 4 | 1 |  | 8 | 2 |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
 | 1.4 | Önyükleyici | 2 |  | 1 |  |  | 1 |
-| 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 |  |  | 1 | 3 |
+| 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 | 3 |  | 1 |  |
 | 1.6 | Oturum açma uyarı metinleri | 12 | 8 |  |  | 2 | 2 |
 | 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
 | 2.1 | Sunucu servisleri | 22 |  | 1 |  | 20 | 1 |
-| 2.2 | İstemci paketleri | 6 |  |  |  | 4 | 2 |
+| 2.2 | İstemci paketleri | 6 |  | 2 |  | 4 |  |
 | 2.3 | Zaman senkronizasyonu | 6 |  |  |  | 3 | 3 |
 | 2.4 | Zamanlanmış işler (cron, at) | 10 | 7 | 2 |  | 1 |  |
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3 |  |  |  | 2 | 1 |
@@ -38,14 +38,14 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 5.1 | SSH sunucusu | 24 | 20 | 3 |  |  | 1 |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 2 |  | 1 | 1 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 2 | 16 |
-| 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 4 |  | 7 | 4 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 |  |  | 9 | 4 |
+| 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 6 |  | 7 | 2 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 1 |  | 9 | 3 |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  |  | 1 |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **102** | **20** | **5** | **100** | **47** |
+| | **Toplam** | **274** | **102** | **28** | **5** | **100** | **39** |
 
-Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %45'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %47'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -160,7 +160,12 @@ Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %45'i en azından kısmen
 |---|---|
 | 1.2.2.1 | Güvenlik güncellemeleri otomatik (unattended-upgrades); 'tüm güncellemeler kurulu' denetlenmez |
 | 1.4.2 | grub.cfg 0600 root:root yapılır; update-grub dosyayı yeniden yazarsa 0444'e dönebilir (sonraki çalıştırmada yeniden sıkılaşır, doğrulanmadı) |
+| 1.5.10 | kod var (hardening_disable_coredump) ama varsayılan KAPALI; çökme dökümünü kapatır |
+| 1.5.11 | kod var (hardening_disable_coredump) ama varsayılan KAPALI; çökme dökümünü kapatır |
+| 1.5.12 | kod var (hardening_disable_coredump) ama varsayılan KAPALI; çökme dökümünü kapatır |
 | 2.1.22 | postfix/courier kaldırılır, dinlemeyen `dma` kurulur; belirli bir MTA'nın yalnız-yerel ayarı denetlenmez |
+| 2.2.4 | kod var (hardening_remove_legacy_clients) ama varsayılan KAPALI; telnet/ftp istemcilerini kaldırır |
+| 2.2.6 | kod var (hardening_remove_legacy_clients) ama varsayılan KAPALI; telnet/ftp istemcilerini kaldırır |
 | 2.4.1.9 | cron.allow/at.allow izinleri yalnızca dosya VARSA sıkılaştırılır; OLUŞTURULMAZ (boş cron.allow crontab kullanımını kapatırdı) |
 | 2.4.2.1 | cron.allow/at.allow izinleri yalnızca dosya VARSA sıkılaştırılır; OLUŞTURULMAZ (boş cron.allow crontab kullanımını kapatırdı) |
 | 3.3.2.7 | `accept_ra = 0` yalnızca `hardening_kernel_disable_ipv6_ra=true` ile (varsayılan kapalı: RA ile IPv6 alan sunucu bağlantıyı kaybeder) |
@@ -176,7 +181,10 @@ Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %45'i en azından kısmen
 | 5.4.1.1 | `PASS_MAX_DAYS 365` login.defs'te; yalnız yeni hesapları etkiler, mevcut kullanıcılara dokunulmaz |
 | 5.4.1.3 | `PASS_WARN_AGE 7` login.defs'te; yalnız yeni hesaplar |
 | 5.4.1.4 | `SHA_CRYPT_*_ROUNDS` yazılır; `ENCRYPT_METHOD` yazılmaz (dağıtım varsayılanına bırakıldı) |
+| 5.4.1.5 | kod var (hardening_password_inactive_days) ama varsayılan KAPALI ve yalnız YENİ hesaplar için |
+| 5.4.3.2 | kod var (hardening_shell_timeout_seconds) ama varsayılan 0 = KAPALI |
 | 5.4.3.3 | `UMASK 027` login.defs'te; /etc/profile.d ve bashrc dosyalarına dokunulmaz |
+| 6.1.3.1 | kod var (hardening_log_file_permissions) ama varsayılan KAPALI; wtmp/btmp/lastlog/faillog ve journal hariç |
 | 7.1.13 | SUID/SGID dosyaları listelenir (salt okunur özet, hardening_suid_report); inceleme insana kalır, değişiklik yok |
 
 ## Bilerek yapılmayanlar (⏸️)
@@ -225,18 +233,16 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11, 1.1.2.1.4, 1.1.2.2.4 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.6, 1.2.1.11 |
 | 1.4 | Önyükleyici | 1.4.1 |
-| 1.5 | Süreç sertleştirme (sysctl, core dump) | 1.5.10, 1.5.11, 1.5.12 |
 | 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9 |
 | 2.1 | Sunucu servisleri | 2.1.23 |
-| 2.2 | İstemci paketleri | 2.2.4, 2.2.6 |
 | 2.3 | Zaman senkronizasyonu | 2.3.2.1, 2.3.2.2, 2.3.3.1 |
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1 |
 | 3.2 | Ağ çekirdek modülleri | 3.2.7 |
 | 5.1 | SSH sunucusu | 5.1.5 |
 | 5.2 | Yetki yükseltme (sudo, su) | 5.2.7 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
-| 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.5, 5.4.2.5, 5.4.2.6, 5.4.3.2 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5, 6.1.3.1 |
+| 5.4 | Kullanıcı hesapları ve ortamı | 5.4.2.5, 5.4.2.6 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5 |
 | 6.3 | Bütünlük denetimi (AIDE) | 6.3.2 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
 

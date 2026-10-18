@@ -121,6 +121,33 @@ vars:
     default: false
     warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
     description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
+  - name: hardening_disable_coredump
+    type: bool
+    default: false
+    warn_if: true                      # true = çökme dökümü (core dump) alınmaz
+    description: "true: core dump'lar kapatılır (limits.d ve systemd-coredump). Bir süreç çöktüğünde döküm OLMAZ, hata ayıklama zorlaşır. Varsayılan kapalı"
+  - name: hardening_remove_legacy_clients
+    type: bool
+    default: false
+    warn_if: true                      # true = telnet/ftp istemcileri KALDIRILIR
+    description: "true: telnet ve ftp istemcileri kaldırılır (apt remove; purge değil, geri alma apt install). Port açmazlar ama telnet ile port yoklayan betikleri ve ftp yedek akışlarını KIRAR. Varsayılan kapalı"
+  - name: hardening_shell_timeout_seconds
+    type: int
+    default: 0
+    min: 0
+    max: 900
+    description: "Etkileşimli kabuk boşta kalma süresi (saniye, TMOUT); 0 = kapalı (varsayılan). Açılınca boşta kalan kabuk oturumları kapanır"
+  - name: hardening_password_inactive_days
+    type: int
+    default: 0
+    min: 0
+    max: 365
+    description: "Parola süresi dolduktan sonra hesabın kilitleneceği gün (INACTIVE); 0 = kapalı (varsayılan). YENİ hesaplar için varsayılan yapılır, mevcutlara dokunulmaz (farklı olanlar uyarılır)"
+  - name: hardening_log_file_permissions
+    type: bool
+    default: false
+    warn_if: true                      # true = /var/log dosyalarının grup/diğer izinleri kısılır
+    description: "true: /var/log altındaki dosyalarda grup yazma ve diğer erişim kaldırılır (wtmp/btmp/lastlog/faillog ve journal hariç). adm grubunda olmayan okuyucular (izleme/log ajanları) bazı günlükleri okuyamaz. Varsayılan kapalı"
   - name: hardening_disable_apport
     type: bool
     default: true

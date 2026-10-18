@@ -30,3 +30,61 @@
     owner: root
     group: root
     mode: "0644"
+
+# --- Kabuk boşta kalma süresi (varsayılan KAPALI) ---
+- name: Validate shell timeout
+  ansible.builtin.assert:
+    that:
+      - (hardening_shell_timeout_seconds | string) is match('^[0-9]+$')
+      - hardening_shell_timeout_seconds | int >= 0
+      - hardening_shell_timeout_seconds | int <= 900
+    fail_msg: "hardening_shell_timeout_seconds 0 (kapalı) ile 900 arasında olmalı (CIS: en çok 900)."
+
+- name: Idle shell timeout (TMOUT)
+  ansible.builtin.copy:
+    dest: /etc/profile.d/60-hardening-tmout.sh
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      readonly TMOUT={{ hardening_shell_timeout_seconds | int }}
+      export TMOUT
+  when: hardening_shell_timeout_seconds | int > 0
+
+# --- Parola INACTIVE (varsayılan KAPALI): yeni hesaplar için varsayılan; mevcutlara dokunulmaz ---
+- name: Validate password inactive days
+  ansible.builtin.assert:
+    that:
+      - (hardening_password_inactive_days | string) is match('^[0-9]+$')
+      - hardening_password_inactive_days | int >= 0
+      - hardening_password_inactive_days | int <= 365
+    fail_msg: "hardening_password_inactive_days 0 (kapalı) ile 365 arasında olmalı (CIS: en çok 45)."
+
+- name: Read the default INACTIVE for new accounts
+  ansible.builtin.command: useradd -D
+  register: hardening_auth_inactive_now
+  changed_when: false
+  check_mode: false
+  when: hardening_password_inactive_days | int > 0
+
+- name: Set the default INACTIVE for new accounts
+  ansible.builtin.command: "useradd -D -f {{ hardening_password_inactive_days | int }}"
+  changed_when: true
+  when: hardening_password_inactive_days | int > 0 and (hardening_auth_inactive_now.stdout | regex_search('INACTIVE=(-?[0-9]+)', '\\1') | first | default('')) != (hardening_password_inactive_days | int | string)
+
+- name: List existing accounts whose INACTIVE differs (read-only)
+  ansible.builtin.shell:
+    cmd: "awk -F: -v n={{ hardening_password_inactive_days | int }} '$2 ~ /^[$]/ && $7 != n {print $1}' {{ hardening_auth_shadow_path }}"
+  register: hardening_auth_inactive_other
+  changed_when: false
+  check_mode: false
+  when: hardening_password_inactive_days | int > 0
+
+- name: Warn about existing accounts with a different INACTIVE
+  ansible.builtin.debug:
+    msg: >-
+      UYARI (parola INACTIVE): {{ hardening_auth_inactive_other.stdout_lines | length }} mevcut hesapta INACTIVE {{ hardening_password_inactive_days | int }} değil
+      ({{ hardening_auth_inactive_other.stdout_lines | join(', ') }}). Mevcut hesaplar DEĞİŞTİRİLMEDİ (süre dolunca kilitlenme riski);
+      istediğiniz hesap için elle: chage -I {{ hardening_password_inactive_days | int }} <kullanıcı>.
+  when: hardening_password_inactive_days | int > 0 and hardening_auth_inactive_other.stdout_lines | length > 0

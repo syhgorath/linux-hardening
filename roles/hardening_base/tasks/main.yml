@@ -145,3 +145,12 @@
       SUID/SGID (CIS 7.1.13, gözden geçirin): {{ hardening_base_suid.stdout_lines | length }} dosya.
       Beklenmeyen bir program varsa inceleyin. İlk 40: {{ hardening_base_suid.stdout_lines[:40] | join(', ') }}
   when: hardening_suid_report | bool
+
+# Düz metin istemcilerini kaldır (varsayılan KAPALI). `remove` (purge değil); bağımlı paket varsa apt onları da listeler/kaldırır, bu yüzden autoremove KAPALI.
+- name: Remove legacy plaintext clients (telnet, ftp)
+  ansible.builtin.apt:
+    name: "{{ hardening_legacy_client_packages }}"
+    state: absent
+    purge: false
+    autoremove: false
+  when: hardening_remove_legacy_clients | bool

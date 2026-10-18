@@ -103,7 +103,7 @@ Bilinen çakışmalar (sertleştirmenin meşru kullanımları bozabileceği yerl
 
 **Varsayılan KAPALI, bilinçli açılacaklar:** `hardening_kernel_disable_ipv6_ra` (IPv6'sını yalnızca yönlendirici duyurusundan alan sunucuyu keser), `hardening_auditd_grub_audit` (`audit=1`, yeniden başlatma gerekir, geri alma kapsamında değil), `hardening_auditd_restart_services` (servis kesintisi), `hardening_ufw_prune_ssh` (kural siler).
 
-**Planlanan, henüz kodlanmadı (hepsi varsayılan KAPALI olacak):** core dump kapatma, kabuk `TMOUT`, parola `INACTIVE`, `/tmp` ve `/dev/shm` `noexec`, `su` kısıtı, günlük dosyası izinleri ve **`telnet`/`ftp` istemcilerinin kaldırılması**. Sonuncusu için not: bu programlar port açmaz (güvenlik riski yaratmaz), ama `telnet host port` ile port yoklayan betikleri ve `ftp` kullanan yedek akışlarını **kırar**; kaldırma `apt remove` ile yapılır (`purge` değil), geri alma `apt install`dır. Ayrıntı: [docs/ROADMAP.md](docs/ROADMAP.md).
+**Varsayılan KAPALI (Grup 2), sunucu türüne göre açılır:** `hardening_disable_coredump`, `hardening_shell_timeout_seconds` (`TMOUT`), `hardening_password_inactive_days`, `hardening_log_file_permissions` ve **`hardening_remove_legacy_clients`** (`telnet`/`ftp` kaldırma). Sonuncusu için not: bu programlar port açmaz (güvenlik riski yaratmaz), ama `telnet host port` ile port yoklayan betikleri ve `ftp` kullanan yedek akışlarını **kırar**; kaldırma `apt remove` ile yapılır (`purge` değil), geri alma `apt install`dır. Ayrıntı: [docs/ROADMAP.md](docs/ROADMAP.md). **Henüz kodlanmadı:** `/tmp` ve `/dev/shm` `noexec`, `su` kısıtı, kullanıcı dot dizinleri (tasarım gerekir).
 
 ## Testler
 `test/` altındaki testler her PR'da CI'da (`.github/workflows/ci.yml`) çalışır; yerelde:
@@ -124,6 +124,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |
 | `test_tags_and_hosts.sh` | `--tags` ile preflight/korumaların atlanmaması, `hardening`/`ubuntu` grubu seçimi ve olmayan grup için uyarı çıkmaması |
 | `test_facts_namespace.sh` | Fact'ler yalnızca `ansible_facts[...]` ile okunur (`INJECT_FACTS_AS_VARS=False` altında OS denetimi), üst düzey fact adı yasağı |
+| `test_cis_group2.py` | Grup 2 (hepsi varsayılan kapalı): core dump, `telnet`/`ftp` kaldırma (`remove`, purge yok), `TMOUT` ve `INACTIVE` sınırları ve idempotensi, mevcut hesaplara dokunulmaması |
 | `test_cis_group1.py` | apport ve `update-notifier-motd` kapatma (olmayan birime dokunulmaz, kendi değişkeniyle kapanır, `lineinfile` idempotent) ve SUID/SGID özetinin salt okunur kalması |
 | `test_files_role.py` | dosya izinleri gerçek `ansible-playbook` ile geçici ağaçta: yalnızca sıkılaşır (0600 gevşemez), olmayan dosya oluşturulmaz, sembolik bağ izlenmez, `--check` değiştirmez, ikinci koşu `changed=0` |
 | `test_sudo_role.py` | sudoers drop-in: `visudo -cf` ile doğrulanır (üretilen içerik gerçek `visudo` ile), `become` denemesi, başarısızlıkta temizlik, `NOPASSWD` yok |

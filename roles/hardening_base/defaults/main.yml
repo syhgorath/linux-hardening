@@ -5,3 +5,7 @@ hardening_disable_apport: true
 hardening_disable_update_notifier_motd: true
 # true: SUID/SGID dosyalarının SALT OKUNUR özetini yazdırır (CIS 7.1.13, "gözden geçir"). Hiçbir şeyi değiştirmez; çok büyük dosya sistemlerinde en çok 120 sn sürer.
 hardening_suid_report: true
+# true: düz metin istemcileri (telnet, ftp) KALDIRILIR (apt remove; purge DEĞİL, ayar dosyalarına dokunulmaz; CIS 2.2). Varsayılan kapalı.
+# Port açmazlar (tek başlarına güvenlik riski değil) ama `telnet host port` ile port yoklayan betikleri ve `ftp` yedek akışlarını KIRAR. Geri alma: apt install.
+hardening_remove_legacy_clients: false
+hardening_legacy_client_packages: [telnet, inetutils-telnet, ftp, tnftp, inetutils-ftp]
