@@ -11,7 +11,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | Küçük Lynis maddeleri | `libpam-tmpdir`, `debsums`, `apt-listchanges`, fail2ban `jail.local`, AIDE SHA256. Sunucu davranışını değiştirir: canlı doğrulama gerekir |
 | Eski `ubuntu` grubunu kaldır | Uyarı artık çıkmıyor (#35, olmayan grup seçilmiyor); kaldırmak yalnızca bir temizlik ve BREAKING olarak işaretlenir |
 | Tarama klasörü zaman damgası | Klasör adı yerel saatle, `summary.json` UTC; tek biçime getirilebilir |
-| v0.2.2 yayını | Hazırlandı (ufw eski SSH kuralı uyarısı/opsiyonel silme, auditd kuralları hemen yükleme ve önceki süreçler uyarısı, bilinen çakışmalar belgesi, tasarım notları). Etiket, imza ve Release bakımcıda |
+| v0.3.0 yayını | Hazırlandı (CIS Ubuntu 26.04 Level 1 Server eşlemesi ve kolay kazançlar, `hardening_files`/`hardening_sudo`/`hardening_docker` rolleri, zaman raporu, `examples/`, README "Dikkat"). Etiket, imza ve Release bakımcıda; sonra sshpocket `components.lock` |
 
 ## Orta
 | İş | Not |

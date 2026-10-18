@@ -110,6 +110,15 @@ başlatmadı, elle `systemctl start docker`. Alpine imajı Docker Hub'dan değil
 - Yolda: ardışık dört `systemctl restart docker` systemd'in başlatma sınırına takıldı ("start of the service was attempted too often"); `systemctl reset-failed` ile çözüldü (test artefaktı; rol tek yeniden başlatma yapar).
 **Ölçülmedi:** `userland-proxy`, `icc`, `no-new-privileges` seçenekleri (rolde yok), Docker'ın kendi depo sürümü (`docker-ce`), gerçek ters vekil (Traefik/nginx), `docker.sock`'a bağlanan konteyner, `DOCKER-USER` kuralları.
 
+**19. v0.3.0 adayı: gerçek VM'de temiz kurulum (2026-10-18). İkinci koşu DOĞRULANMADI.** VM temiz snapshot'a döndürüldü (ufw kapalı, auditd yok, `telnet`/`ftp` kurulu, saat ~9 gün geride). `main` + sürüm commit'i, varsayılanlarla tam `harden`
+(`-e @vm-vars.yml`: yalnızca `allow_from`), birinci koşu **13:28:37-13:44:11 UTC, `ok=117 changed=35 failed=0`** (~15,5 dk, AIDE ilk veritabanı ~10 dk). auditd başlangıcından kural yüklemeye **3 sn**, kurallar fail2ban ve AIDE'den önce.
+- **Zaman raporu (saat 9 gün geride, `chrony` yeniden başlatılmadan önce, `--check`):** "Kaynakların ölçtüğü ofset ~9.2 sn ama hiçbir kaynak seçilmediği için bu değere GÜVENİLMEZ … Sunucu saati, kontrol makinesinin saatine göre **~9 gün 1 dk geride**". Önceki sürüm aynı durumda yalnızca "~9.2 sn kayık" diyordu (madde 15'te bulunan hata, düzeltme bu vakada doğrulandı). `chrony` yeniden başlatılınca saat düzeldi; tam koşuda `ZAMAN: chrony senkron: 5 kaynak … ofset 2 ms`.
+- Tam koşu çıktısında: SUID/SGID özeti (23 dosya), "auditd'den önce başlamış 27 program" uyarısı (beklenen; varsayılan `hardening_auditd_restart_services` boş, `audit=1` kapalı).
+- **İkinci koşu (idempotens) doğrulanmadı.** 13:46'da başladı, 13:48:03'te `hardening_fail2ban : Configure sshd jail` görevinde çıktı verdi, sonra takıldı ve 14:02'de elle durduruldu (rc=143). O sırada kontrol makinesi **ağ değiştirmişti**: başka bir LAN'a geçmiş ve VPN arayüzü üzerinden yönlendiriliyordu; VM'e hem ping hem TCP/22 yanıt vermiyordu.
+  Bağlantı kaybının nedeni bu veriyle KESİN söylenemez: görev ufw/ssh'tan önceydi (geri alma ağı henüz kurulu değildi) ve hardening kaynaklı olduğunu gösteren bir kanıt yok, ama ağ değişikliği sırasında VM'in durumu da gözlenemedi. VM'in koşu sonrası son durumu bilinmiyor.
+  Gözlem: `ansible.cfg` içinde `ServerAliveInterval`/`timeout` ayarı yok; ölü bir TCP bağlantısında `ansible-playbook` 14 dakika takılı kaldı. Adaylar: `ssh_args`'a `-o ServerAliveInterval=15 -o ServerAliveCountMax=3`, `timeout`; ayrı bir iş.
+- İdempotens kanıtı bu sürümde **parça parça** var: madde 12-16 (VM, birçok role için `changed=0`), madde 17 (mini lab, üç sunucuda tam koşu, ikinci koşu yalnızca LAB'a özgü `augenrules`). Temiz kurulumda uçtan uca ikinci koşu bu kayıtta **eksik**; etiketten önce bir kez daha denenmesi önerilir.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
@@ -124,7 +133,8 @@ başlatmadı, elle `systemctl start docker`. Alpine imajı Docker Hub'dan değil
 ## Doğrulanmayanlar
 - Başka sunucular/yapılandırmalar; ikinci bir Ubuntu 26.04 kurulumu.
 - **Gerçek ağ/ufw düzeyi kesinti** (engel sshd katmanındaydı).
-- Kontrol makinesinin ağ değiştirmesi (VPN ↔ LAN) sırasında koşu.
+- Kontrol makinesinin ağ değiştirmesi (VPN ↔ LAN) sırasında koşu: 2026-10-18'de kazara yaşandı (madde 19); koşu takıldı, sonuç ve neden belirsiz. Kasıtlı bir deneme yapılmadı.
+- Temiz kurulumda uçtan uca **ikinci koşu** `changed=0` (madde 19: yarım kaldı).
 - Raspberry Pi / Proxmox profilleri (`planned`).
 - sshpocket üzerinden uçtan uca bileşen kurulumu ve çalıştırma.
 - Tam CIS Benchmark uyumu (bilerek "yaklaşım").

@@ -5,6 +5,17 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.3.0] - 2026-10-18
+
+CIS Ubuntu 26.04 Level 1 Server eşlemesi, üç yeni rol (`hardening_files`, `hardening_sudo`, `hardening_docker`), salt okunur zaman raporu, çoklu sunucu örnekleri ve çok sayıda gerçek VM / Docker
+mini lab doğrulaması. **Dikkat edilecekler (varsayılan olarak AÇIK ve davranışı değiştirenler; hepsinin kaçış yolu `docs/known-issues.md` ve README "Dikkat" tablosunda):**
+(1) `kernel`: yeni sysctl satırları (`secure_redirects=0`, `route_localnet=0`) ve modül yasakları (`cramfs`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `firewire-core`, `atm`, `can`);
+(2) `ufw`: yönlendirilen trafik için `deny` (`hardening_ufw_routed_deny`); (3) `ssh`: `DisableForwarding`, zayıf `MACs` çıkarma, `MaxStartups 10:30:60`, drop-in `0600`;
+(4) `base`: `apport` ve `update-notifier-motd` kapatma, `journald` kalıcı depolama; (5) `sudo`: `use_pty` ve `timestamp_timeout=15` (sudo-rs algılanır); (6) `files`: dosya izinleri (yalnızca sıkılaşır);
+(7) `auditd`: `clock_adjtime` kuralı ve (Docker kuruluysa) Docker izleme kuralları. **Varsayılan KAPALI yeni seçenekler:** core dump, `telnet`/`ftp` kaldırma, `TMOUT`, `INACTIVE`, günlük dosyası izinleri, IPv6 RA,
+`audit=1`, servis yeniden başlatma, Docker rolü. `component.yml` `vars` listesine bu sürümde 22 değişken eklendi (5'ten 27'ye) (`sshpocket_api` değişmedi). Tam CIS uyumu iddiası yoktur: eşleme `docs/cis-esleme.md` içindedir
+ve CIS-CAT ile ölçülmedi.
+
 ### Eklendi
 - `hardening_docker` (yeni rol, etiket `docker`, **varsayılan KAPALI**, Docker kurulu değilse atlanır; `docs/design/docker-sunucusu.md` ilk dilim): `hardening_docker_enabled` ile **salt okunur rapor** (docker grubu üyeleri, `0.0.0.0`'a yayınlanan ve izinli listede olmayan konteyner portları, TLS'siz TCP API, `iptables:false`/`experimental`/`insecure-registries`/`tcp://` gibi `daemon.json` ayarları); `hardening_docker_daemon_manage` ile `daemon.json` **birleştirme** (`live-restore`, günlük boyutu sınırı; mevcut anahtarlar korunur, değişmeden önce yedek, geçersiz JSON'a dokunulmaz); `daemon.json` değişince önce `reload` (SIGHUP: `live-restore` konteynerler durmadan açılır; gerçek Docker'da doğrulandı), tam yeniden başlatma yalnız `hardening_docker_restart=true` ile. Karar betikleri birim testli (`test_docker_scripts.py`, `test_docker_tasks.py`).
   `hardening_files`: Docker dosyaları (`docker.service`/`docker.socket`, `/etc/docker`, `daemon.json`, `/run/docker.sock` `root:docker`, containerd soketi) için izinler (yalnız var olanlara). `hardening_auditd`: Docker kuruluysa var olan Docker yolları için izleme kuralı (`/var/lib/docker` hariç; `hardening_auditd_docker_rules`, varsayılan açık).
@@ -34,7 +45,8 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 - `hardening_time` (yeni rol, etiket `time`): **salt okunur** zaman raporu. chrony çalışıyor mu, kaynaklar ulaşılabilir ve seçili mi, saat kaynaklara göre ne kadar kayık? `harden` çıktısında `ZAMAN:` ya da `UYARI (zaman):` verir.
   Snapshot dönüşünde `timedatectl` "synchronized: yes" derken saatin günlerce kayık olduğu görüldü; rapor bunu kaynakların ölçtüğü ofsetten yakalar. Saati ya da yapılandırmayı **değiştirmez**, `--check`'te de çalışır.
   Değişkenler: `hardening_time_report` (varsayılan `true`), `hardening_time_max_offset_seconds` (varsayılan `5`). Testler: `test_time_report.py`, `test_time_tasks.py`.
-- README (TR/EN): **"Ne yapmaz (kapsam sınırları)"** bölümü: alan bazlı tablo; "bilerek" (belgeli karar) ile "henüz yapılmadı" ayrımı. Madde numaralı CIS eşlemesi henüz yok, bölüm bunu açıkça söyler.
+- README (TR/EN): **"Ne yapmaz (kapsam sınırları)"** bölümü: alan bazlı tablo; "bilerek" (belgeli karar) ile "henüz yapılmadı" ayrımı. Madde numaralı eşleme sonradan `docs/cis-esleme.md` olarak eklendi.
+
 ### Düzeltildi
 - `hardening_time`: kaynaklar seçilmemişken (`*` yok; `~` çok değişken, `?` seçilemez) chrony'nin ölçtüğü ofset artık "kesin kayma" diye yazılmaz. Gerçek VM'de snapshot dönüşünde saat ~8 gün geride iken kaynaklar `~` idi ve ofset yalnızca ~9,2 sn görünüyordu; rapor "~9.2 sn kayık" diyordu. Şimdi "bu değere güvenilmez" der ve **sunucu saatini kontrol makinesinin saatiyle de karşılaştırır** (`date +%s`, en az 30 sn eşik; kontrol makinesinin saati de yanlış olabilir, mesaj bunu söyler). Saat dilimi hatası (`now(utc=true).timestamp()` 3 saat kaydırıyordu) gerçek VM'de yakalandı ve testi eklendi.
 
@@ -131,7 +143,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.2.2...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/syhgorath/linux-hardening/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/syhgorath/linux-hardening/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/syhgorath/linux-hardening/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/syhgorath/linux-hardening/compare/v0.1.0...v0.2.0
