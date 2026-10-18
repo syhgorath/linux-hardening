@@ -4,8 +4,14 @@
 # NOT: hardening_ssh_port KALDIRILDI; ufw kuralı sshd'nin gerçekten dinlediği porttan yazılır, port değiştirme desteklenmez.
 # Bu değişkeni preflight da okur (kaynak IP kontrolü); tek sahibi bu rol, orada tanımsızsa boş sayılır.
 hardening_ssh_allow_from: []
-# Ek açılacak portlar, örn: ["443/tcp"]
+# Ek açılacak portlar/kurallar. Biçimler: "443/tcp", "80", "8000:8010/tcp" ya da kaynak kısıtlı "from 192.0.2.5 to any port 6379 proto tcp"
+# (kaynak: IP, CIDR ya da any). Bu liste grup/ortak ayarlar içindir; sunucuya ÖZEL kurallar için hardening_ufw_extra_allow_host kullanın:
+# Ansible liste değişkenlerini BİRLEŞTİRMEZ, üzerine yazar; host_vars'a hardening_ufw_extra_allow yazarsanız grubunki silinir.
 hardening_ufw_extra_allow: []
+# Yalnızca bu sunucuya özel ek kurallar (host_vars). Rol, extra_allow ile BİRLEŞTİRİR (tekrarlar atılır).
+hardening_ufw_extra_allow_host: []
+# Geçerli kural biçimi (iç ayar; rol her girdiyi bununla doğrular, uymayan girdide ufw'ye hiç dokunmadan durur).
+hardening_ufw_extra_allow_pattern: '^([0-9]{1,5}(:[0-9]{1,5})?(/(tcp|udp))?|from (any|[0-9A-Fa-f:.]+(/[0-9]{1,3})?) to any port [0-9]{1,5}(:[0-9]{1,5})? proto (tcp|udp))$'
 # false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki SSH kuralları için yalnızca UYARIR.
 # true: bu kuralları SİLER (kontrol makinesinin adresini kapsayanlara, extra_allow'dakilere ve biçime uymayanlara dokunulmaz).
 # Silmeden sonra allow_from'daki her ağın kuralı yerinde değilse rol ufw'yi etkinleştirmeden durur.

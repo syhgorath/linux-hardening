@@ -28,6 +28,17 @@
       Yönetim ağınızı yazın, örn: -e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'
       (varsayılan inventory/group_vars/all.yml içinde bilerek boştur).
 
+- name: Extra ufw rules must have a valid format (daha roller çalışmadan)
+  ansible.builtin.assert:
+    that:
+      - hardening_ufw_extra_allow | default([]) is not string
+      - hardening_ufw_extra_allow_host | default([]) is not string
+      - ((hardening_ufw_extra_allow | default([])) + (hardening_ufw_extra_allow_host | default([]))) | reject('match', hardening_preflight_extra_allow_pattern) | list | length == 0
+    fail_msg: >-
+      hardening_ufw_extra_allow / hardening_ufw_extra_allow_host içinde geçersiz kural var:
+      {{ ((hardening_ufw_extra_allow | default([])) + (hardening_ufw_extra_allow_host | default([]))) | reject('match', hardening_preflight_extra_allow_pattern) | list }}.
+      İzinli biçimler: "443/tcp", "80", "8000:8010/tcp" ya da "from 192.0.2.5 to any port 6379 proto tcp" (kaynak: IP, CIDR ya da any). Hiçbir rol çalışmadı.
+
 - name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
   ansible.builtin.command: printenv SSH_CONNECTION
   become: false

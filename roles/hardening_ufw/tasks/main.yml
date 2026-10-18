@@ -1,4 +1,21 @@
 # ufw modülü community.general içinde; sadece ansible-core kurulu olduğu için komutla yönetiyoruz.
+# Ek kurallar: grup (hardening_ufw_extra_allow) ve sunucuya özel (hardening_ufw_extra_allow_host) listeler birleştirilir ve ufw'ye dokunmadan ÖNCE doğrulanır.
+- name: Combine extra ufw rules (group + host)
+  ansible.builtin.set_fact:
+    hardening_ufw_extra_allow_all: "{{ (hardening_ufw_extra_allow + hardening_ufw_extra_allow_host) | unique | list }}"
+
+- name: Validate extra ufw rules
+  ansible.builtin.assert:
+    that:
+      - hardening_ufw_extra_allow is not string
+      - hardening_ufw_extra_allow_host is not string
+      - hardening_ufw_extra_allow_all | reject('match', hardening_ufw_extra_allow_pattern) | list | length == 0
+    fail_msg: >-
+      hardening_ufw_extra_allow / hardening_ufw_extra_allow_host içinde geçersiz kural var:
+      {{ hardening_ufw_extra_allow_all | reject('match', hardening_ufw_extra_allow_pattern) | list }}.
+      İzinli biçimler: "443/tcp", "80", "8000:8010/tcp" ya da "from 192.0.2.5 to any port 6379 proto tcp" (kaynak: IP, CIDR ya da any).
+      ufw'ye hiçbir şey yazılmadı.
+
 - name: Install ufw
   ansible.builtin.apt:
     name: ufw
@@ -45,7 +62,7 @@
 
 - name: Allow extra ports
   ansible.builtin.command: "ufw allow {{ item }}"
-  loop: "{{ hardening_ufw_extra_allow }}"
+  loop: "{{ hardening_ufw_extra_allow_all }}"
   register: hardening_ufw_extra
   changed_when: "'Skipping' not in hardening_ufw_extra.stdout"
 
@@ -71,7 +88,7 @@
   ansible.builtin.script:
     cmd: >-
       stale_ssh_rules.py {{ {'allow_from': hardening_ssh_allow_from, 'ssh_ports': hardening_ufw_ssh_ports,
-      'extra_allow': hardening_ufw_extra_allow,
+      'extra_allow': hardening_ufw_extra_allow_all,
       'controller': (hardening_ufw_ssh_connection.stdout | default('')).split(' ')[0],
       'added': hardening_ufw_added.stdout_lines} | to_json | quote }}
     executable: python3
@@ -119,7 +136,7 @@
   ansible.builtin.script:
     cmd: >-
       stale_ssh_rules.py {{ {'allow_from': hardening_ssh_allow_from, 'ssh_ports': hardening_ufw_ssh_ports,
-      'extra_allow': hardening_ufw_extra_allow,
+      'extra_allow': hardening_ufw_extra_allow_all,
       'controller': (hardening_ufw_ssh_connection.stdout | default('')).split(' ')[0],
       'added': hardening_ufw_added_after.stdout_lines} | to_json | quote }}
     executable: python3

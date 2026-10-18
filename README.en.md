@@ -134,6 +134,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_cis_quickwins.py` | CIS quick wins: module lists, ufw `routed` policy, `audit=1` (real `replace` module, idempotent), ssh restart refusal, risky options default to off |
 | `test_time_report.py` | time report decision (real `chronyc -c sources` format): healthy, stale/skewed clock, service down, no sources, threshold, malformed lines |
 | `test_time_tasks.py` | the time role stays read-only: read-only modules only, works in `--check`, can be disabled, no command changes the clock |
+| `test_ufw_extra_allow.py` | extra ufw rules: group and host lists merge, invalid input (14 examples) is rejected before any role runs, both validators share one pattern, the sshpocket variable |
 | `test_ufw_stale_rules.py` | ufw stale SSH rule decision: network normalization, controller/empty allow_from/extra_allow safeguards, missing-rule detection |
 | `test_ufw_prune_tasks.py` | structure of the ufw delete tasks: off by default, never deletes in `--check`, post-delete verification before ufw enable |
 | `test_auditd_unaudited.py` | read-only detection of processes started before auditd (fake `ps`/`systemctl`); kernel threads and threshold excluded |

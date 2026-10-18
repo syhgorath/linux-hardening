@@ -151,6 +151,12 @@
       "description": "Kaynakların ölçtüğü ofset bu saniyeyi aşarsa zaman raporu uyarır"
     },
     {
+      "name": "hardening_ufw_extra_allow",
+      "type": "list[string]",
+      "default": [],
+      "description": "Gelen trafikte ek açılacak portlar/kurallar (varsayılan: hepsi kapalı). Biçimler: \"443/tcp\", \"80\", \"8000:8010/tcp\" ya da kaynak kısıtlı \"from 192.0.2.5 to any port 6379 proto tcp\" (kaynak: IP, CIDR ya da any). Geçersiz girdi hiçbir rol çalışmadan reddedilir. Ansible'da sunucuya özel kurallar için hardening_ufw_extra_allow_host (grupla birleşir)"
+    },
+    {
       "name": "hardening_ufw_prune_ssh",
       "type": "bool",
       "default": false,
