@@ -70,6 +70,14 @@ Docker LAB'da (Ubuntu 26.04 konteyner) aynı kod uygulandı; `auditctl -l` konte
 sunucu tarafı kanalı reddetti (`open failed`); nedenin `DisableForwarding` olduğu ayrıca ayrıştırılmadı. Varsayılanlar (`sshd -T`, OpenSSH 10.2): şifre/KEX/MAC listelerinde CBC/3DES/SHA1-KEX yok;
 `maxstartups` varsayılanı `10:30:100`. **Ölçülmedi:** `MaxStartups`'ın paralel bağlantılı otomasyonda etkisi, eski istemcilerle MAC uyumu.
 
+**14. Dosya izinleri ve sudo, gerçek VM (2026-10-18).** `--tags files,ssh,sudo`. İlk koşuda sudo rolü düştü: Ubuntu 26.04'ün varsayılanı **sudo-rs** ve `Defaults logfile` desteklemiyor
+(`visudo -cf`: "unknown setting: 'logfile'"). Doğrulama (`validate`) dosyayı yazdırmadı, rescue çalıştı, **sudo bozulmadı** (`sudo -n id -u` = 0); rol `visudo --version` ile sudo-rs'i
+algılayıp `logfile`ı yalnızca klasik sudo'da yazacak şekilde düzeltildi (VM'de her iki `visudo` da kurulu, `update-alternatives` sudo-rs'e işaret ediyor). Düzeltilmiş koşu: `ok=44 changed=1 failed=0`,
+ikinci koşu `changed=0`. Sonuç izinler: `passwd`/`group`/`shells` 644, `shadow`/`gshadow` 640 root:shadow, `sshd_config` 600, `sshd_config.d` 700, ana bilgisayar anahtarları 600 / `.pub` 644,
+`cron.d`/`cron.daily` 700, `crontab` 600, `grub.cfg` 600, `sudoers.d/60-hardening` 440; içerik `use_pty` + `timestamp_timeout=15`. **Ölçülmedi:** `use_pty`'nin arka plana atılan sudo süreçlerine
+etkisi, `grub.cfg`'nin sonraki `update-grub`'da 0444'e dönüp dönmediği, `timestamp_timeout`'un sudo-rs'te gerçekten uygulandığı (yalnızca sözdizimi kabul edildi). Bir `--check` koşusunda tek seferlik
+"privilege escalation prompt" zaman aşımı görüldü, iki tekrarda çıkmadı (nedeni bilinmiyor).
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

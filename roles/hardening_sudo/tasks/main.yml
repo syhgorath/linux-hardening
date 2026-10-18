@@ -5,6 +5,20 @@
 - name: Sudo settings (CIS)
   when: hardening_sudo_enabled | bool
   block:
+    # Ubuntu 26.04'te varsayılan sudo-rs'tir ve `Defaults logfile` desteklemez ("unknown setting: 'logfile'", gerçek VM'de görüldü); olaylarını syslog/journald'e yazar
+    # (CIS 5.2.3 yöntem A). Klasik sudo'da dosyaya yazılır. Doğrulayıcı (visudo) hangisiyse ona göre karar verilir.
+    - name: Detect the sudo implementation (visudo --version)
+      ansible.builtin.command: visudo --version
+      become: false
+      register: hardening_sudo_visudo_version
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Remember whether sudo-rs is in use
+      ansible.builtin.set_fact:
+        hardening_sudo_is_rs: "{{ 'visudo-rs' in (hardening_sudo_visudo_version.stdout | default('')) }}"
+
     - name: Write sudoers drop-in (use_pty, logfile, timestamp_timeout)
       ansible.builtin.copy:
         dest: /etc/sudoers.d/60-hardening
@@ -15,7 +29,9 @@
         content: |
           # Ansible tarafından yönetilir
           Defaults use_pty
+          {% if not hardening_sudo_is_rs %}
           Defaults logfile="{{ hardening_sudo_logfile }}"
+          {% endif %}
           Defaults timestamp_timeout=15
 
     - name: Check that privilege escalation still works

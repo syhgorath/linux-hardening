@@ -35,16 +35,16 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 3.3 | Ağ çekirdek parametreleri | 27 | 20 | 2 | 5 |  |
 | 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |
 | 5.1 | SSH sunucusu | 24 | 20 | 3 |  | 1 |
-| 5.2 | Yetki yükseltme (sudo, su) | 6 | 3 | 1 |  | 2 |
+| 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 2 |  | 2 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 18 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 4 |  | 11 |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 |  |  |  | 15 |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  | 1 |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 |  |  | 3 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 11 |
-| | **Toplam** | **274** | **95** | **18** | **5** | **156** |
+| | **Toplam** | **274** | **94** | **19** | **5** | **156** |
 
-Yani Level 1 Server maddelerinin yaklaşık %35'i ✅, %41'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -127,9 +127,8 @@ Yani Level 1 Server maddelerinin yaklaşık %35'i ✅, %41'i en azından kısmen
 | 5.1.22 | PermitRootLogin no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.23 | PermitUserEnvironment no | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
 | 5.1.24 | UsePAM yes | `roles/hardening_ssh/templates/sshd-hardening.conf.j2` |
-| 5.2.2 | sudoers.d/60-hardening: use_pty, logfile, timestamp_timeout=15 (visudo ile doğrulanır) | `roles/hardening_sudo/tasks/main.yml` |
-| 5.2.3 | sudoers.d/60-hardening: use_pty, logfile, timestamp_timeout=15 (visudo ile doğrulanır) | `roles/hardening_sudo/tasks/main.yml` |
-| 5.2.6 | sudoers.d/60-hardening: use_pty, logfile, timestamp_timeout=15 (visudo ile doğrulanır) | `roles/hardening_sudo/tasks/main.yml` |
+| 5.2.2 | sudoers.d/60-hardening: use_pty, timestamp_timeout=15 (visudo ile doğrulanır) | `roles/hardening_sudo/tasks/main.yml` |
+| 5.2.6 | sudoers.d/60-hardening: use_pty, timestamp_timeout=15 (visudo ile doğrulanır) | `roles/hardening_sudo/tasks/main.yml` |
 | 5.3.3.2.2 | minlen 14 | `roles/hardening_auth/templates/pwquality.conf.j2` |
 | 5.3.3.2.3 | minclass 3 | `roles/hardening_auth/templates/pwquality.conf.j2` |
 | 5.3.3.2.4 | maxrepeat 3 | `roles/hardening_auth/templates/pwquality.conf.j2` |
@@ -160,6 +159,7 @@ Yani Level 1 Server maddelerinin yaklaşık %35'i ✅, %41'i en azından kısmen
 | 5.1.7 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
 | 5.1.13 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
 | 5.1.14 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
+| 5.2.3 | sudo-rs (26.04 varsayılanı) `logfile` desteklemez; olaylar varsayılan olarak journald'e gider (CIS yöntem A) ama kodla garanti/yapılandırma yok. Klasik sudo'da `logfile` yazılır |
 | 5.2.5 | sudoers'ta `!authenticate` varsa yalnızca UYARIR, değiştirmez |
 | 5.3.1.3 | libpam-pwquality kurulur; 'son sürüm' denetlenmez |
 | 5.3.2.3 | paket kurulur ve pwquality.conf yazılır; pam-configs'te etkin olduğu doğrulanmadı |
