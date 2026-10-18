@@ -21,7 +21,9 @@ bulunmaz**; yalnızca bakımcının makinesindedir.
    ```
    Bu betik VERSION/CHANGELOG/component.yml, profiller ↔ `hardening_supported_os` ↔ `docs/SUPPORT.md` ve `vars`
    tutarlılığını kontrol eder.
-3. **Etiketle** (bakımcı): `git tag -s v<sürüm> -m "linux-hardening <sürüm>"` ve `git push origin v<sürüm>`.
+3. **Etiketle** (bakımcı): `git tag -a v<sürüm> -m "linux-hardening <sürüm>"` ve `git push origin v<sürüm>`.
+   Etiket **açıklamalıdır (annotated) ama gpg ile imzalı değildir** (`-s` bu makinelerde gpg gerektirir ve kullanılmaz); paketin güvenliği etiketin değil,
+   adım 4'teki **SSH imzasının** işidir (`sshpocket-component` ad alanı). `release.sh` yalnızca etiketin var olmasını ve HEAD'i göstermesini ister.
 > **Ön koşul:** betik `scripts/check-consistency.py`'yi çalıştırır, bunun için PyYAML'lı bir Python gerekir. En kolayı:
 > `python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements.txt` (betik `.venv`'i kendiliğinden
 > kullanır; `.venv/` git'te ignore'dadır). Başka bir Python için `LH_PYTHON=/yol/python3`.
