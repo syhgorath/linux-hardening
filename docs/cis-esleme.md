@@ -11,38 +11,39 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 - ✅ **Karşılıyor:** ayar kodda var ve değeri benchmark'ın beklediğiyle **elle karşılaştırıldı** (sysctl, SSH, pwquality değerleri PDF'in beklediği değerlerle).
 - 🟡 **Kısmen:** ilgili ayar var ama maddenin tamamını kapsamıyor (neden satırda yazılı).
 - ⏸️ **Bilerek yok:** belgeli karar.
+- ⚪ **Varsayılan uygun:** kodumuz bir şey yapmıyor ama **test VM'inde** Ubuntu varsayılanı maddeyi karşılıyor (aşağıda ölçüm yöntemi). Başka sunucuda böyle olmayabilir; garanti değil.
 - ❌ **Yok:** kodda karşılığı yok. Sunucuda dağıtım varsayılanı zaten uygun olabilir; **denetlemiyor ve garanti etmiyoruz**.
 
 - **Ölçülmedi:** CIS-CAT, OpenSCAP veya benzeri bir araçla tarama yapılmadı; bu tablo **koddan okuyarak** çıkarıldı. Kodda ayar olması, çalışan sunucuda uygulandığının kanıtı değildir (kanıtlar için [verification-log.md](verification-log.md)).
 
 ## Özet
 
-| Bölüm | Konu | Level 1 madde | ✅ | 🟡 | ⏸️ | ❌ |
-|---|---|---:|---:|---:|---:|---:|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 7 |  |  | 22 |
-| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 |  | 1 |  | 14 |
-| 1.3 | AppArmor | 3 |  |  |  | 3 |
-| 1.4 | Önyükleyici | 2 |  | 1 |  | 1 |
-| 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 6 |  |  | 5 |
-| 1.6 | Oturum açma uyarı metinleri | 12 | 7 |  |  | 5 |
-| 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |
-| 2.1 | Sunucu servisleri | 22 |  | 1 |  | 21 |
-| 2.2 | İstemci paketleri | 6 |  |  |  | 6 |
-| 2.3 | Zaman senkronizasyonu | 6 |  |  |  | 6 |
-| 2.4 | Zamanlanmış işler (cron, at) | 10 | 7 | 2 |  | 1 |
-| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3 |  |  |  | 3 |
-| 3.2 | Ağ çekirdek modülleri | 7 | 6 |  |  | 1 |
-| 3.3 | Ağ çekirdek parametreleri | 27 | 20 | 2 | 5 |  |
-| 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |
-| 5.1 | SSH sunucusu | 24 | 20 | 3 |  | 1 |
-| 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 2 |  | 2 |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 18 |
-| 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 4 |  | 11 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 |  |  |  | 15 |
-| 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  | 1 |
-| 7.1 | Sistem dosyası izinleri | 13 | 10 |  |  | 3 |
-| 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 11 |
-| | **Toplam** | **274** | **94** | **19** | **5** | **156** |
+| Bölüm | Konu | Level 1 madde | ✅ | 🟡 | ⏸️ | ⚪ | ❌ |
+|---|---|---:|---:|---:|---:|---:|---:|
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 7 |  |  | 19 | 3 |
+| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 |  | 1 |  | 8 | 6 |
+| 1.3 | AppArmor | 3 |  |  |  | 3 |  |
+| 1.4 | Önyükleyici | 2 |  | 1 |  |  | 1 |
+| 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 6 |  |  | 1 | 4 |
+| 1.6 | Oturum açma uyarı metinleri | 12 | 7 |  |  | 2 | 3 |
+| 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
+| 2.1 | Sunucu servisleri | 22 |  | 1 |  | 20 | 1 |
+| 2.2 | İstemci paketleri | 6 |  |  |  | 4 | 2 |
+| 2.3 | Zaman senkronizasyonu | 6 |  |  |  | 3 | 3 |
+| 2.4 | Zamanlanmış işler (cron, at) | 10 | 7 | 2 |  | 1 |  |
+| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3 |  |  |  | 2 | 1 |
+| 3.2 | Ağ çekirdek modülleri | 7 | 6 |  |  |  | 1 |
+| 3.3 | Ağ çekirdek parametreleri | 27 | 20 | 2 | 5 |  |  |
+| 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |  |
+| 5.1 | SSH sunucusu | 24 | 20 | 3 |  |  | 1 |
+| 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 2 |  | 1 | 1 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 2 | 16 |
+| 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 4 |  | 7 | 4 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 |  |  |  | 9 | 6 |
+| 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  |  | 1 |
+| 7.1 | Sistem dosyası izinleri | 13 | 10 |  |  | 2 | 1 |
+| 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
+| | **Toplam** | **274** | **94** | **19** | **5** | **100** | **56** |
 
 Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
@@ -179,33 +180,57 @@ Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen
 | 3.3.2.1 | ip_forward'a bilerek dokunulmaz |
 | 3.3.2.2 | ip_forward'a bilerek dokunulmaz |
 
+## Varsayılan uygun (⚪), test VM'inde ölçüldü
+
+**Ölçüm yöntemi (CIS-CAT değil):** 2026-10-18'de test VM'inde (Ubuntu 26.04, bu projenin rolleri uygulanmış) her madde için CIS denetim metninin **yaklaşığı** salt okunur bir kabuk betiğiyle çalıştırıldı (`sysctl`, `systemctl`, `dpkg-query`, `findmnt`, `find` vb.; hiçbir şey değiştirilmedi). Betik depoda **yok**; sonuçlar yaklaşıktır, resmî uyumluluk kanıtı değildir. Bu satırlar kodumuzun bir şey yaptığı anlamına gelmez; yalnızca o makinede varsayılanın uygun çıktığını söyler.
+
+| Bölüm | Konu | Madde numaraları |
+|---|---|---|
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.2.1.1, 1.1.2.1.2, 1.1.2.1.3, 1.1.2.2.1, 1.1.2.2.2, 1.1.2.2.3, 1.1.2.3.2, 1.1.2.3.3, 1.1.2.4.2, 1.1.2.4.3, 1.1.2.5.2, 1.1.2.5.3, 1.1.2.5.4, 1.1.2.6.2, 1.1.2.6.3, 1.1.2.6.4, 1.1.2.7.2, 1.1.2.7.3, 1.1.2.7.4 |
+| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.1, 1.2.1.4, 1.2.1.7, 1.2.1.10, 1.2.1.12, 1.2.1.13, 1.2.1.14, 1.2.1.15 |
+| 1.3 | AppArmor | 1.3.1.1, 1.3.1.2, 1.3.1.4 |
+| 1.5 | Süreç sertleştirme (sysctl, core dump) | 1.5.6 |
+| 1.6 | Oturum açma uyarı metinleri | 1.6.1, 1.6.11 |
+| 1.7 | GNOME oturum yöneticisi (masaüstü) | 1.7.1, 1.7.2, 1.7.3, 1.7.4, 1.7.5, 1.7.6 |
+| 2.1 | Sunucu servisleri | 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8, 2.1.9, 2.1.10, 2.1.11, 2.1.12, 2.1.13, 2.1.14, 2.1.15, 2.1.16, 2.1.17, 2.1.18, 2.1.19, 2.1.20 |
+| 2.2 | İstemci paketleri | 2.2.1, 2.2.2, 2.2.3, 2.2.5 |
+| 2.3 | Zaman senkronizasyonu | 2.3.1.1, 2.3.3.2, 2.3.3.3 |
+| 2.4 | Zamanlanmış işler (cron, at) | 2.4.1.1 |
+| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.2, 3.1.3 |
+| 5.2 | Yetki yükseltme (sudo, su) | 5.2.1 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.2.1, 5.3.3.4.3 |
+| 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.6, 5.4.2.1, 5.4.2.2, 5.4.2.3, 5.4.2.4, 5.4.2.7, 5.4.2.8 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.1, 6.1.1.1.2, 6.1.1.1.3, 6.1.1.1.4, 6.1.2.1, 6.1.2.2, 6.1.2.3, 6.1.2.6, 6.1.2.7 |
+| 7.1 | Sistem dosyası izinleri | 7.1.11, 7.1.12 |
+| 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.1, 7.2.2, 7.2.3, 7.2.4, 7.2.5, 7.2.6, 7.2.7, 7.2.8, 7.2.9, 7.2.10 |
+
+**VM'de uygun ÇIKMAYAN** (bu yüzden ❌ kaldı) ve kodla çözülebilecek olanlar: `/tmp` ve `/dev/shm` için `noexec` (1.1.2.x), `apport` etkin (1.5.7), core dump sınırı ve `systemd-coredump` ayarı (1.5.10-12), `update-notifier-motd.timer` etkin (1.6.12), `telnet`, `ftp`/`tnftp` istemcileri **kurulu** (2.2.4, 2.2.6), `pam_unix` `nullok` (5.3.3.4.1), `INACTIVE` (5.4.1.5), kabuk `TMOUT` (5.4.3.2), journald `Storage`/`Compress` açıkça yazılı değil (6.1.1.1.6/7), `sysstat` günlükleri herkesçe okunabilir (6.1.3.1). Bu envanter VM'e özgüdür.
+
+
 ## Yok (❌), konuya göre
 
 Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numaralar yalnız konu gruplamak içindir).
 
 | Bölüm | Konu | Madde numaraları |
 |---|---|---|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11, 1.1.2.1.1, 1.1.2.1.2, 1.1.2.1.3, 1.1.2.1.4, 1.1.2.2.1, 1.1.2.2.2, 1.1.2.2.3, 1.1.2.2.4, 1.1.2.3.2, 1.1.2.3.3, 1.1.2.4.2, 1.1.2.4.3, 1.1.2.5.2, 1.1.2.5.3, 1.1.2.5.4, 1.1.2.6.2, 1.1.2.6.3, 1.1.2.6.4, 1.1.2.7.2, 1.1.2.7.3, 1.1.2.7.4 |
-| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.1, 1.2.1.3, 1.2.1.4, 1.2.1.5, 1.2.1.6, 1.2.1.7, 1.2.1.8, 1.2.1.9, 1.2.1.10, 1.2.1.11, 1.2.1.12, 1.2.1.13, 1.2.1.14, 1.2.1.15 |
-| 1.3 | AppArmor | 1.3.1.1, 1.3.1.2, 1.3.1.4 |
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11, 1.1.2.1.4, 1.1.2.2.4 |
+| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.3, 1.2.1.5, 1.2.1.6, 1.2.1.8, 1.2.1.9, 1.2.1.11 |
 | 1.4 | Önyükleyici | 1.4.1 |
-| 1.5 | Süreç sertleştirme (sysctl, core dump) | 1.5.6, 1.5.7, 1.5.10, 1.5.11, 1.5.12 |
-| 1.6 | Oturum açma uyarı metinleri | 1.6.1, 1.6.4, 1.6.9, 1.6.11, 1.6.12 |
-| 1.7 | GNOME oturum yöneticisi (masaüstü) | 1.7.1, 1.7.2, 1.7.3, 1.7.4, 1.7.5, 1.7.6 |
-| 2.1 | Sunucu servisleri | 2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8, 2.1.9, 2.1.10, 2.1.11, 2.1.12, 2.1.13, 2.1.14, 2.1.15, 2.1.16, 2.1.17, 2.1.18, 2.1.19, 2.1.20, 2.1.23 |
-| 2.2 | İstemci paketleri | 2.2.1, 2.2.2, 2.2.3, 2.2.4, 2.2.5, 2.2.6 |
-| 2.3 | Zaman senkronizasyonu | 2.3.1.1, 2.3.2.1, 2.3.2.2, 2.3.3.1, 2.3.3.2, 2.3.3.3 |
-| 2.4 | Zamanlanmış işler (cron, at) | 2.4.1.1 |
-| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1, 3.1.2, 3.1.3 |
+| 1.5 | Süreç sertleştirme (sysctl, core dump) | 1.5.7, 1.5.10, 1.5.11, 1.5.12 |
+| 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9, 1.6.12 |
+| 2.1 | Sunucu servisleri | 2.1.23 |
+| 2.2 | İstemci paketleri | 2.2.4, 2.2.6 |
+| 2.3 | Zaman senkronizasyonu | 2.3.2.1, 2.3.2.2, 2.3.3.1 |
+| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1 |
 | 3.2 | Ağ çekirdek modülleri | 3.2.7 |
 | 5.1 | SSH sunucusu | 5.1.5 |
-| 5.2 | Yetki yükseltme (sudo, su) | 5.2.1, 5.2.7 |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.1, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.3, 5.3.3.4.4 |
-| 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.5, 5.4.1.6, 5.4.2.1, 5.4.2.2, 5.4.2.3, 5.4.2.4, 5.4.2.5, 5.4.2.6, 5.4.2.7, 5.4.2.8, 5.4.3.2 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.1, 6.1.1.1.2, 6.1.1.1.3, 6.1.1.1.4, 6.1.1.1.5, 6.1.1.1.6, 6.1.1.1.7, 6.1.2.1, 6.1.2.2, 6.1.2.3, 6.1.2.4, 6.1.2.5, 6.1.2.6, 6.1.2.7, 6.1.3.1 |
+| 5.2 | Yetki yükseltme (sudo, su) | 5.2.7 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
+| 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.5, 5.4.2.5, 5.4.2.6, 5.4.3.2 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.1.1.6, 6.1.1.1.7, 6.1.2.4, 6.1.2.5, 6.1.3.1 |
 | 6.3 | Bütünlük denetimi (AIDE) | 6.3.2 |
-| 7.1 | Sistem dosyası izinleri | 7.1.11, 7.1.12, 7.1.13 |
-| 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.1, 7.2.2, 7.2.3, 7.2.4, 7.2.5, 7.2.6, 7.2.7, 7.2.8, 7.2.9, 7.2.10, 7.2.11 |
+| 7.1 | Sistem dosyası izinleri | 7.1.13 |
+| 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
 
 ## Level 1 dışında yaptıklarımız
 

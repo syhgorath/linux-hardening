@@ -116,5 +116,15 @@ check("yalniz GRUB_CMDLINE_LINUX (DEFAULT'a dokunulmaz)", ('GRUB_CMDLINE_LINUX_D
 rc, txt, ch = run_replace('GRUB_CMDLINE_LINUX="quiet"\n', check_mode=True)
 check("--check: dosya degismez ama degisecegi bildirilir", ('GRUB_CMDLINE_LINUX="quiet"\n', True), (txt, ch))
 
+# 6) journald: kalıcı depolama + sıkıştırma açıkça yazılır (CIS 6.1.1.1.6/7); saklama süresi/boyut ayarlarına dokunulmaz
+jd = task("hardening_base", "Persistent, compressed journald storage")
+jc = jd["ansible.builtin.copy"]
+check("journald drop-in /etc/systemd/journald.conf.d/ altinda, 0644 root", True, jc["dest"].startswith("/etc/systemd/journald.conf.d/") and jc["mode"] == "0644" and jc["owner"] == "root")
+check("journald: [Journal] basligi, Storage=persistent, Compress=yes", True, all(x in jc["content"] for x in ("[Journal]", "Storage=persistent", "Compress=yes")))
+check("journald: saklama/boyut ayarlarina dokunulmaz (SystemMaxUse, MaxRetention...)", True, not any(x in jc["content"] for x in ("MaxUse", "KeepFree", "MaxRetention", "MaxFileSec")))
+check("journald: degisince yeniden baslatilir (handler adi eslesir)", True, jd.get("notify") == "Restart journald")
+hand = load("roles/hardening_base/handlers/main.yml")
+check("journald handler'i systemd-journald'i restart eder", True, any(h.get("name") == "Restart journald" and h["ansible.builtin.systemd"]["name"] == "systemd-journald" and h["ansible.builtin.systemd"]["state"] == "restarted" for h in hand))
+
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)
