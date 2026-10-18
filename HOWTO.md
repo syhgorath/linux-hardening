@@ -190,6 +190,8 @@ Skor tek başına hedef değil. Önemli olan **uyarı sayısı (0)** ve bilerek 
 | `hardening_auditd` | auditd + temel kurallar |
 | `hardening_fail2ban` | SSH jail |
 | `hardening_aide` | Dosya bütünlüğü veritabanı |
+| `hardening_files` | Dosya izinleri (CIS 7.1.x, 5.1.1-5.1.4, cron, `grub.cfg`): yalnızca fazla izni kaldırır, olmayan dosyayı oluşturmaz, `hardening_files_enabled=false` ile kapanır |
+| `hardening_sudo` | `/etc/sudoers.d/60-hardening`: `use_pty`, `logfile`, `timestamp_timeout=15` (CIS 5.2.x). `visudo -cf` ile doğrulanır, yazdıktan sonra `become` denenir; `hardening_sudo_enabled=false` ile kapanır |
 | `hardening_time` | Salt okunur zaman raporu (chrony durumu, kaynaklar, saat kayması); `harden` çıktısında `ZAMAN:` / `UYARI (zaman):`. Hiçbir şeyi değiştirmez |
 | `hardening_ufw` | Gelen trafik varsayılan engelli, SSH sadece yönetim ağından |
 | `hardening_ssh` | Root yok, parola yok, MaxAuthTries 3, forwarding kapalı |

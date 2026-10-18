@@ -1,0 +1,56 @@
+# sudo ayarları (CIS 5.2.2 use_pty, 5.2.3 logfile, 5.2.6 timestamp_timeout<=15) ve 5.2.5 için SALT OKUNUR tarama.
+# /etc/sudoers.d/ altına ayrı bir dosya yazılır (ana /etc/sudoers'a dokunulmaz) ve `visudo -cf` ile doğrulanır.
+# RİSK: yanlış sudoers erişimi keser. Bu yüzden yazdıktan hemen sonra `become` ile denenir; başarısızsa dosya silinmeye çalışılır ve rol DURUR.
+# Geri alma güvenlik ağı sudoers'ı geri almaz. Rol ssh'tan SONRA çalışır; mevcut bağlantıda `become` denemesi rolün kendi içindedir (yeni bağlantıda become denenmez).
+- name: Sudo settings (CIS)
+  when: hardening_sudo_enabled | bool
+  block:
+    - name: Write sudoers drop-in (use_pty, logfile, timestamp_timeout)
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/60-hardening
+        owner: root
+        group: root
+        mode: "0440"
+        validate: /usr/sbin/visudo -cf %s
+        content: |
+          # Ansible tarafından yönetilir
+          Defaults use_pty
+          Defaults logfile="{{ hardening_sudo_logfile }}"
+          Defaults timestamp_timeout=15
+
+    - name: Check that privilege escalation still works
+      ansible.builtin.command: id -u
+      become: true
+      register: hardening_sudo_probe
+      changed_when: false
+      check_mode: false
+      failed_when: hardening_sudo_probe.stdout | trim != '0'
+      when: not ansible_check_mode
+
+    # 5.2.5: sudoers'ta "!authenticate" (parolasız/yeniden kimlik doğrulamasız sudo) olmamalı. Dosyaları DEĞİŞTİRMEYİZ (kasıtlı olabilir): yalnızca uyarırız.
+    - name: Look for '!authenticate' in sudoers (read-only)
+      ansible.builtin.shell:
+        cmd: grep -rEn '^[^#]*!authenticate' /etc/sudoers /etc/sudoers.d 2>/dev/null || true
+      register: hardening_sudo_noauth
+      changed_when: false
+      check_mode: false
+
+    - name: Warn about '!authenticate'
+      ansible.builtin.debug:
+        msg: >-
+          UYARI (sudo, CIS 5.2.5): sudoers içinde "!authenticate" var, yani bazı kullanıcılar parola sormadan sudo kullanıyor: {{ hardening_sudo_noauth.stdout_lines | join(' | ') }}.
+          Bu bilinçli olabilir (otomasyon); değiştirilmedi.
+      when: hardening_sudo_noauth.stdout_lines | length > 0
+
+  rescue:
+    - name: Remove the sudoers drop-in after a failure
+      ansible.builtin.file:
+        path: /etc/sudoers.d/60-hardening
+        state: absent
+      failed_when: false  # become çalışmıyorsa silinemeyebilir; aşağıdaki hata mesajı bunu söyler
+
+    - name: Stop after sudo failure
+      ansible.builtin.fail:
+        msg: >-
+          sudo ayarı uygulanamadı ya da sonrasında yetki yükseltme çalışmadı; /etc/sudoers.d/60-hardening silinmeye çalışıldı. Sunucuda doğrulayın:
+          ls -l /etc/sudoers.d/60-hardening (kalmışsa root olarak silin).

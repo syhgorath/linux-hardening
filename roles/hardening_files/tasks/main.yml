@@ -1,0 +1,80 @@
+# Dosya izinleri (CIS 7.1.x, 5.1.1-5.1.4, 2.4.x, 1.4.2, 1.6.6). Yalnızca fazla izni kaldırır (sembolik modlar), mevcut dosyalara dokunur, yenisini oluşturmaz.
+# Geri alma güvenlik ağı bunları geri almaz (izinler yalnızca sıkılaşır). Kapsam: docs/cis-esleme.md.
+- name: File permissions (CIS)
+  when: hardening_files_enabled | bool
+  block:
+    - name: Stat the static targets
+      ansible.builtin.stat:
+        path: "{{ hardening_files_root }}{{ item.path }}"
+      loop: "{{ hardening_files_targets }}"
+      loop_control:
+        label: "{{ item.path }}"
+      register: hardening_files_stat
+
+    - name: Tighten ownership and mode (only existing paths)
+      ansible.builtin.file:
+        path: "{{ hardening_files_root }}{{ item.item.path }}"
+        state: "{{ 'directory' if item.stat.isdir else 'file' }}"
+        owner: "{{ item.item.owner }}"
+        group: "{{ item.stat.gr_name if item.stat.gr_name in (item.item.group_ok | default([])) else item.item.group }}"
+        mode: "{{ item.item.mode }}"
+        follow: false
+      loop: "{{ hardening_files_stat.results }}"
+      loop_control:
+        label: "{{ item.item.path }}"
+      when: item.stat.exists and not item.stat.islnk
+
+    # Dinamik listeler (adları sabit değil). `find` salt okunurdur, `--check`'te de çalışır.
+    - name: Find sshd drop-in files
+      ansible.builtin.find:
+        paths: "{{ hardening_files_root }}/etc/ssh/sshd_config.d"
+        patterns: "*.conf"
+        file_type: file
+      register: hardening_files_sshd_dropins
+
+    - name: Tighten sshd drop-in files (CIS 5.1.1)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "u-x,og-rwx"
+      loop: "{{ hardening_files_sshd_dropins.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Find SSH private host keys
+      ansible.builtin.find:
+        paths: "{{ hardening_files_root }}/etc/ssh"
+        patterns: "ssh_host_*_key"
+        file_type: file
+      register: hardening_files_hostkeys
+
+    - name: Tighten SSH private host keys (CIS 5.1.3)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "u-x,go-rwx"
+      loop: "{{ hardening_files_hostkeys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Find SSH public host keys
+      ansible.builtin.find:
+        paths: "{{ hardening_files_root }}/etc/ssh"
+        patterns: "ssh_host_*_key.pub"
+        file_type: file
+      register: hardening_files_hostkeys_pub
+
+    - name: Tighten SSH public host keys (CIS 5.1.4)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "u-x,go-wx"
+      loop: "{{ hardening_files_hostkeys_pub.files }}"
+      loop_control:
+        label: "{{ item.path }}"

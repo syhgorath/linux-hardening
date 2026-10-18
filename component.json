@@ -158,6 +158,20 @@
       "description": "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
     },
     {
+      "name": "hardening_files_enabled",
+      "type": "bool",
+      "default": true,
+      "warn_if": false,
+      "description": "true: CIS dosya izinleri (passwd/shadow/group, sshd_config, ana bilgisayar anahtarları, cron, grub.cfg) yalnızca fazla izin KALDIRILARAK sıkılaştırılır; olmayan dosya oluşturulmaz. false: rol hiçbir şey yapmaz"
+    },
+    {
+      "name": "hardening_sudo_enabled",
+      "type": "bool",
+      "default": true,
+      "warn_if": false,
+      "description": "true: /etc/sudoers.d/60-hardening yazılır (use_pty, logfile, timestamp_timeout=15; visudo ile doğrulanır). use_pty, arka plana atılan sudo süreçlerinin oturum kapanınca takılmasına yol açabilir. false: rol hiçbir şey yapmaz"
+    },
+    {
       "name": "hardening_kernel_disable_ipv6_ra",
       "type": "bool",
       "default": false,

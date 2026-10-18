@@ -1,0 +1,5 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# false: rol hiçbir şey yapmaz (kaçış anahtarı).
+hardening_sudo_enabled: true
+# sudo komutlarının kaydı (CIS 5.2.3). Dosyayı sudo ilk kullanımda root:root 0600 olarak kendisi oluşturur.
+hardening_sudo_logfile: /var/log/sudo.log
