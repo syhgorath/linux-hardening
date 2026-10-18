@@ -7,7 +7,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ### Eklendi
 - CIS "grup 2" (davranışı değiştirenler, **hepsi varsayılan KAPALI**, her biri kendi değişkeniyle; `test_cis_group2.py`, `test_files_role.py`):
-  - `hardening_disable_coredump` (`limits.d` ve `systemd-coredump`), `hardening_remove_legacy_clients` (`telnet`/`ftp` istemcileri; `apt remove`, purge ve autoremove YOK), `hardening_shell_timeout_seconds` (`TMOUT`, 0..900), `hardening_password_inactive_days` (`useradd -D -f`; yalnız yeni hesaplar, mevcutlar uyarıyla listelenir, 0..365), `hardening_log_file_permissions` (`/var/log` dosyalarında `g-wx,o-rwx`; wtmp/btmp/lastlog/faillog ve journal hariç).
+  - `hardening_disable_coredump` (`limits.d` ve `systemd-coredump`), `hardening_remove_legacy_clients` (`telnet`/`ftp` istemcileri ve `ubuntu-standard` metapaketi; `apt remove`, purge ve autoremove YOK; metapaket olmadan apt bir istemciyi kaldırınca öbürünü kuruyor, gerçek VM'de görüldü), `hardening_shell_timeout_seconds` (`TMOUT`, 0..900), `hardening_password_inactive_days` (`useradd -D -f`; yalnız yeni hesaplar, mevcutlar uyarıyla listelenir, 0..365), `hardening_log_file_permissions` (`/var/log` dosyalarında `g-wx,o-rwx`; wtmp/btmp/lastlog/faillog ve journal hariç).
   - Tamsayı değişkenler `abc` gibi değerleri sessizce "kapalı" saymaz; reddedilir.
   - `/var/log` taraması taşınabilir `find` kullanır (`-perm /mode` GNU'ya özgüdür).
   - README "Dikkat" bölümü güncellendi. Kalan (tasarım gerekir): `/tmp` ve `/dev/shm` `noexec`, `su` kısıtı, kullanıcı dot dizinleri.

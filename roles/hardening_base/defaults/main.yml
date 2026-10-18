@@ -8,4 +8,8 @@ hardening_suid_report: true
 # true: düz metin istemcileri (telnet, ftp) KALDIRILIR (apt remove; purge DEĞİL, ayar dosyalarına dokunulmaz; CIS 2.2). Varsayılan kapalı.
 # Port açmazlar (tek başlarına güvenlik riski değil) ama `telnet host port` ile port yoklayan betikleri ve `ftp` yedek akışlarını KIRAR. Geri alma: apt install.
 hardening_remove_legacy_clients: false
-hardening_legacy_client_packages: [telnet, inetutils-telnet, ftp, tnftp, inetutils-ftp]
+# ftp-ssl ve telnet-ssl: aynı komutu (`ftp`/`telnet`) update-alternatives ile sağlarlar; yalnızca `ftp`/`telnet` kaldırılınca komut onlara düşüyordu (gerçek VM'de görüldü).
+# ubuntu-standard: bir ftp istemcisi ister (`ftp | ftp-ssl | tnftp`); onu listede tutmazsanız apt, bir istemciyi kaldırınca bir ÖBÜRÜNÜ kurar ve her koşuda
+# ping-pong yapar (gerçek VM'de görüldü: ftp -> ftp-ssl -> ftp+tnftp ...). Bu bir METAPAKETTİR (dosya içermez); kalkınca bağımlılıkları sunucuda kalır, ama
+# `apt autoremove` onlardan otomatik kurulmuş olanları aday gösterebilir. İstemiyorsanız hardening_remove_legacy_clients'i açmayın.
+hardening_legacy_client_packages: [telnet, telnet-ssl, inetutils-telnet, ftp, ftp-ssl, tnftp, inetutils-ftp, ubuntu-standard]

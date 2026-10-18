@@ -76,7 +76,8 @@ a = ap["ansible.builtin.apt"]
 check("apt: state absent, purge false, autoremove false (ayar dosyalarina ve bagimli paketlere dokunulmaz)", True, a["state"] == "absent" and a["purge"] is False and a["autoremove"] is False)
 check("kendi degiskeniyle kapanir", True, "hardening_remove_legacy_clients" in str(ap["when"]))
 pk = bd["hardening_legacy_client_packages"]
-check("paket listesi yalniz telnet/ftp istemcileri (sshd, openssh vb. YOK)", True, set(pk) <= {"telnet", "inetutils-telnet", "ftp", "tnftp", "inetutils-ftp", "pftp"} and {"telnet", "ftp"} <= set(pk))
+check("paket listesi yalniz telnet/ftp istemcileri (sshd, openssh vb. YOK)", True, set(pk) <= {"telnet", "telnet-ssl", "inetutils-telnet", "ftp", "ftp-ssl", "tnftp", "inetutils-ftp", "pftp", "ubuntu-standard"} and {"telnet", "ftp", "ftp-ssl", "telnet-ssl"} <= set(pk))
+check("ubuntu-standard listede (yoksa apt bir istemciyi kaldirinca digerini kurar: ping-pong)", True, "ubuntu-standard" in pk)
 check("apt gorevi paket adini listeden alir", True, a["name"] == "{{ hardening_legacy_client_packages }}")
 
 # 4) kabuk TMOUT
