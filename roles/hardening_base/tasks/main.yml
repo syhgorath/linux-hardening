@@ -50,3 +50,26 @@
   loop:
     - /etc/issue
     - /etc/issue.net
+
+# CIS 6.1.1.1.6 / 6.1.1.1.7: journald kalıcı depolama ve sıkıştırma AÇIKÇA yazılır. `Storage=auto` yalnızca /var/log/journal varsa kalıcıdır (bazı bulut imajlarında yoktur).
+# Veri kaybı yok: günlükler diske yazılır; saklama süresi/boyut ayarlarına dokunulmaz (site politikası).
+- name: Ensure journald drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Persistent, compressed journald storage
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/60-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      [Journal]
+      Storage=persistent
+      Compress=yes
+  notify: Restart journald
