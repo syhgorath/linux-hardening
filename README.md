@@ -56,8 +56,7 @@ Canlı doğrulama kayıtları: [docs/verification-log.md](docs/verification-log.
 
 ## Ne yapmaz (kapsam sınırları)
 
-Bu proje **tam CIS Benchmark uyumu iddia etmez**: hedef "Level 1 Server *yaklaşımı*". Hangi CIS maddelerinin karşılandığı henüz **madde numarasıyla eşlenmedi**
-(eşleme CIS Benchmark PDF'iyle çıkarılacak, bkz. [docs/ROADMAP.md](docs/ROADMAP.md)); bu yüzden aşağıdaki tablo madde değil **alan** bazlıdır ve yalnızca kodda
+Bu proje **tam CIS Benchmark uyumu iddia etmez**: hedef "Level 1 Server *yaklaşımı*". Madde numaralı eşleme (Level 1 Server) [docs/cis-esleme.md](docs/cis-esleme.md) dosyasında; aşağıdaki tablo ise madde değil **alan** bazlıdır ve yalnızca kodda
 doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır; diğerleri **henüz yapılmadı**, atlandığı anlamına gelmez. Eksik bir alan görürseniz issue açın.
 
 | Alan | Durum | Not |
@@ -84,6 +83,27 @@ doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır
 | fail2ban | Sınırlı | Yalnızca `sshd` jail |
 
 Bilinen çakışmalar (sertleştirmenin meşru kullanımları bozabileceği yerler): [docs/known-issues.md](docs/known-issues.md).
+
+## Dikkat: davranışı değiştiren ayarlar
+
+`harden` bir sunucuya uygulanınca aşağıdakiler **varsayılan olarak açıktır** ve meşru bir kullanımı bozabilir. Sunucu türüne göre `group_vars`/`host_vars` ya da `-e` ile kapatın. Tam liste ve kaçış yolları: [docs/known-issues.md](docs/known-issues.md).
+
+| Ayar (varsayılan) | Ne bozabilir | Kapatma |
+|---|---|---|
+| `ufw`: gelen trafik `deny` | `hardening_ssh_allow_from` ve `hardening_ufw_extra_allow` dışındaki her şey (web, Redis, izleme) kapanır. Docker'ın yayınladığı portlar ufw'yi **atlar** | `hardening_ssh_allow_from` (tüm bağlantı ağlarını yaz), `hardening_ufw_extra_allow` |
+| `hardening_ufw_routed_deny` (açık) | ufw ile yönlendirme/NAT/köprü yapan, Docker'lı sunucularda konteyner trafiği durabilir | `false` |
+| `base`: `postfix`/`courier` kaldırılır, `dma` kurulur | Yerel posta sunucusu bekleyen uygulama bozulur | `--skip-tags base` (tüm rolü atlar) |
+| `base`: `usb-storage` kapalı; `kernel`: `cramfs`, `hfs`, `jffs2`, `firewire-core`, `atm`, `can`, `dccp`, `sctp`, `rds`, `tipc` yüklenemez | USB diske yedek, bu dosya sistemi/protokolü kullanan uygulama çalışmaz | `--skip-tags kernel,base` |
+| `kernel`: `route_localnet=0` | `localhost`'a DNAT yapan düzenler (bazı Kubernetes `NodePort`) bozulur | `--skip-tags kernel` |
+| `ssh`: `DisableForwarding`, `MACs` zayıf liste, `MaxStartups 10:30:60` | Unix soket yönlendirme, çok eski istemciler, çok paralel SSH bağlantısı | `hardening_ssh_allow_tcp_forwarding=local` (yönlendirme), diğerleri için `--skip-tags ssh` |
+| `hardening_disable_apport` (açık) | Ubuntu çökme raporları toplanmaz | `false` |
+| `hardening_disable_update_notifier_motd` (açık) | Oturum açılışındaki güncelleme iletisi yenilenmez | `false` |
+| `hardening_sudo_enabled` (açık) | `use_pty`: arka plana atılan `sudo` süreçleri oturum kapanınca takılabilir | `false` |
+| `hardening_files_enabled` (açık) | İzinler yalnızca **sıkılaşır**; bu dosyalara başka kullanıcıyla erişen betikler bozulabilir | `false` |
+
+**Varsayılan KAPALI, bilinçli açılacaklar:** `hardening_kernel_disable_ipv6_ra` (IPv6'sını yalnızca yönlendirici duyurusundan alan sunucuyu keser), `hardening_auditd_grub_audit` (`audit=1`, yeniden başlatma gerekir, geri alma kapsamında değil), `hardening_auditd_restart_services` (servis kesintisi), `hardening_ufw_prune_ssh` (kural siler).
+
+**Planlanan, henüz kodlanmadı (hepsi varsayılan KAPALI olacak):** core dump kapatma, kabuk `TMOUT`, parola `INACTIVE`, `/tmp` ve `/dev/shm` `noexec`, `su` kısıtı, günlük dosyası izinleri ve **`telnet`/`ftp` istemcilerinin kaldırılması**. Sonuncusu için not: bu programlar port açmaz (güvenlik riski yaratmaz), ama `telnet host port` ile port yoklayan betikleri ve `ftp` kullanan yedek akışlarını **kırar**; kaldırma `apt remove` ile yapılır (`purge` değil), geri alma `apt install`dır. Ayrıntı: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Testler
 `test/` altındaki testler her PR'da CI'da (`.github/workflows/ci.yml`) çalışır; yerelde:
