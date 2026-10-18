@@ -132,6 +132,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_docker_tasks.py` | `hardening_docker` görevleri uçtan uca (sahte okuma çıktısı + gerçek betik): varsayılan kapalı, Docker yoksa atla, okumalar salt okunur, yedekli yazma, auditd'de yalnız var olan yollar |
 | `test_examples.py` | `examples/` tutarlılığı: gerçek `ansible-inventory` ile `group_vars` birleşimi, sshpocket dosyalarıyla aynı; yalnız var olan değişkenler, ek ufw kuralları doğrulama kalıbına uyar, DB portu açılmaz |
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
+| `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
 | `test_cis_group2.py` | Grup 2 (hepsi varsayılan kapalı): core dump, `telnet`/`ftp` kaldırma (`remove`, purge yok), `TMOUT` ve `INACTIVE` sınırları ve idempotensi, mevcut hesaplara dokunulmaması |
 | `test_cis_group1.py` | apport ve `update-notifier-motd` kapatma (olmayan birime dokunulmaz, kendi değişkeniyle kapanır, `lineinfile` idempotent) ve SUID/SGID özetinin salt okunur kalması |
 | `test_files_role.py` | dosya izinleri gerçek `ansible-playbook` ile geçici ağaçta: yalnızca sıkılaşır (0600 gevşemez), olmayan dosya oluşturulmaz, sembolik bağ izlenmez, `--check` değiştirmez, ikinci koşu `changed=0` |
