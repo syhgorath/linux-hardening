@@ -1,0 +1,6 @@
+# server1: web + veritabanı + php. Ters vekil (server2) yalnızca 80'e ulaşır; veritabanı portu HİÇ açılmaz (PHP yerel sokete/127.0.0.1'e bağlanır).
+hardening_ufw_extra_allow:
+  - "from 192.168.1.12 to any port 80 proto tcp"   # ters vekilin (server2) adresi
+# İsteğe bağlı, davranışı değiştirenler (varsayılan KAPALI; açmadan önce README "Dikkat" bölümüne bakın):
+# hardening_remove_legacy_clients: true
+# hardening_disable_coredump: true

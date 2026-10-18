@@ -92,6 +92,13 @@ yeniden uygulandı: `masked`/`inactive`, `systemctl --failed` boş, ikinci koşu
 her koşuda `changed=1`). Çözüm: `ubuntu-standard`ı aynı işlemde kaldırmak (listeye eklendi; tek `apt-get remove` işleminde hepsi gider). Mevcut hesap uyarısı gerçek veriyle çalıştı (`syhgorath` INACTIVE 45 değil, değiştirilmedi). **Ölçülmedi:** TMOUT'un gerçek boşta oturumu kapatması, core dump kapalıyken
 gerçek bir çökme, günlük izinlerinin izleme ajanlarına etkisi.
 
+**17. Üç sunuculuk senaryo, Docker/Colima mini lab (2026-10-18).** `examples/` gerçek haliyle denendi: özel Docker ağı `192.168.1.0/24`, üç systemd'li Ubuntu 26.04 konteyneri (`server1` web, `server2` Docker, `server3` Redis/günlük/yedek;
+mevcut `sshpocket-lab:ubuntu26` imajı, indirme yok) + bir yabancı konteyner (`192.168.1.99`). Envanter `examples/inventory.example.yml` ile aynı gruplar, `group_vars` = `examples/group_vars`. `--skip-tags aide` ile tam `harden`:
+üçünde `ok=107 changed=32 failed=0`; ikinci koşu yalnızca LAB'a özgü `augenrules` (`changed=1`). **Bağlantı matrisi (22 kontrol, 0 hata):** `server1:80` yalnızca `server2`'den açık (`server3` ve yabancıdan kapalı), `server1:3306` kimseden açık değil;
+`server2:80/443` herkese açık, `8080` kapalı; `server3:6379` ve `514` yalnızca `server1`/`server2`'den açık (yabancıdan kapalı), `9100` kapalı; SSH LAN'dan açık. **`host_vars` birleşmesi:** `server3`'e
+`hardening_ufw_extra_allow_host` ile `9100` (yalnız `server1`'den) eklenince grup kuralları (6379, 514) **durdu**, yeni kural eklendi. **sshpocket yolu:** `group_vars` olmadan `-e @examples/sshpocket/<sunucu>.yml` üç sunucuda da `changed=0`
+(group_vars ile kurulmuş durumla aynı). **Ölçülmedi:** gerçek Redis/nginx/Docker (yalnızca port dinleyicileri), VPN, ev yönlendiricisi/ters vekil, Docker'ın yayınladığı portların ufw'yi atlaması (Docker içinde Docker kurulmadı), harici USB disk.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

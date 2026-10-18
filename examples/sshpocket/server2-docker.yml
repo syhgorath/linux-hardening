@@ -1,0 +1,8 @@
+# sshpocket için: group_vars/all.yml + docker.yml BİRLEŞİMİ.
+hardening_ssh_allow_from:
+  - 192.168.1.0/24
+  - 192.0.2.0/24
+hardening_ufw_routed_deny: false
+hardening_ufw_extra_allow:
+  - "80/tcp"
+  - "443/tcp"

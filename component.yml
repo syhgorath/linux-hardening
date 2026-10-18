@@ -121,6 +121,11 @@ vars:
     default: false
     warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
     description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
+  - name: hardening_disable_usb_storage
+    type: bool
+    default: true
+    warn_if: false                     # false = usb-storage engellenmez (kural dosyası silinir)
+    description: "true (varsayılan): usb-storage çekirdek modülü yüklenemez (CIS); USB diske yedek/kurtarma çalışmaz. false: bu rolün yazdığı kural dosyası silinir, USB depolama tekrar kullanılabilir"
   - name: hardening_disable_coredump
     type: bool
     default: false

@@ -1,0 +1,5 @@
+# ORTAK: üç sunucuda aynı olanlar. Öncelik: rol varsayılanı < all.yml < <grup>.yml < host_vars/<sunucu>.yml < -e.
+# SSH'a bağlanabileceğin TÜM ağlar (LAN + VPN). Yalnızca VPN yazarsan LAN'dan SSH kesilir.
+hardening_ssh_allow_from:
+  - 192.168.1.0/24   # LAN
+  - 192.0.2.0/24     # VPN (örnek adres; kullanmıyorsan sil)

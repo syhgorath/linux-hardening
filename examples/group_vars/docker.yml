@@ -1,0 +1,6 @@
+# server2: Docker (web+db+php konteyner olarak) + ters vekil. Yalnızca VEKİL 80/443 yayınlar; diğer konteyner portları dışarı AÇILMAZ (iç Docker ağı).
+# Docker yayınladığı portu ufw'yi ATLAYARAK açar (docs/known-issues.md); bu yüzden yayınlanan port sayısını küçük tut.
+hardening_ufw_routed_deny: false   # Docker/NAT yönlendirmesi ufw'nin routed ilkesine takılmasın
+hardening_ufw_extra_allow:
+  - "80/tcp"
+  - "443/tcp"

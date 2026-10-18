@@ -299,6 +299,16 @@ ansible-playbook playbooks/harden.yml --ask-become-pass
 7. Kademeli git: ilk gün `--tags base,auth,kernel`, sonra `auditd,fail2ban,aide`, en son `ufw,ssh`.
 8. Sonunda `audit.yml` ile tekrar ölç, sorun yoksa sıradaki sunucuya geç.
 
+## 7c. Birden fazla sunucu, farklı sertleştirme
+
+Sunucular birbirinden farklıysa (web, Docker, Redis...) ortak ayarı bir yerde, türe özel ayarı başka yerde tutun: `group_vars/all.yml` < `group_vars/<grup>.yml` < `host_vars/<sunucu>.yml` < `-e`.
+Çalışan bir örnek (3 sunucu: web / Docker / Redis+günlük+yedek) ve katmanların anlatımı: [examples/README.md](examples/README.md).
+
+- **Düz Ansible:** `examples/inventory.example.yml` ve `examples/group_vars/` yan yana durur; `--limit server3` ile tek sunucu.
+- **sshpocket:** `group_vars` görülmez; sunucu başına `examples/sshpocket/<sunucu>.yml` verilir (`-e @dosya`). Bu dosyalar `group_vars` birleşiminin kopyasıdır ve `test/test_examples.py` ikisinin kaymadığını denetler.
+- **Liste tuzağı:** Ansible liste değişkenlerini ezer. Sunucuya özel portlar için `hardening_ufw_extra_allow_host` kullanın (grupla birleşir); `host_vars`'a `hardening_ufw_extra_allow` yazarsanız grubunki silinir.
+- Her sunucu için: snapshot, `--check --diff`, uygula, ikinci koşu `changed=0`. Önce en az hizmeti olanla başlayın.
+
 ## 8. Bakım
 
 - Değişiklik yaptıysan: `git add -A && git commit -m "..." && git push`

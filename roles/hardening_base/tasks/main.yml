@@ -37,6 +37,13 @@
       # Ansible tarafından yönetilir
       install usb-storage /bin/false
       blacklist usb-storage
+  when: hardening_disable_usb_storage | bool
+
+- name: Allow usb-storage (remove this role's rule file)
+  ansible.builtin.file:
+    path: /etc/modprobe.d/60-hardening-usb.conf
+    state: absent
+  when: not (hardening_disable_usb_storage | bool)
 
 - name: Legal banner
   ansible.builtin.copy:
