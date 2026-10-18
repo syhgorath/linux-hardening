@@ -39,7 +39,7 @@ check("varsayilan: yol oneki bos, dinamik sahip/grup root", ("", "root", "root")
 check("yollar mutlak ve tekrarsiz", True, all(p.startswith("/") for p in paths) and len(paths) == len(set(paths)))
 check("modlar sembolik ve yalnizca izin KALDIRIR (rakam yok, '+'/'=' yok)", [], [t["path"] for t in targets if re.search(r"[0-9+=]", t["mode"]) or "-" not in t["mode"]])
 check("sahip hep root", [], [t["path"] for t in targets if t["owner"] != "root"])
-for must in ("/etc/passwd", "/etc/shadow", "/etc/gshadow", "/etc/group", "/etc/ssh/sshd_config", "/etc/ssh/sshd_config.d", "/etc/crontab", "/etc/cron.d", "/boot/grub/grub.cfg"):
+for must in ("/etc/apt/auth.conf.d", "/etc/apt/sources.list.d", "/etc/passwd", "/etc/shadow", "/etc/gshadow", "/etc/group", "/etc/ssh/sshd_config", "/etc/ssh/sshd_config.d", "/etc/crontab", "/etc/cron.d", "/boot/grub/grub.cfg"):
     check(f"hedef var: {must}", True, must in paths)
 check("cron.allow/at.allow yalnizca VARSA sikilastirilir; rol dosya OLUSTURMAZ", True,
       "state: touch" not in (ROOT / "roles/hardening_files/tasks/main.yml").read_text(encoding="utf-8")
@@ -50,7 +50,7 @@ me = pwd.getpwuid(os.getuid()).pw_name
 mygrp = grp.getgrgid(os.getgid()).gr_name
 with tempfile.TemporaryDirectory() as tmp:
     root = Path(tmp) / "root"
-    for sub in ("etc/ssh/sshd_config.d", "etc/cron.d", "etc/security"):
+    for sub in ("etc/ssh/sshd_config.d", "etc/cron.d", "etc/security", "etc/apt/sources.list.d", "etc/apt/auth.conf.d", "etc/apt/trusted.gpg.d", "usr/share/keyrings"):
         (root / sub).mkdir(parents=True)
     def mk(rel, mode, text="x\n"):
         p = root / rel
@@ -68,6 +68,11 @@ with tempfile.TemporaryDirectory() as tmp:
     mk("etc/ssh/ssh_host_rsa_key.pub", 0o666)
     mk("etc/ssh/ssh_host_rsa_key.bak", 0o666)     # desene uymaz: dokunulmamali
     (root / "etc/cron.d").chmod(0o755)
+    mk("etc/apt/sources.list.d/a.sources", 0o666)
+    mk("usr/share/keyrings/k.gpg", 0o755)
+    mk("usr/share/keyrings/readme.txt", 0o666)    # *gpg degil: dokunulmamali
+    mk("etc/apt/trusted.gpg.d/t.gpg", 0o666)
+    (root / "etc/apt/auth.conf.d").chmod(0o775)
     real = mk("etc/real_motd_target", 0o666)
     (root / "etc/motd").symlink_to(real)         # sembolik bag: izlenmemeli, hedef degismemeli
     # /etc/shadow- , /etc/crontab, /etc/cron.allow ... YOK: olusturulmamali
@@ -81,6 +86,7 @@ with tempfile.TemporaryDirectory() as tmp:
             tg("/etc/shadow", "u-x,g-wx,o-rwx", group="nogroup", group_ok=[mygrp]),
             tg("/etc/shadow-", "u-x,g-wx,o-rwx"), tg("/etc/crontab", "og-rwx"), tg("/etc/cron.allow", "u-x,g-wx,o-rwx"),
             tg("/etc/ssh/sshd_config", "u-x,og-rwx"), tg("/etc/cron.d", "og-rwx"), tg("/etc/motd", "u-x,go-wx"),
+            tg("/etc/apt/auth.conf.d", "go-w"),
         ],
     }
     pb = Path(tmp) / "p.yml"
@@ -115,6 +121,11 @@ with tempfile.TemporaryDirectory() as tmp:
     check("desene uymayan dosyaya dokunulmaz (.bak 0666)", 0o666, mode("etc/ssh/ssh_host_rsa_key.bak"))
     check("cron.d dizini 0755 -> 0700", 0o700, mode("etc/cron.d"))
     check("sembolik bag izlenmez: hedef 0666 kalir", 0o666, mode("etc/real_motd_target"))
+    check("APT kaynak dosyasi 0666 -> 0644", 0o644, mode("etc/apt/sources.list.d/a.sources"))
+    check("APT anahtari (.gpg) 0755 -> 0644 (calistirma bitleri kalkar)", 0o644, mode("usr/share/keyrings/k.gpg"))
+    check("APT anahtari trusted.gpg.d 0666 -> 0644", 0o644, mode("etc/apt/trusted.gpg.d/t.gpg"))
+    check("*gpg olmayan dosyaya dokunulmaz (readme.txt 0666)", 0o666, mode("usr/share/keyrings/readme.txt"))
+    check("auth.conf.d dizini 0775 -> 0755 (yalniz yazma kalkar)", 0o755, mode("etc/apt/auth.conf.d"))
     check("olmayan dosyalar OLUSTURULMAZ (shadow-, crontab, cron.allow)", [], [n for n in ("etc/shadow-", "etc/crontab", "etc/cron.allow") if (root / n).exists()])
     rc, res, out = run()
     check("ikinci kosu: changed=0 (idempotent)", (0, 0, 0), res)

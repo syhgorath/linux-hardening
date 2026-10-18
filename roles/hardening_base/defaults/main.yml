@@ -1,0 +1,7 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# true: Ubuntu hata raporlayıcı apport'u kapatır (/etc/default/apport enabled=0, servis durdurulur ve maskelenir; CIS 1.5.7). Çökme raporları toplanmaz.
+hardening_disable_apport: true
+# true: update-notifier-motd zamanlayıcısını durdurup maskeler (CIS 1.6.12). Oturum açılışındaki "güncelleme var" ileti güncellemesi durur.
+hardening_disable_update_notifier_motd: true
+# true: SUID/SGID dosyalarının SALT OKUNUR özetini yazdırır (CIS 7.1.13, "gözden geçir"). Hiçbir şeyi değiştirmez; çok büyük dosya sistemlerinde en çok 120 sn sürer.
+hardening_suid_report: true

@@ -78,3 +78,42 @@
       loop: "{{ hardening_files_hostkeys_pub.files }}"
       loop_control:
         label: "{{ item.path }}"
+
+    # CIS 1.2.1: APT anahtar (.gpg) ve kaynak dosyaları 0644 ya da daha kısıtlı, root:root
+    - name: Find APT key files
+      ansible.builtin.find:
+        paths:
+          - "{{ hardening_files_root }}/usr/share/keyrings"
+          - "{{ hardening_files_root }}/etc/apt/trusted.gpg.d"
+        patterns: "*gpg"
+        file_type: file
+      register: hardening_files_apt_keys
+
+    - name: Tighten APT key files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "u-x,go-wx"
+      loop: "{{ hardening_files_apt_keys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Find APT source files
+      ansible.builtin.find:
+        paths: "{{ hardening_files_root }}/etc/apt/sources.list.d"
+        patterns: "*"
+        file_type: file
+      register: hardening_files_apt_sources
+
+    - name: Tighten APT source files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "u-x,go-wx"
+      loop: "{{ hardening_files_apt_sources.files }}"
+      loop_control:
+        label: "{{ item.path }}"

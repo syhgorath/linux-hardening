@@ -21,11 +21,11 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | Bölüm | Konu | Level 1 madde | ✅ | 🟡 | ⏸️ | ⚪ | ❌ |
 |---|---|---:|---:|---:|---:|---:|---:|
 | 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 7 |  |  | 19 | 3 |
-| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 |  | 1 |  | 8 | 6 |
+| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 4 | 1 |  | 8 | 2 |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
 | 1.4 | Önyükleyici | 2 |  | 1 |  |  | 1 |
-| 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 6 |  |  | 1 | 4 |
-| 1.6 | Oturum açma uyarı metinleri | 12 | 7 |  |  | 2 | 3 |
+| 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 |  |  | 1 | 3 |
+| 1.6 | Oturum açma uyarı metinleri | 12 | 8 |  |  | 2 | 2 |
 | 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
 | 2.1 | Sunucu servisleri | 22 |  | 1 |  | 20 | 1 |
 | 2.2 | İstemci paketleri | 6 |  |  |  | 4 | 2 |
@@ -39,13 +39,13 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 2 |  | 1 | 1 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 2 | 16 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 4 |  | 7 | 4 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 |  |  |  | 9 | 6 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 |  |  | 9 | 4 |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  |  | 1 |
-| 7.1 | Sistem dosyası izinleri | 13 | 10 |  |  | 2 | 1 |
+| 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **94** | **19** | **5** | **100** | **56** |
+| | **Toplam** | **274** | **102** | **20** | **5** | **100** | **47** |
 
-Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %45'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -58,10 +58,15 @@ Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen
 | 1.1.1.5 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
 | 1.1.1.9 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
 | 1.1.1.10 | usb-storage modülü kapalı | `roles/hardening_base/tasks/main.yml` |
+| 1.2.1.3 | APT anahtarları (.gpg), auth.conf.d / sources.list.d dizinleri ve kaynak dosyaları: yalnızca fazla izin kaldırılır | `roles/hardening_files/tasks/main.yml` |
+| 1.2.1.5 | APT anahtarları (.gpg), auth.conf.d / sources.list.d dizinleri ve kaynak dosyaları: yalnızca fazla izin kaldırılır | `roles/hardening_files/tasks/main.yml` |
+| 1.2.1.8 | APT anahtarları (.gpg), auth.conf.d / sources.list.d dizinleri ve kaynak dosyaları: yalnızca fazla izin kaldırılır | `roles/hardening_files/tasks/main.yml` |
+| 1.2.1.9 | APT anahtarları (.gpg), auth.conf.d / sources.list.d dizinleri ve kaynak dosyaları: yalnızca fazla izin kaldırılır | `roles/hardening_files/tasks/main.yml` |
 | 1.5.1 | fs.protected_hardlinks = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 1.5.3 | kernel.yama.ptrace_scope = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 1.5.4 | fs.suid_dumpable = 0 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 1.5.5 | kernel.dmesg_restrict = 1 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
+| 1.5.7 | apport kapatılır (enabled=0, servis durdurulup maskelenir) | `roles/hardening_base/tasks/main.yml` |
 | 1.5.8 | kernel.kptr_restrict = 2 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 1.5.9 | kernel.randomize_va_space = 2 | `roles/hardening_kernel/templates/sysctl.conf.j2` |
 | 1.6.2 | /etc/issue ve /etc/issue.net: işletim sistemi bilgisi içermeyen uyarı metni | `roles/hardening_base/tasks/main.yml` |
@@ -71,6 +76,7 @@ Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen
 | 1.6.7 | banner dosyaları root:root 0644 | `roles/hardening_base/tasks/main.yml` |
 | 1.6.8 | banner dosyaları root:root 0644 | `roles/hardening_base/tasks/main.yml` |
 | 1.6.10 | banner dosyaları root:root 0644 | `roles/hardening_base/tasks/main.yml` |
+| 1.6.12 | update-notifier-motd zamanlayıcısı maskelenir | `roles/hardening_base/tasks/main.yml` |
 | 2.4.1.2 | crontab ve cron dizinleri og-rwx root:root (cron kurulu değilse atlanır) | `roles/hardening_files/defaults/main.yml` |
 | 2.4.1.3 | crontab ve cron dizinleri og-rwx root:root (cron kurulu değilse atlanır) | `roles/hardening_files/defaults/main.yml` |
 | 2.4.1.4 | crontab ve cron dizinleri og-rwx root:root (cron kurulu değilse atlanır) | `roles/hardening_files/defaults/main.yml` |
@@ -134,6 +140,8 @@ Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen
 | 5.3.3.2.3 | minclass 3 | `roles/hardening_auth/templates/pwquality.conf.j2` |
 | 5.3.3.2.4 | maxrepeat 3 | `roles/hardening_auth/templates/pwquality.conf.j2` |
 | 5.3.3.2.6 | dictcheck 1 | `roles/hardening_auth/templates/pwquality.conf.j2` |
+| 6.1.1.1.6 | journald drop-in: Storage=persistent, Compress=yes | `roles/hardening_base/tasks/main.yml` |
+| 6.1.1.1.7 | journald drop-in: Storage=persistent, Compress=yes | `roles/hardening_base/tasks/main.yml` |
 | 6.3.1 | AIDE kurulur, veritabanı üretilir | `roles/hardening_aide/tasks/main.yml` |
 | 7.1.1 | passwd/group/shadow/gshadow (+ yedekleri), shells, opasswd izinleri (var olanlar; yalnızca fazla izni kaldırır) | `roles/hardening_files/defaults/main.yml` |
 | 7.1.2 | passwd/group/shadow/gshadow (+ yedekleri), shells, opasswd izinleri (var olanlar; yalnızca fazla izni kaldırır) | `roles/hardening_files/defaults/main.yml` |
@@ -169,6 +177,7 @@ Yani Level 1 Server maddelerinin yaklaşık %34'i ✅, %41'i en azından kısmen
 | 5.4.1.3 | `PASS_WARN_AGE 7` login.defs'te; yalnız yeni hesaplar |
 | 5.4.1.4 | `SHA_CRYPT_*_ROUNDS` yazılır; `ENCRYPT_METHOD` yazılmaz (dağıtım varsayılanına bırakıldı) |
 | 5.4.3.3 | `UMASK 027` login.defs'te; /etc/profile.d ve bashrc dosyalarına dokunulmaz |
+| 7.1.13 | SUID/SGID dosyaları listelenir (salt okunur özet, hardening_suid_report); inceleme insana kalır, değişiklik yok |
 
 ## Bilerek yapılmayanlar (⏸️)
 
@@ -214,10 +223,10 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | Bölüm | Konu | Madde numaraları |
 |---|---|---|
 | 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11, 1.1.2.1.4, 1.1.2.2.4 |
-| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.3, 1.2.1.5, 1.2.1.6, 1.2.1.8, 1.2.1.9, 1.2.1.11 |
+| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.6, 1.2.1.11 |
 | 1.4 | Önyükleyici | 1.4.1 |
-| 1.5 | Süreç sertleştirme (sysctl, core dump) | 1.5.7, 1.5.10, 1.5.11, 1.5.12 |
-| 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9, 1.6.12 |
+| 1.5 | Süreç sertleştirme (sysctl, core dump) | 1.5.10, 1.5.11, 1.5.12 |
+| 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9 |
 | 2.1 | Sunucu servisleri | 2.1.23 |
 | 2.2 | İstemci paketleri | 2.2.4, 2.2.6 |
 | 2.3 | Zaman senkronizasyonu | 2.3.2.1, 2.3.2.2, 2.3.3.1 |
@@ -227,9 +236,8 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 5.2 | Yetki yükseltme (sudo, su) | 5.2.7 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.5, 5.4.2.5, 5.4.2.6, 5.4.3.2 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.1.1.6, 6.1.1.1.7, 6.1.2.4, 6.1.2.5, 6.1.3.1 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5, 6.1.3.1 |
 | 6.3 | Bütünlük denetimi (AIDE) | 6.3.2 |
-| 7.1 | Sistem dosyası izinleri | 7.1.13 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
 
 ## Level 1 dışında yaptıklarımız

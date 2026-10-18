@@ -108,6 +108,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |
+| `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |
 | `test_files_role.py` | file permissions with real `ansible-playbook` in a temp tree: only ever tightens (0600 stays), never creates files, symlinks not followed, `--check` changes nothing, second run `changed=0` |
 | `test_sudo_role.py` | sudoers drop-in: validated with `visudo -cf` (generated content checked with the real `visudo`), `become` probe, cleanup on failure, no `NOPASSWD` |
 | `test_cis_quickwins.py` | CIS quick wins: module lists, ufw `routed` policy, `audit=1` (real `replace` module, idempotent), ssh restart refusal, risky options default to off |

@@ -117,6 +117,21 @@ vars:
     default: false
     warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
     description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
+  - name: hardening_disable_apport
+    type: bool
+    default: true
+    warn_if: true                      # true = çökme raporu (apport) toplanmaz
+    description: "true: Ubuntu hata raporlayıcı apport kapatılır (enabled=0, servis durdurulup maskelenir; CIS 1.5.7). Çökme raporları toplanmaz. false: dokunulmaz"
+  - name: hardening_disable_update_notifier_motd
+    type: bool
+    default: true
+    warn_if: true                      # true = update-notifier-motd zamanlayıcısı maskelenir
+    description: "true: update-notifier-motd zamanlayıcısı durdurulup maskelenir (CIS 1.6.12); oturum açılışındaki güncelleme iletisi yenilenmez. false: dokunulmaz"
+  - name: hardening_suid_report
+    type: bool
+    default: true
+    warn_if: false                     # false = SUID/SGID özeti yazdırılmaz
+    description: "true: SUID/SGID dosyalarının SALT OKUNUR özetini yazdırır (CIS 7.1.13); hiçbir şeyi değiştirmez, en çok 120 sn sürer. false: çalışmaz"
   - name: hardening_files_enabled
     type: bool
     default: true
