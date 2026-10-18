@@ -1,0 +1,13 @@
+# Önce RELOAD (SIGHUP): live-restore gibi bazı ayarlar konteynerleri DURDURMADAN etkinleşir (mini labda gerçek Docker'la görüldü: reload sonrası
+# "Live Restore Enabled: true", konteynerler ayakta). Sonra, yalnızca hardening_docker_restart=true ise tam yeniden başlatma.
+- name: Reload docker
+  ansible.builtin.systemd:
+    name: docker
+    state: reloaded
+  when: not (hardening_docker_restart | bool)
+
+- name: Restart docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  when: hardening_docker_restart | bool

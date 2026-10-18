@@ -14,3 +14,6 @@
 -a always,exit -F arch=b64 -S clock_adjtime -F auid>=1000 -F auid!=unset -k time-change
 -a always,exit -F arch=b64 -S init_module,finit_module,delete_module -k modules
 -w /etc/localtime -p wa -k time-change
+{% for p in hardening_auditd_docker_existing | default([]) %}
+-w {{ p }} -p wa -k docker
+{% endfor %}

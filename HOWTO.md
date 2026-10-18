@@ -193,6 +193,7 @@ Skor tek başına hedef değil. Önemli olan **uyarı sayısı (0)** ve bilerek 
 | `hardening_aide` | Dosya bütünlüğü veritabanı |
 | `hardening_files` | Dosya izinleri (CIS 7.1.x, 5.1.1-5.1.4, cron, `grub.cfg`): yalnızca fazla izni kaldırır, olmayan dosyayı oluşturmaz, `hardening_files_enabled=false` ile kapanır |
 | `hardening_sudo` | `/etc/sudoers.d/60-hardening`: `use_pty`, `timestamp_timeout=15` (+ klasik sudo'da `logfile`; sudo-rs `logfile` desteklemez) (CIS 5.2.x). `visudo -cf` ile doğrulanır, yazdıktan sonra `become` denenir; `hardening_sudo_enabled=false` ile kapanır |
+| `hardening_docker` | Docker çalıştıran sunucu (varsayılan KAPALI; kurulu değilse atlanır): salt okunur rapor (docker grubu, herkese yayınlanan portlar, TCP API, tehlikeli `daemon.json`) ve isteğe bağlı `daemon.json` birleştirme. Dosya izinleri `hardening_files`'ta, auditd kuralları `hardening_auditd`'de |
 | `hardening_time` | Salt okunur zaman raporu (chrony durumu, kaynaklar, saat kayması); `harden` çıktısında `ZAMAN:` / `UYARI (zaman):`. Hiçbir şeyi değiştirmez |
 | `hardening_ufw` | Gelen trafik varsayılan engelli, SSH sadece yönetim ağından |
 | `hardening_ssh` | Root yok, parola yok, MaxAuthTries 3, forwarding kapalı |

@@ -44,6 +44,8 @@ CASES = [
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
     ("sysctl.ra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_disable_ipv6_ra": True}),
     ("hardening.rules", "roles/hardening_auditd/templates/hardening.rules.j2", {}),
+    ("hardening.docker.rules", "roles/hardening_auditd/templates/hardening.rules.j2",
+     {"hardening_auditd_docker_existing": ["/usr/bin/dockerd", "/etc/docker", "/run/docker.sock"]}),
     ("hardening-rollback.sh", "roles/hardening_rollback/templates/hardening-rollback.sh.j2", {}),
     ("hardening-rollback.service", "roles/hardening_rollback/templates/hardening-rollback.service.j2", {}),
     ("hardening-rollback.timer", "roles/hardening_rollback/templates/hardening-rollback.timer.j2", {}),
@@ -156,6 +158,11 @@ if not UPDATE:
     assert_has("auditd: clock_adjtime yalniz kullanici oturumundan (auid>=1000, unset degil)", ru,
                "-S clock_adjtime -F auid>=1000 -F auid!=unset -k time-change")
     assert_has("auditd: eski time-change kurali korunur", ru, "-S adjtimex,settimeofday,clock_settime -k time-change")
+    assert_has("auditd: Docker yokken (varsayilan) docker kurali YOK", ru, "-k docker", want=False)
+    dr = read("hardening.docker.rules")
+    for pth in ("/usr/bin/dockerd", "/etc/docker", "/run/docker.sock"):
+        assert_has(f"auditd: Docker varken {pth} izlenir (-p wa -k docker)", dr, f"-w {pth} -p wa -k docker")
+    assert_has("auditd: /var/lib/docker bilerek izlenmez", dr, "/var/lib/docker", want=False)
 
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)

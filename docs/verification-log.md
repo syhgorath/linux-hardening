@@ -99,6 +99,17 @@ mevcut `sshpocket-lab:ubuntu26` imajı, indirme yok) + bir yabancı konteyner (`
 `hardening_ufw_extra_allow_host` ile `9100` (yalnız `server1`'den) eklenince grup kuralları (6379, 514) **durdu**, yeni kural eklendi. **sshpocket yolu:** `group_vars` olmadan `-e @examples/sshpocket/<sunucu>.yml` üç sunucuda da `changed=0`
 (group_vars ile kurulmuş durumla aynı). **Ölçülmedi:** gerçek Redis/nginx/Docker (yalnızca port dinleyicileri), VPN, ev yönlendiricisi/ters vekil, Docker'ın yayınladığı portların ufw'yi atlaması (Docker içinde Docker kurulmadı), harici USB disk.
 
+**18. Gerçek Docker, mini lab `hl-server2` (2026-10-18).** `docker.io` 29.1.3 (Ubuntu paketi, ~80 MB, `ports.ubuntu.com`, arm64) konteynere kuruldu; iç içe Docker için `daemon.json`'a **önceden** `storage-driver: vfs` yazıldı (overlay-on-overlay çalışmaz); `apt` servisi
+başlatmadı, elle `systemctl start docker`. Alpine imajı Docker Hub'dan değil, ana makinenin Docker'ından `docker save | docker load` ile aktarıldı. Dört konteyner: `proxy` (80), `redis` (6379, bilerek yayınlandı), `db` (yayınlanmamış), `app` (`127.0.0.1:8080`).
+- **ufw atlaması doğrulandı:** ufw'de yalnızca 22/80/443 vardı; `hl-other` (yabancı) `server2:6379`'a **bağlandı** (`OPEN`), `8080` (loopback) kapalıydı.
+- **Rapor (`hardening_docker_enabled=true`):** `tester` docker grubunda, `redis:6379/tcp` izinli listede değil → uyarı; `proxy` (80, izinli), `app` (loopback), `db` (yayınlanmamış) uyarı DEĞİL; `live-restore` ve günlük boyutu için NOT.
+- **`daemon.json` birleştirme:** mevcut `storage-driver: vfs` ve `registry-mirrors` korundu, `live-restore`, `log-driver`, `log-opts` eklendi, yedek alındı, ikinci koşu `changed=0`.
+- **live-restore (önemli):** `daemon.json`'da olup çalışan daemon'a yüklenmemişken `systemctl restart docker` **tüm konteynerleri durdurdu**. `systemctl reload docker` (SIGHUP) ise `live-restore`'u konteynerler **durmadan** açtı; sonraki yeniden başlatmada konteynerler ayakta kaldı.
+  Bunun üzerine rol, `daemon.json` değişince önce `reload` yapar (yalnız `hardening_docker_restart=false` iken), tam yeniden başlatma yalnız `true` iken. Rol ile baştan sona doğrulandı (live-restore kapalı → rol → `Live Restore Enabled: true`, konteynerler durmadan, sonraki restart'ta da ayakta).
+- **Dosya izinleri:** `/etc/docker` 777→755, `daemon.json` 666→644; `docker.sock` `root:docker` 660, containerd soketi 660 korundu. **auditd:** var olan 10 Docker yolu için `-w ... -p wa -k docker` kuralı yazıldı (olmayan yollar atlandı).
+- Yolda: ardışık dört `systemctl restart docker` systemd'in başlatma sınırına takıldı ("start of the service was attempted too often"); `systemctl reset-failed` ile çözüldü (test artefaktı; rol tek yeniden başlatma yapar).
+**Ölçülmedi:** `userland-proxy`, `icc`, `no-new-privileges` seçenekleri (rolde yok), Docker'ın kendi depo sürümü (`docker-ce`), gerçek ters vekil (Traefik/nginx), `docker.sock`'a bağlanan konteyner, `DOCKER-USER` kuralları.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

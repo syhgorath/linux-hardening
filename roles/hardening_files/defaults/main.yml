@@ -40,6 +40,16 @@ hardening_files_targets:
   # CIS 1.2.1: APT dizinleri 0755 ya da daha kısıtlı (yalnız yazma izni kaldırılır; dosya izinleri aşağıdaki görevlerde)
   - { path: /etc/apt/auth.conf.d, mode: "go-w", owner: root, group: root }
   - { path: /etc/apt/sources.list.d, mode: "go-w", owner: root, group: root }
+  # Docker (CIS Docker 3.x): yalnızca VARSA uygulanır (Docker kurulu değilse yollar yoktur)
+  - { path: /usr/lib/systemd/system/docker.service, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/systemd/system/docker.service, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /usr/lib/systemd/system/docker.socket, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/systemd/system/docker.socket, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/docker, mode: "go-w", owner: root, group: root }
+  - { path: /etc/docker/daemon.json, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/default/docker, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /run/docker.sock, mode: "u-x,g-x,o-rwx", owner: root, group: docker, group_ok: [root, docker] }
+  - { path: /run/containerd/containerd.sock, mode: "u-x,g-x,o-rwx", owner: root, group: root }
   # CIS 1.6.6, 1.6.9
   - { path: /etc/motd, mode: "u-x,go-wx", owner: root, group: root }
   # CIS 1.4.2 (update-grub dosyayı yeniden yazarsa 0444'e dönebilir; bir sonraki çalıştırmada yeniden sıkılaştırılır)

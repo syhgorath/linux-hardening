@@ -3,6 +3,19 @@
     name: [auditd, audispd-plugins]
     state: present
 
+# Docker izleme kuralları: yalnızca var olan yollar (CIS Docker 1.1.x; /var/lib/docker hariç). `stat` salt okunur, --check'te de çalışır.
+- name: Look for Docker files to audit
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ hardening_auditd_docker_paths }}"
+  register: hardening_auditd_docker_stat
+  when: hardening_auditd_docker_rules | bool
+
+- name: Remember the Docker paths that exist
+  ansible.builtin.set_fact:
+    hardening_auditd_docker_existing: "{{ hardening_auditd_docker_stat.results | selectattr('stat.exists') | map(attribute='item') | list }}"
+  when: hardening_auditd_docker_rules | bool
+
 - name: Audit rules
   ansible.builtin.template:
     src: hardening.rules.j2
