@@ -1,0 +1,21 @@
+# ÖRNEK: 3 sunucu, 3 tür. Kopyala: cp -r examples inventory-evim && düzenle. Adresler yer tutucudur (RFC 5737 / örnek LAN).
+# 'hardening' üst grubu zorunludur (harden.yml onu seçer); alt gruplar (web, docker, infra) group_vars/<grup>.yml dosyasını yükler.
+all:
+  children:
+    hardening:
+      children:
+        web:
+          hosts:
+            server1:
+              ansible_host: 192.168.1.11
+              ansible_user: ubuntu
+        docker:
+          hosts:
+            server2:
+              ansible_host: 192.168.1.12
+              ansible_user: ubuntu
+        infra:
+          hosts:
+            server3:
+              ansible_host: 192.168.1.13
+              ansible_user: ubuntu

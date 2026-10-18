@@ -58,6 +58,10 @@ Live verification log: [docs/verification-log.md](docs/verification-log.md); roa
 >
 > Try it on a test server first, take a snapshot, and look at `--check --diff`.
 
+## Several servers
+
+A working example for hardening different servers differently (web, Docker, Redis...): [examples/](examples/README.md) (Turkish): `group_vars`, and one variable file per server for sshpocket. See [HOWTO.md](HOWTO.md) section 7c.
+
 ## What it does not do (scope limits)
 
 This project **does not claim full CIS Benchmark compliance**: the goal is a "Level 1 Server *approach*". The item-by-item mapping (Level 1 Server) is in [docs/cis-esleme.md](docs/cis-esleme.md) (Turkish); the table below is by **area**, not by item, and lists only limits verified in
@@ -128,6 +132,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |
+| `test_examples.py` | `examples/` consistency: the `group_vars` merge (real `ansible-inventory`) equals the sshpocket files; only existing variables, extra ufw rules match the validation pattern, the database port is never opened |
+| `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
 | `test_cis_group2.py` | Group 2 (all off by default): core dumps, `telnet`/`ftp` removal (`remove`, no purge), `TMOUT` and `INACTIVE` bounds and idempotence, existing accounts left alone |
 | `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |
 | `test_files_role.py` | file permissions with real `ansible-playbook` in a temp tree: only ever tightens (0600 stays), never creates files, symlinks not followed, `--check` changes nothing, second run `changed=0` |

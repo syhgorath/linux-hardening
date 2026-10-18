@@ -1,0 +1,9 @@
+# server3: Redis + günlük sunucusu + yedek. Ağdaki diğer sunucular yalnızca KENDİ ihtiyaç duyduğu porta ulaşır.
+hardening_ufw_extra_allow:
+  - "from 192.168.1.11 to any port 6379 proto tcp"   # Redis, server1
+  - "from 192.168.1.12 to any port 6379 proto tcp"   # Redis, server2
+  - "from 192.168.1.11 to any port 514 proto tcp"    # günlük (rsyslog), server1
+  - "from 192.168.1.12 to any port 514 proto tcp"    # günlük (rsyslog), server2
+# Yedek PULL yönünde: server3, diğerlerine SSH ile bağlanır (kısıtlı bir yedek kullanıcısı/anahtarı elle kurulur; bu proje kullanıcı/anahtar yönetmez).
+# USB diske yedek alınacaksa:
+# hardening_disable_usb_storage: false

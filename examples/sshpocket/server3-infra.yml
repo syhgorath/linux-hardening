@@ -1,0 +1,9 @@
+# sshpocket için: group_vars/all.yml + infra.yml BİRLEŞİMİ.
+hardening_ssh_allow_from:
+  - 192.168.1.0/24
+  - 192.0.2.0/24
+hardening_ufw_extra_allow:
+  - "from 192.168.1.11 to any port 6379 proto tcp"
+  - "from 192.168.1.12 to any port 6379 proto tcp"
+  - "from 192.168.1.11 to any port 514 proto tcp"
+  - "from 192.168.1.12 to any port 514 proto tcp"

@@ -1,0 +1,7 @@
+# sshpocket için: group_vars/all.yml + web.yml BİRLEŞİMİ (sshpocket group_vars görmez; bu dosya -e @dosya olarak verilir).
+# Değişirse test/test_examples.py düşer: önce group_vars'ı değiştirip burayı eşitleyin.
+hardening_ssh_allow_from:
+  - 192.168.1.0/24
+  - 192.0.2.0/24
+hardening_ufw_extra_allow:
+  - "from 192.168.1.12 to any port 80 proto tcp"

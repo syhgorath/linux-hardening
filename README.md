@@ -54,6 +54,10 @@ Canlı doğrulama kayıtları: [docs/verification-log.md](docs/verification-log.
 >
 > Önce test sunucusunda deneyin, snapshot alın, `--check --diff` ile bakın.
 
+## Birden fazla sunucu
+
+Web, Docker, Redis gibi farklı sunucuları farklı ayarlarla sertleştirmek için çalışan örnek: [examples/](examples/README.md) (`group_vars` ve sshpocket için sunucu başına değişken dosyası). Ayrıntı: [HOWTO.md](HOWTO.md#7c-birden-fazla-sunucu-farklı-sertleştirme).
+
 ## Ne yapmaz (kapsam sınırları)
 
 Bu proje **tam CIS Benchmark uyumu iddia etmez**: hedef "Level 1 Server *yaklaşımı*". Madde numaralı eşleme (Level 1 Server) [docs/cis-esleme.md](docs/cis-esleme.md) dosyasında; aşağıdaki tablo ise madde değil **alan** bazlıdır ve yalnızca kodda
@@ -124,6 +128,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |
 | `test_tags_and_hosts.sh` | `--tags` ile preflight/korumaların atlanmaması, `hardening`/`ubuntu` grubu seçimi ve olmayan grup için uyarı çıkmaması |
 | `test_facts_namespace.sh` | Fact'ler yalnızca `ansible_facts[...]` ile okunur (`INJECT_FACTS_AS_VARS=False` altında OS denetimi), üst düzey fact adı yasağı |
+| `test_examples.py` | `examples/` tutarlılığı: gerçek `ansible-inventory` ile `group_vars` birleşimi, sshpocket dosyalarıyla aynı; yalnız var olan değişkenler, ek ufw kuralları doğrulama kalıbına uyar, DB portu açılmaz |
+| `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
 | `test_cis_group2.py` | Grup 2 (hepsi varsayılan kapalı): core dump, `telnet`/`ftp` kaldırma (`remove`, purge yok), `TMOUT` ve `INACTIVE` sınırları ve idempotensi, mevcut hesaplara dokunulmaması |
 | `test_cis_group1.py` | apport ve `update-notifier-motd` kapatma (olmayan birime dokunulmaz, kendi değişkeniyle kapanır, `lineinfile` idempotent) ve SUID/SGID özetinin salt okunur kalması |
 | `test_files_role.py` | dosya izinleri gerçek `ansible-playbook` ile geçici ağaçta: yalnızca sıkılaşır (0600 gevşemez), olmayan dosya oluşturulmaz, sembolik bağ izlenmez, `--check` değiştirmez, ikinci koşu `changed=0` |

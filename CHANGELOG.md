@@ -6,6 +6,8 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `examples/` (3 sunucu: web / Docker / Redis+günlük+yedek): `inventory.example.yml`, `group_vars/{all,web,docker,infra}.yml`, sshpocket için `sshpocket/<sunucu>.yml` ve katmanları/liste tuzağını anlatan `examples/README.md`; HOWTO 7c. `test_examples.py`: gerçek `ansible-inventory` birleşimi ile sshpocket dosyaları aynı kalır.
+- `hardening_disable_usb_storage` (varsayılan `true`, yani bugünkü davranış): `false` iken `usb-storage` kural dosyası silinir, USB diske yedek alınabilir. `component.yml` `vars`'ta.
 - CIS "grup 2" (davranışı değiştirenler, **hepsi varsayılan KAPALI**, her biri kendi değişkeniyle; `test_cis_group2.py`, `test_files_role.py`):
   - `hardening_disable_coredump` (`limits.d` ve `systemd-coredump`), `hardening_remove_legacy_clients` (`telnet`/`ftp` istemcileri ve `ubuntu-standard` metapaketi; `apt remove`, purge ve autoremove YOK; metapaket olmadan apt bir istemciyi kaldırınca öbürünü kuruyor, gerçek VM'de görüldü), `hardening_shell_timeout_seconds` (`TMOUT`, 0..900), `hardening_password_inactive_days` (`useradd -D -f`; yalnız yeni hesaplar, mevcutlar uyarıyla listelenir, 0..365), `hardening_log_file_permissions` (`/var/log` dosyalarında `g-wx,o-rwx`; wtmp/btmp/lastlog/faillog ve journal hariç).
   - Tamsayı değişkenler `abc` gibi değerleri sessizce "kapalı" saymaz; reddedilir.

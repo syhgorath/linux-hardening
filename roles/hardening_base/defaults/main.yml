@@ -1,4 +1,7 @@
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# true (varsayılan): usb-storage çekirdek modülü yüklenemez (CIS 1.1.1, usb-storage; USB diske yedek/kurtarma çalışmaz). false: bu rolün yazdığı kural DOSYASI silinir
+# (yüklü olmayan modül tekrar yüklenebilir; çalışan çekirdekte hemen etki etmeyebilir).
+hardening_disable_usb_storage: true
 # true: Ubuntu hata raporlayıcı apport'u kapatır (/etc/default/apport enabled=0, servis durdurulur ve maskelenir; CIS 1.5.7). Çökme raporları toplanmaz.
 hardening_disable_apport: true
 # true: update-notifier-motd zamanlayıcısını durdurup maskeler (CIS 1.6.12). Oturum açılışındaki "güncelleme var" ileti güncellemesi durur.
