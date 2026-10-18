@@ -1,0 +1,18 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md ve docs/design/docker-sunucusu.md).
+# true: Docker rolünü çalıştırır (Docker kurulu değilse atlanır): SALT OKUNUR rapor (docker grubu, herkese yayınlanan portlar, TCP API, tehlikeli daemon.json ayarları).
+# Dosya izinleri hardening_files'ta, auditd kuralları hardening_auditd'de ayrıca (Docker kuruluysa). Varsayılan kapalı.
+hardening_docker_enabled: false
+# true: daemon.json'a hardening_docker_daemon_settings anahtarlarını BİRLEŞTİRİR (mevcut anahtarlar korunur, değişmeden önce yedek alınır). Varsayılan kapalı.
+hardening_docker_daemon_manage: false
+# daemon.json'a eklenecek anahtarlar (varsayılan: konteynerler daemon yeniden başlayınca ayakta kalsın, günlükler diski doldurmasın).
+# Genişletebilirsiniz (no-new-privileges, userland-proxy, icc...): etkileri docs/design/docker-sunucusu.md'de.
+hardening_docker_daemon_settings:
+  live-restore: true
+  log-driver: json-file
+  log-opts:
+    max-size: 10m
+    max-file: "3"
+# true: daemon.json değişince Docker yeniden başlatılır (live-restore yoksa konteynerler durur). false: yalnızca "yeniden başlatma gerekli" uyarısı yazılır.
+hardening_docker_restart: false
+# Raporda "beklenen" sayılan, her arayüze yayınlanabilecek portlar (ters vekil). Başka bir port herkese yayınlanırsa uyarılır.
+hardening_docker_allowed_published: [80, 443]

@@ -1,5 +1,5 @@
 # Önce: ansible-playbook playbooks/harden.yml --check --diff
-# Tek rol:  --tags base,auth,kernel,files,auditd,fail2ban,aide,time,ufw,ssh,sudo
+# Tek rol:  --tags base,auth,kernel,files,docker,auditd,fail2ban,aide,time,ufw,ssh,sudo
 # SSH ve ufw en sonda; firewall SSH iznini enable'dan önce ekler.
 - name: Harden
   # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
@@ -29,6 +29,8 @@
     - { role: hardening_kernel, tags: [kernel] }
     # Dosya izinleri auditd'den ÖNCE: kurallar yüklüyken chmod/chown kimlik dosyası izleme kurallarını (-w /etc/passwd ... -p wa) gürültüyle tetiklemesin.
     - { role: hardening_files, tags: [files] }
+    # Docker (varsayılan KAPALI; kurulu değilse atlanır): salt okunur rapor ve isteğe bağlı daemon.json birleştirme.
+    - { role: hardening_docker, tags: [docker] }
     - { role: hardening_auditd, tags: [auditd] }
     - { role: hardening_fail2ban, tags: [fail2ban] }
     - { role: hardening_aide, tags: [aide] }

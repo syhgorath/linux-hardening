@@ -121,6 +121,25 @@ vars:
     default: false
     warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
     description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
+  - name: hardening_docker_enabled
+    type: bool
+    default: false
+    warn_if: true                      # true = Docker rolü çalışır (kurulu değilse atlanır)
+    description: "true: Docker rolü çalışır (Docker kurulu değilse atlanır): docker grubu, herkese yayınlanan portlar, TCP API ve tehlikeli daemon.json ayarları için SALT OKUNUR rapor. Dosya izinleri ve auditd kuralları Docker kuruluysa zaten ayrıca uygulanır. Varsayılan kapalı"
+  - name: hardening_docker_daemon_manage
+    type: bool
+    default: false
+    warn_if: true                      # true = /etc/docker/daemon.json'a anahtar birleştirilir
+    description: "true: daemon.json'a live-restore ve günlük boyutu sınırı gibi anahtarlar BİRLEŞTİRİLİR (mevcut anahtarlar korunur, yedek alınır; geçersiz JSON'a dokunulmaz). Değişiklik çoğu zaman Docker yeniden başlatması ister. Varsayılan kapalı"
+  - name: hardening_docker_restart
+    type: bool
+    default: false
+    warn_if: true                      # true = daemon.json değişince Docker yeniden başlatılır (konteynerler durabilir)
+    description: "true: daemon.json değişince Docker yeniden başlatılır; live-restore yoksa konteynerler DURUR. false: yalnızca 'yeniden başlatma gerekli' uyarısı. Varsayılan kapalı"
+  - name: hardening_docker_allowed_published
+    type: list[int]
+    default: [80, 443]
+    description: "Her arayüze yayınlanmasına izin verilen konteyner portları (ters vekil). Başka bir port 0.0.0.0'a yayınlanırsa rapor uyarır (Docker ufw'yi atlar). Varsayılan 80 ve 443"
   - name: hardening_disable_usb_storage
     type: bool
     default: true

@@ -1,0 +1,121 @@
+# Docker sunucusu (docs/design/docker-sunucusu.md). Varsayılan KAPALI. Docker kurulu değilse hiçbir şey yapmaz.
+# Okuma görevleri `--check`'te de çalışır; karar mantığı files/docker_report.py ve files/docker_daemon_merge.py içindedir (test/test_docker_scripts.py).
+- name: Docker (CIS Docker Benchmark)
+  when: hardening_docker_enabled | bool
+  block:
+    - name: Look for the Docker daemon binary
+      ansible.builtin.stat:
+        path: /usr/bin/dockerd
+      register: hardening_docker_bin
+
+    - name: Note that Docker is not installed
+      ansible.builtin.debug:
+        msg: "Docker kurulu değil (/usr/bin/dockerd yok): docker rolü atlandı."
+      when: not hardening_docker_bin.stat.exists
+
+    - name: Docker checks
+      when: hardening_docker_bin.stat.exists
+      block:
+        - name: Read daemon.json
+          ansible.builtin.slurp:
+            src: /etc/docker/daemon.json
+          register: hardening_docker_daemon_raw
+          failed_when: false
+          check_mode: false
+
+        - name: Docker group members
+          ansible.builtin.command: getent group docker
+          register: hardening_docker_group
+          changed_when: false
+          failed_when: false
+          check_mode: false
+
+        - name: Published container ports (read-only)
+          ansible.builtin.command: docker ps --format '{% raw %}{{.Names}}|{{.Ports}}{% endraw %}'
+          register: hardening_docker_ps
+          changed_when: false
+          failed_when: false
+          check_mode: false
+
+        - name: Listening TCP sockets (read-only)
+          ansible.builtin.command: ss -lntH
+          register: hardening_docker_ss
+          changed_when: false
+          failed_when: false
+          check_mode: false
+
+        - name: Prepare the Docker report input
+          ansible.builtin.set_fact:
+            hardening_docker_report_input:
+              group_members: >-
+                {{ ((hardening_docker_group.stdout | default('') | trim).split(':')[3] | default('')).split(',')
+                   if (hardening_docker_group.stdout | default('') | trim).split(':') | length > 3 else [] }}
+              ports: "{{ hardening_docker_ps.stdout_lines | default([]) }}"
+              listening: "{{ hardening_docker_ss.stdout_lines | default([]) | map('regex_replace', '^\\S+\\s+\\S+\\s+\\S+\\s+(\\S+).*$', '\\1') | list }}"
+              daemon_text: "{{ (hardening_docker_daemon_raw.content | b64decode) if hardening_docker_daemon_raw.content is defined else '' }}"
+              allowed_published: "{{ hardening_docker_allowed_published }}"
+
+        - name: Evaluate the Docker setup
+          ansible.builtin.script:
+            cmd: "docker_report.py {{ hardening_docker_report_input | to_json | quote }}"
+            executable: python3
+          register: hardening_docker_report_raw
+          changed_when: false
+          check_mode: false
+
+        - name: Parse the Docker report
+          ansible.builtin.set_fact:
+            hardening_docker_report: "{{ hardening_docker_report_raw.stdout | from_json }}"
+
+        - name: Warn about Docker problems
+          ansible.builtin.debug:
+            msg: "UYARI (docker): {{ hardening_docker_report.warnings | join(' ') }}"
+          when: hardening_docker_report.status == 'warn'
+
+        - name: Notes about the Docker setup
+          ansible.builtin.debug:
+            msg: "NOT (docker): {{ hardening_docker_report.notes | join(' ') }}"
+          when: hardening_docker_report.notes | length > 0
+
+        - name: Note that the Docker report could not be evaluated
+          ansible.builtin.debug:
+            msg: "UYARI (docker): rapor değerlendirilemedi: {{ hardening_docker_report.error }}"
+          when: hardening_docker_report.status == 'unknown'
+
+        # --- daemon.json birleştirme (varsayılan KAPALI) ---
+        - name: Compute the merged daemon.json
+          ansible.builtin.script:
+            cmd: "docker_daemon_merge.py {{ {'existing': (hardening_docker_daemon_raw.content | b64decode) if hardening_docker_daemon_raw.content is defined else '', 'settings': hardening_docker_daemon_settings} | to_json | quote }}"
+            executable: python3
+          register: hardening_docker_merge_raw
+          changed_when: false
+          check_mode: false
+          when: hardening_docker_daemon_manage | bool
+
+        - name: Parse the merged daemon.json
+          ansible.builtin.set_fact:
+            hardening_docker_merge: "{{ hardening_docker_merge_raw.stdout | from_json }}"
+          when: hardening_docker_daemon_manage | bool
+
+        - name: Refuse to touch an unreadable daemon.json
+          ansible.builtin.debug:
+            msg: "UYARI (docker): daemon.json birleştirilemedi, dokunulmadı: {{ hardening_docker_merge.error }}"
+          when: hardening_docker_daemon_manage | bool and hardening_docker_merge.error | length > 0
+
+        - name: Merge settings into daemon.json
+          ansible.builtin.copy:
+            dest: /etc/docker/daemon.json
+            content: "{{ hardening_docker_merge.text }}"
+            owner: root
+            group: root
+            mode: "0644"
+            backup: true
+          when: hardening_docker_daemon_manage | bool and hardening_docker_merge.changed and hardening_docker_merge.error | length == 0
+          notify: Restart docker
+
+        - name: Tell that Docker needs a restart
+          ansible.builtin.debug:
+            msg: >-
+              UYARI (docker): daemon.json değişti ama Docker yeniden başlatılmadı (hardening_docker_restart=false). Ayarların çoğu yeniden başlatma ister
+              (live-restore yoksa konteynerler durur): hazır olduğunuzda `systemctl restart docker`.
+          when: hardening_docker_daemon_manage | bool and hardening_docker_merge.changed and hardening_docker_merge.error | length == 0 and not (hardening_docker_restart | bool)

@@ -1,6 +1,6 @@
 # Tasarım notu: Docker çalıştıran sunucu (kod YOK)
 
-**Durum:** yalnızca tasarım. Kod yazılmadan önce aşağıdaki açık sorular cevaplanmalı. Kaynak: **CIS Docker Benchmark v1.9.0** (09-30-2026, 117 madde). CIS metni bu depoya alınmaz; yalnızca madde
+**Durum:** ilk dilim KODLANDI (rapor, `daemon.json` birleştirme, dosya izinleri, auditd kuralları; hepsi güvenli varsayılanlarla, Docker rolü varsayılan kapalı). Aşağıdaki açık sorular varsayılanları belirler; kullanıcı kendi ayarını değişkenlerle verir. Gerçek Docker'la doğrulama bekliyor (kurulum indirme gerektirir). Kaynak: **CIS Docker Benchmark v1.9.0** (09-30-2026, 117 madde). CIS metni bu depoya alınmaz; yalnızca madde
 numaraları ve kendi sözlerimizle kısa açıklamalar var (PDF'i [CIS'ten](https://www.cisecurity.org/cis-benchmarks) indirin). Senaryo: `examples/` içindeki "server2" (Docker + ters vekil, home lab).
 
 ## Kapsam kararı

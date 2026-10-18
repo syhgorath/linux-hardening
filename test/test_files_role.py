@@ -39,7 +39,7 @@ check("varsayilan: yol oneki bos, dinamik sahip/grup root", ("", "root", "root")
 check("yollar mutlak ve tekrarsiz", True, all(p.startswith("/") for p in paths) and len(paths) == len(set(paths)))
 check("modlar sembolik ve yalnizca izin KALDIRIR (rakam yok, '+'/'=' yok)", [], [t["path"] for t in targets if re.search(r"[0-9+=]", t["mode"]) or "-" not in t["mode"]])
 check("sahip hep root", [], [t["path"] for t in targets if t["owner"] != "root"])
-for must in ("/etc/apt/auth.conf.d", "/etc/apt/sources.list.d", "/etc/passwd", "/etc/shadow", "/etc/gshadow", "/etc/group", "/etc/ssh/sshd_config", "/etc/ssh/sshd_config.d", "/etc/crontab", "/etc/cron.d", "/boot/grub/grub.cfg"):
+for must in ("/etc/docker", "/etc/docker/daemon.json", "/run/docker.sock", "/usr/lib/systemd/system/docker.service", "/etc/apt/auth.conf.d", "/etc/apt/sources.list.d", "/etc/passwd", "/etc/shadow", "/etc/gshadow", "/etc/group", "/etc/ssh/sshd_config", "/etc/ssh/sshd_config.d", "/etc/crontab", "/etc/cron.d", "/boot/grub/grub.cfg"):
     check(f"hedef var: {must}", True, must in paths)
 check("cron.allow/at.allow yalnizca VARSA sikilastirilir; rol dosya OLUSTURMAZ", True,
       "state: touch" not in (ROOT / "roles/hardening_files/tasks/main.yml").read_text(encoding="utf-8")

@@ -4,3 +4,23 @@
 hardening_auditd_restart_services: []
 # true: GRUB_CMDLINE_LINUX'a `audit=1` ekler ve update-grub çalıştırır; etkisi YENİDEN BAŞLATMADAN sonra başlar, geri alma güvenlik ağı kapsamında DEĞİLDİR.
 hardening_auditd_grub_audit: false
+# true (varsayılan): Docker kuruluysa Docker dosyaları/dizinleri için izleme kuralı eklenir (CIS Docker 1.1.x). Yalnızca VAR OLAN yollar için yazılır
+# (var olmayan yola kural eklemek yüklemeyi bozar). /var/lib/docker bilerek izlenmez (konteyner çalışırken çok gürültülü).
+hardening_auditd_docker_rules: true
+hardening_auditd_docker_paths:
+  - /usr/bin/dockerd
+  - /usr/bin/containerd
+  - /usr/bin/containerd-shim
+  - /usr/bin/containerd-shim-runc-v1
+  - /usr/bin/containerd-shim-runc-v2
+  - /usr/bin/runc
+  - /etc/docker
+  - /etc/docker/daemon.json
+  - /etc/default/docker
+  - /etc/containerd/config.toml
+  - /usr/lib/systemd/system/docker.service
+  - /usr/lib/systemd/system/docker.socket
+  - /etc/systemd/system/docker.service
+  - /etc/systemd/system/docker.socket
+  - /run/docker.sock
+  - /run/containerd/containerd.sock
