@@ -32,7 +32,7 @@ sudo ls /etc/ssh/sshd_config.d/ && sudo sshd -T | grep -iE 'allowtcpforwarding|a
 | **sshd: root** | `PermitRootLogin no`; ayrıca playbook root ile bağlanınca durur | `root` ile yönetilen sistemler (örn. Proxmox hostu, bazı otomasyonlar) kilitlenir | ✅ şablon + `hardening_preflight` | **Anahtar yok**; root yerine sudo'lu bir kullanıcı gerekir |
 | **sshd: parola** | `PasswordAuthentication no` (anahtar yoksa rol durur) | Anahtarsız kullanıcılar giremez | ✅ `hardening_ssh` | `hardening_ssh_disable_password: false`, `hardening_ssh_kbdinteractive` |
 | **Banner** | `/etc/issue` ve `/etc/issue.net`, sshd `Banner` | Her SSH bağlantısında banner metni **stderr'e** yazılır; stdout/stderr ayrıştıran betikler ve araçlar bozulabilir | ✅ `hardening_base` + şablon; çıktıda gözlemlendi | **Anahtar yok** (`--skip-tags base` banner'ı da atlar) |
-| **fail2ban** | sshd jail: `maxretry 5`, `bantime 1h`; `ignoreip` yalnızca `127.0.0.1/8 ::1` + kontrol makinesinin adresi | Aynı NAT çıkışını paylaşan **başka yöneticiler** ya da parola hataları yapan otomasyon banlanabilir | ✅ `roles/hardening_fail2ban` | `hardening_fail2ban_ignoreip`, `hardening_fail2ban_maxretry`, `hardening_fail2ban_bantime` |
+| **fail2ban** | sshd jail: `maxretry 5`, `bantime 1h`; `ignoreip` yalnızca `127.0.0.1/8 ::1` + kontrol makinesinin adresi (**adres değişen bir yerden çalıştırırsanız dosya bir kez yeniden yazılır ve fail2ban yeniden başlar; bu idempotens ihlali değil, tasarımdır**) | Aynı NAT çıkışını paylaşan **başka yöneticiler** ya da parola hataları yapan otomasyon banlanabilir | ✅ `roles/hardening_fail2ban` | `hardening_fail2ban_ignoreip`, `hardening_fail2ban_maxretry`, `hardening_fail2ban_bantime` |
 
 ## Çekirdek, modüller ve donanım
 
