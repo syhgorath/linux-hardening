@@ -76,7 +76,7 @@ the code. Rows marked "Deliberately" are documented decisions; the others are **
 | Bootloader (GRUB password, `audit=1`) | Not yet | Design note for `audit=1`: [auditd-kapsam.md](docs/design/auditd-kapsam.md) (Turkish) |
 | AppArmor profiles | Not yet | |
 | Log management (rsyslog, journald, logrotate, remote logging) | Not yet | |
-| `cron`/`at` restrictions, `sudo` configuration | Not yet | `sudoers` changes are only **audited** by auditd |
+| `cron`/`at` restrictions, `sudo` configuration | Partial | Only cron file/directory **permissions** and a `sudoers.d` drop-in (`use_pty`, `logfile`, `timestamp_timeout`); `cron.allow`/`at.allow` are not created, `su` is not restricted. `sudoers` changes are also **audited** by auditd |
 | Disabling IPv6 | Not yet | |
 | Core dumps | Partial | Only `fs.suid_dumpable = 0`; no `systemd-coredump` settings |
 | Removing unused services/packages | Partial | Only `postfix`/`courier-*` are removed; avahi, cups, etc. are not |

@@ -72,7 +72,7 @@ doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır
 | Önyükleyici (GRUB parolası, `audit=1`) | Henüz yok | `audit=1` için tasarım notu: [auditd-kapsam.md](docs/design/auditd-kapsam.md) |
 | AppArmor profilleri | Henüz yok | |
 | Günlük yönetimi (rsyslog, journald, logrotate, uzak günlük) | Henüz yok | |
-| `cron`/`at` kısıtları, `sudo` yapılandırması | Henüz yok | `sudoers` değişimleri yalnızca auditd ile **izlenir** |
+| `cron`/`at` kısıtları, `sudo` yapılandırması | Kısmi | Yalnızca cron dosya/dizin **izinleri** ve `sudoers.d` ayarı (`use_pty`, `logfile`, `timestamp_timeout`); `cron.allow`/`at.allow` oluşturulmaz, `su` kısıtlanmaz. `sudoers` değişimleri ayrıca auditd ile **izlenir** |
 | IPv6'yı kapatmak | Henüz yok | |
 | Core dump | Kısmi | Yalnızca `fs.suid_dumpable = 0`; `systemd-coredump` ayarı yok |
 | Kullanılmayan servis/paket kaldırma | Kısmi | Yalnızca `postfix`/`courier-*` kaldırılır; avahi, cups vb. yok |
