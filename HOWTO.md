@@ -102,7 +102,8 @@ Ağ ayarlarını kontrol et (varsayılanı rol `defaults/`'ında, örnek `invent
 | `hardening_ssh_disable_password` | SSH parola girişini kapat | Anahtar yoksa rol zaten durur |
 | `hardening_ssh_kbdinteractive` | 2FA/TOTP için `keyboard-interactive` (varsayılan `false`) | `true` ise `AuthenticationMethods publickey,keyboard-interactive` yazılır. PAM 2FA'sı **sizin kurmanız gerekir**; yanlışsa erişim kesilir. Bağlantı doğrulaması yalnızca banner'ı sınar |
 | `hardening_ssh_allow_tcp_forwarding` | `no` \| `local` \| `remote` \| `yes` (varsayılan `"no"`) | ProxyJump için jump host'ta en az `local`. YAML'da `no`'yu tırnaklayın (tırnaksız bool olur ve doğrulama durdurur) |
-| `hardening_ufw_extra_allow` | Ek açılacak portlar, örn. `["443/tcp"]` | Web sunucusu vb. için |
+| `hardening_ufw_extra_allow` | Ek açılacak portlar/kurallar, örn. `["443/tcp"]` ya da kaynak kısıtlı `["from 192.0.2.5 to any port 6379 proto tcp"]`; geçersiz girdi roller çalışmadan reddedilir | Web sunucusu vb. için |
+| `hardening_ufw_extra_allow_host` | Yalnızca o sunucuya özel ek kurallar (`host_vars`); `hardening_ufw_extra_allow` ile **birleşir**, ezmez | Grup ortak portları + sunucuya özel port |
 
 Bir sunucuya özel ayar: `inventory/host_vars/yeni-sunucu.yml` oluşturup oraya yaz.
 

@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_ufw`: **`hardening_ufw_extra_allow` artık sshpocket'e açık** (`component.yml` `vars`, `list[string]`). Kaynak kısıtlı kurallar da yazılabilir (`from 192.0.2.5 to any port 6379 proto tcp`). **Geçersiz girdi** (typo, ek komut, yanlış biçim) roller çalışmadan, daha preflight'ta reddedilir (AIDE'nin dakikalarca sürmesinden sonra değil). `hardening_ufw_extra_allow_host` (yeni): sunucuya özel kurallar, grup listesiyle **birleşir**; Ansible liste değişkenlerini birleştirmez, ezer, bu yüzden `host_vars`'a `hardening_ufw_extra_allow` yazmak grubunkini sessizce siliyordu. Eski-kural (prune) koruması da birleşik listeyi görür.
 - CIS "grup 1" parçaları (sessiz ve güvenli; her biri kendi değişkeniyle kapanır, hepsi `test_cis_group1.py` / `test_files_role.py` ile sınandı):
   - `hardening_base`: `hardening_disable_apport` (CIS 1.5.7; `/etc/default/apport` `enabled=0`, servis durdurulup maskelenir) ve `hardening_disable_update_notifier_motd` (CIS 1.6.12). Olmayan birime dokunulmaz. Varsayılan **açık**; çökme raporları toplanmaz.
   - `hardening_base`: `hardening_suid_report` (CIS 7.1.13): SUID/SGID dosyalarının **salt okunur** özeti (`find / -xdev`, en çok 120 sn). Hiçbir şeyi değiştirmez.

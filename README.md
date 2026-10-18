@@ -130,6 +130,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_cis_quickwins.py` | CIS kolay kazançlar: modül listeleri, ufw `routed` ilkesi, `audit=1` (gerçek `replace` modülüyle, idempotent), ssh yeniden başlatma yasağı, riskli seçeneklerin varsayılanı kapalı |
 | `test_time_report.py` | zaman raporu kararı (gerçek `chronyc -c sources` biçimiyle): sağlıklı, bayat/kayık saat, servis kapalı, kaynak yok, eşik, bozuk satır |
 | `test_time_tasks.py` | zaman rolü salt okunur kalır: yalnızca okuma modülleri, `--check`'te çalışır, kapatılabilir, saati değiştiren komut yok |
+| `test_ufw_extra_allow.py` | ufw ek kuralları: grup ve sunucu listeleri birleşir, geçersiz girdi (14 örnek) roller çalışmadan reddedilir, iki doğrulayıcı aynı kalıpta, sshpocket değişkeni |
 | `test_ufw_stale_rules.py` | ufw eski SSH kuralı kararı: ağ normalleştirme, kontrol makinesi/boş allow_from/extra_allow korumaları, eksik kural tespiti |
 | `test_ufw_prune_tasks.py` | ufw silme görevlerinin yapısı: varsayılan kapalı, `--check`'te silmez, silme sonrası doğrulama ufw enable'dan önce |
 | `test_auditd_unaudited.py` | auditd'den önce başlamış süreçlerin salt okunur tespiti (sahte `ps`/`systemctl` ile), çekirdek iş parçacıkları ve eşik dışarıda |
