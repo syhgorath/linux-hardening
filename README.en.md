@@ -136,6 +136,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_docker_tasks.py` | `hardening_docker` tasks end to end (faked read output + real scripts): off by default, skipped without Docker, reads are read-only, backed-up writes, auditd only for paths that exist |
 | `test_examples.py` | `examples/` consistency: the `group_vars` merge (real `ansible-inventory`) equals the sshpocket files; only existing variables, extra ufw rules match the validation pattern, the database port is never opened |
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
+| `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
 | `test_cis_group2.py` | Group 2 (all off by default): core dumps, `telnet`/`ftp` removal (`remove`, no purge), `TMOUT` and `INACTIVE` bounds and idempotence, existing accounts left alone |
 | `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |
 | `test_files_role.py` | file permissions with real `ansible-playbook` in a temp tree: only ever tightens (0600 stays), never creates files, symlinks not followed, `--check` changes nothing, second run `changed=0` |

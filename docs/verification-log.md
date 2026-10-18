@@ -119,6 +119,10 @@ başlatmadı, elle `systemctl start docker`. Alpine imajı Docker Hub'dan değil
   Gözlem: `ansible.cfg` içinde `ServerAliveInterval`/`timeout` ayarı yok; ölü bir TCP bağlantısında `ansible-playbook` 14 dakika takılı kaldı. Adaylar: `ssh_args`'a `-o ServerAliveInterval=15 -o ServerAliveCountMax=3`, `timeout`; ayrı bir iş.
 - İdempotens kanıtı bu sürümde **parça parça** var: madde 12-16 (VM, birçok role için `changed=0`), madde 17 (mini lab, üç sunucuda tam koşu, ikinci koşu yalnızca LAB'a özgü `augenrules`). Temiz kurulumda uçtan uca ikinci koşu bu kayıtta **eksik**; etiketten önce bir kez daha denenmesi önerilir.
 
+**20. Ölü bağlantıda zaman aşımı (2026-10-18, mini lab).** Madde 19'daki takılmanın (14 dk) önlemi: `ansible.cfg` `ssh_extra_args = -o ServerAliveInterval=15 -o ServerAliveCountMax=3`. Ölçüm: `hl-server1`'de `sleep 600` görevi sürerken konteynerde `iptables -I INPUT/OUTPUT 1 -j DROP`
+ile **sessiz** kesinti (RST yok). Ayar yokken (`ANSIBLE_SSH_EXTRA_ARGS=" "`) ansible **153 sn** sonra ("Connection timed out during banner exchange", UNREACHABLE), ayarla **58 sn** sonra pes etti. Fark gerçek ama bu simülasyonda sonsuz takılma
+görülmedi; 14 dakikalık vaka başka bir kopma biçimiydi (ağ arayüzünün değişmesi). **Ölçülmedi:** gerçek ağ değişimi altında yeni ayarın davranışı, çok yavaş bağlantılarda yanlış kopma.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

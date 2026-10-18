@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Değişti
+- `ansible.cfg`: `[ssh_connection] ssh_extra_args = -o ServerAliveInterval=15 -o ServerAliveCountMax=3`. Ölü bir TCP bağlantısında (ağ değişti, Mac uyudu) `ansible-playbook` artık ~45 sn yanıt gelmezse görevi UNREACHABLE yapar. Ansible'ın varsayılan `ssh_args`'ı (ControlMaster/ControlPersist) ezilmez. `test_ansible_cfg.py`. Mini labda sessiz paket düşürmeyle ölçüldü: ayar yokken 153 sn, varken 58 sn.
+
 ## [0.3.0] - 2026-10-18
 
 CIS Ubuntu 26.04 Level 1 Server eşlemesi, üç yeni rol (`hardening_files`, `hardening_sudo`, `hardening_docker`), salt okunur zaman raporu, çoklu sunucu örnekleri ve çok sayıda gerçek VM / Docker
