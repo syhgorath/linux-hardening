@@ -126,6 +126,21 @@ başlatmadı, elle `systemctl start docker`. Alpine imajı Docker Hub'dan değil
 ile **sessiz** kesinti (RST yok). Ayar yokken (`ANSIBLE_SSH_EXTRA_ARGS=" "`) ansible **153 sn** sonra ("Connection timed out during banner exchange", UNREACHABLE), ayarla **58 sn** sonra pes etti. Fark gerçek ama bu simülasyonda sonsuz takılma
 görülmedi; 14 dakikalık vaka başka bir kopma biçimiydi (ağ arayüzünün değişmesi). **Ölçülmedi:** gerçek ağ değişimi altında yeni ayarın davranışı, çok yavaş bağlantılarda yanlış kopma.
 
+**21. Lynis önce/sonra, gerçek VM (2026-10-18).** Temiz snapshot'a dönülmüş VM (Ubuntu 26.04.1, Lynis 3.1.6 snapshot'ta kuruluydu, indirme yok); saat `chrony` yeniden başlatılarak düzeltildi, sonra salt okunur sistem incelemesi (paketler, dinleyen portlar, hesaplar, `sshd -T`, sysctl, izinler)
+ve `lynis audit system`. Ardından varsayılanlarla tam `harden` (**`ok=117 changed=35 failed=0`**, 13 dk; madde 19'daki temiz kurulumla aynı sayılar), sonra aynı iki ölçüm. Ham raporlar repoda YOK (ana makine adı ve paket listesi içerir): kullanıcının makinesinde `~/.local/share/linux-hardening/scans/` altında (0700/0600).
+| | Önce | Sonra |
+|---|---:|---:|
+| **Lynis hardening index** | **58** | **73** |
+| Uyarı | 2 | 1 |
+| Öneri (ham satır) | 94 | 26 |
+| `sysctl` değeri farklı | 15 | 5 |
+Kategori (öneri sayısı, önce→sonra): SSH 18→2, AUTH 14→2, NETW 8→0, BANN 4→0, USB 2→0, BOOT 6→3, FILE 6→2, DEB 8→4, PKGS 8→4, ACCT 4→1, LOGG 4→2. Okunan ayar farkları (19): `sshd` (parola girişi, root, forwarding, banner, `MaxAuthTries`...), `rp_filter`, `accept_redirects`, `send_redirects`, `log_martians`, `kptr_restrict`, `suid_dumpable`.
+**Kalan öneriler, sınıflandırma:**
+- *Bilerek yapılmayan / tasarım ister:* SSH `Port` (port değiştirme desteklenmez), `MaxSessions 2` (CIS en çok 10 ister; 4 seçildi, Ansible çoklaması oturum kullanır), GRUB parolası, `/home` ve `/var` ayrı bölüm (kurulum kararı), `kernel.modules_disabled=1` (yeniden başlatmaya dek geri alınamaz), uzak günlük sunucusu, derleyici kısıtı, kötü amaçlı yazılım tarayıcısı.
+- *Küçük ve güvenli, yapılabilir:* `fs.protected_fifos=2`, `kernel.sysrq=0`, `net.core.bpf_jit_harden=2`; AIDE sağlama toplamı SHA256/SHA512 (FINT-4402, `hardening_aide` kurulduktan sonra çıkan yeni öneri); `libpam-tmpdir`. Düşük değerli paketler: `debsums`, `apt-listchanges`, `apt-listbugs`, `apt-show-versions`, `acct` (süreç muhasebesi). `fail2ban jail.local`: kozmetik (bizim ayar zaten `jail.d/` içinde, güncellemeden etkilenmez).
+- *Ortam:* `PKGS-7392` uyarısı (`python3-jwt`, `python3-urllib3` için bekleyen güvenlik güncellemesi): Lynis `apt-get update` yapınca görüyor, snapshot eski; `unattended-upgrades` açık ve günlük uyguluyor. Temiz kurulumdan hemen sonra puan, güncel olmayan paketler yüzünden düşük çıkabilir.
+Not: Lynis puanı CIS uyumu değildir; öznel bir araçtır. Aynı sunucuda ölçüldü, başka sunucuda puanlar farklı olabilir. **Ölçülmedi:** `systemd-analyze security` (servis sandbox puanları, Lynis BOOT-5264), farklı bir sunucu türü (web/Docker), Lynis'in eski sürümleri.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
