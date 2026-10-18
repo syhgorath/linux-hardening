@@ -43,7 +43,8 @@ def play(tasks, vars_=None):
 
 
 defaults = yaml.safe_load((ROOT / "roles/hardening_base/defaults/main.yml").read_text(encoding="utf-8"))
-check("varsayilanlar: apport, motd zamanlayicisi, SUID ozeti ACIK", {"hardening_disable_apport": True, "hardening_disable_update_notifier_motd": True, "hardening_suid_report": True}, defaults)
+check("varsayilanlar: apport, motd zamanlayicisi, SUID ozeti ACIK", {"hardening_disable_apport": True, "hardening_disable_update_notifier_motd": True, "hardening_suid_report": True},
+      {k: defaults[k] for k in ("hardening_disable_apport", "hardening_disable_update_notifier_motd", "hardening_suid_report")})
 
 # 1) apport: lineinfile'in kendi parametreleri, geçici dosyada
 li = task("Disable apport in its defaults file")["ansible.builtin.lineinfile"]

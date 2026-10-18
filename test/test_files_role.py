@@ -50,7 +50,7 @@ me = pwd.getpwuid(os.getuid()).pw_name
 mygrp = grp.getgrgid(os.getgid()).gr_name
 with tempfile.TemporaryDirectory() as tmp:
     root = Path(tmp) / "root"
-    for sub in ("etc/ssh/sshd_config.d", "etc/cron.d", "etc/security", "etc/apt/sources.list.d", "etc/apt/auth.conf.d", "etc/apt/trusted.gpg.d", "usr/share/keyrings"):
+    for sub in ("etc/ssh/sshd_config.d", "etc/cron.d", "etc/security", "etc/apt/sources.list.d", "etc/apt/auth.conf.d", "etc/apt/trusted.gpg.d", "usr/share/keyrings", "var/log/journal", "var/log/nginx"):
         (root / sub).mkdir(parents=True)
     def mk(rel, mode, text="x\n"):
         p = root / rel
@@ -68,6 +68,13 @@ with tempfile.TemporaryDirectory() as tmp:
     mk("etc/ssh/ssh_host_rsa_key.pub", 0o666)
     mk("etc/ssh/ssh_host_rsa_key.bak", 0o666)     # desene uymaz: dokunulmamali
     (root / "etc/cron.d").chmod(0o755)
+    mk("var/log/app.log", 0o644)
+    mk("var/log/loose.log", 0o666)
+    mk("var/log/tight.log", 0o600)
+    mk("var/log/nginx/access.log", 0o664)
+    mk("var/log/wtmp", 0o664)                     # CIS bunu 0664 ister: dokunulmamali
+    mk("var/log/btmp", 0o660)
+    mk("var/log/journal/system.journal", 0o644)   # journal: dokunulmamali
     mk("etc/apt/sources.list.d/a.sources", 0o666)
     mk("usr/share/keyrings/k.gpg", 0o755)
     mk("usr/share/keyrings/readme.txt", 0o666)    # *gpg degil: dokunulmamali
@@ -129,6 +136,19 @@ with tempfile.TemporaryDirectory() as tmp:
     check("olmayan dosyalar OLUSTURULMAZ (shadow-, crontab, cron.allow)", [], [n for n in ("etc/shadow-", "etc/crontab", "etc/cron.allow") if (root / n).exists()])
     rc, res, out = run()
     check("ikinci kosu: changed=0 (idempotent)", (0, 0, 0), res)
+    check("gunluk izinleri VARSAYILAN kapali: kosu sonrasi app.log 0644 kalir", 0o644, mode("var/log/app.log"))
+    rc, res, out = run("--check", "-e", "hardening_log_file_permissions=true")
+    check("--check + gunluk izinleri acik: dosyalar degismez", (0o644, 0o666), (mode("var/log/app.log"), mode("var/log/loose.log")))
+    rc, res, out = run("-e", "hardening_log_file_permissions=true")
+    check("gunluk izinleri acik: kosu hatasiz", 0, rc)
+    check("app.log 0644 -> 0640 (diger okuma kalkar)", 0o640, mode("var/log/app.log"))
+    check("loose.log 0666 -> 0640", 0o640, mode("var/log/loose.log"))
+    check("tight.log 0600 GEVSEMEZ", 0o600, mode("var/log/tight.log"))
+    check("alt dizin (nginx/access.log 0664 -> 0640)", 0o640, mode("var/log/nginx/access.log"))
+    check("wtmp 0664 ve btmp 0660 icin dokunulmaz", (0o664, 0o660), (mode("var/log/wtmp"), mode("var/log/btmp")))
+    check("journal dosyasina dokunulmaz (0644)", 0o644, mode("var/log/journal/system.journal"))
+    rc, res, out = run("-e", "hardening_log_file_permissions=true")
+    check("gunluk izinleri: ikinci kosu changed=0", (0, 0, 0), res)
     rc, res, out = run("-e", "hardening_files_enabled=false")
     check("hardening_files_enabled=false: rol bir sey yapmaz", 0, rc)
     (root / "etc/passwd").chmod(0o666)

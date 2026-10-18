@@ -117,3 +117,59 @@
       loop: "{{ hardening_files_apt_sources.files }}"
       loop_control:
         label: "{{ item.path }}"
+
+# --- Günlük dosyası izinleri (varsayılan KAPALI): yalnızca fazla izni kaldırır ---
+- name: Log file permissions (CIS)
+  when: hardening_files_enabled | bool and hardening_log_file_permissions | bool
+  block:
+    - name: List log files with excess permissions (read-only)
+      ansible.builtin.command:
+        argv:
+          - find
+          - "{{ hardening_files_root }}/var/log"
+          - -type
+          - f
+          # "-perm /0027" GNU'ya özgüdür; taşınabilir karşılığı: g+w, g+x ya da diğer herhangi bir izin biti varsa
+          - "("
+          - -perm
+          - "-0020"
+          - -o
+          - -perm
+          - "-0010"
+          - -o
+          - -perm
+          - "-0004"
+          - -o
+          - -perm
+          - "-0002"
+          - -o
+          - -perm
+          - "-0001"
+          - ")"
+          - "!"
+          - -path
+          - "*/journal/*"
+          - "!"
+          - -name
+          - "wtmp*"
+          - "!"
+          - -name
+          - "btmp*"
+          - "!"
+          - -name
+          - "lastlog*"
+          - "!"
+          - -name
+          - "faillog*"
+          - -print
+      register: hardening_files_logs
+      changed_when: false
+      check_mode: false
+
+    - name: Tighten log file permissions
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: file
+        mode: "g-wx,o-rwx"
+        follow: false
+      loop: "{{ hardening_files_logs.stdout_lines }}"

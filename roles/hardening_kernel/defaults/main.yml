@@ -2,3 +2,6 @@
 # true: IPv6 yönlendirici duyurularını (RA) kabul etmeyi kapatır (CIS 3.3.2, accept_ra). Adresini/yolunu yalnızca RA'dan alan
 # bir sunucu IPv6 bağlantısını KAYBEDER; bu yüzden varsayılan false.
 hardening_kernel_disable_ipv6_ra: false
+# true: core dump'lar kapatılır (limits.d `* hard core 0`, systemd-coredump `Storage=none`, `ProcessSizeMax=0`; CIS 1.5 core dump maddeleri).
+# Bedeli: bir süreç çöktüğünde çökme dökümü OLMAZ, hata ayıklama (Redis/PHP/Docker çökmeleri) zorlaşır. Varsayılan kapalı.
+hardening_disable_coredump: false

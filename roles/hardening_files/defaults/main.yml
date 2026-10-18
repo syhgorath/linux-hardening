@@ -44,3 +44,6 @@ hardening_files_targets:
   - { path: /etc/motd, mode: "u-x,go-wx", owner: root, group: root }
   # CIS 1.4.2 (update-grub dosyayı yeniden yazarsa 0444'e dönebilir; bir sonraki çalıştırmada yeniden sıkılaştırılır)
   - { path: /boot/grub/grub.cfg, mode: "u-x,go-rwx", owner: root, group: root }
+# true: /var/log altındaki dosyalarda grup yazma ve diğer erişimi kaldırır (CIS günlük dosyası erişimi). wtmp/btmp/lastlog/faillog ve journal dosyalarına dokunulmaz.
+# Bedeli: `adm` grubunda olmayan okuyucular (izleme/günlük toplayıcı ajanları) bazı günlükleri okuyamaz. Varsayılan kapalı.
+hardening_log_file_permissions: false

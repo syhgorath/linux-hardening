@@ -85,6 +85,13 @@ APT dizinleri 755, `sources.list.d` dosyaları ve `.gpg` anahtarları 644, `sudo
 yeniden uygulandı: `masked`/`inactive`, `systemctl --failed` boş, ikinci koşu `changed=0`. SUID/SGID özeti VM'de 24 dosya (0,7 sn). **Ölçülmedi:** apport'un kapalıyken çökme davranışı,
 `apt update`'in kısıtlı izinlerle etkisi (yalnızca izinler değişti).
 
+**16. CIS grup 2 (seçenekler AÇIK), gerçek VM (2026-10-18).** `--tags kernel,base,auth,files` + hepsi açık: `ok=55 changed=9 failed=0`, ikinci koşu `changed=0`. `TMOUT=600` ve `readonly` (kabukta
+`TMOUT=9` → "readonly variable"), `ulimit -c` = 0, `systemd-coredump` `Storage=none`/`ProcessSizeMax=0`, `useradd -D` `INACTIVE=45`, `/var/log` dosyalarının diğer izni kalktı (yalnız `wtmp` ve `lastlog` 0664 kaldı, bilerek),
+`sudo` çalışıyor. **Yolda bulunan:** `ftp`/`telnet` paketleri kaldırılınca `/usr/bin/ftp` `update-alternatives` ile **`ftp-ssl`**e düştü (aynı komutu sağlayan başka paket); varsayılan paket listesine
+`ftp-ssl` ve `telnet-ssl` eklendi. Bu da yetmedi: `ubuntu-standard` metapaketi bir ftp istemcisi ister; `apt remove` bir istemciyi kaldırınca bir ÖBÜRÜNÜ otomatik kurdu (apt geçmişi: ftp -> ftp-ssl -> ftp+tnftp,
+her koşuda `changed=1`). Çözüm: `ubuntu-standard`ı aynı işlemde kaldırmak (listeye eklendi; tek `apt-get remove` işleminde hepsi gider). Mevcut hesap uyarısı gerçek veriyle çalıştı (`syhgorath` INACTIVE 45 değil, değiştirilmedi). **Ölçülmedi:** TMOUT'un gerçek boşta oturumu kapatması, core dump kapalıyken
+gerçek bir çökme, günlük izinlerinin izleme ajanlarına etkisi.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
