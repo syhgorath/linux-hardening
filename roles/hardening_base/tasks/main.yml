@@ -74,6 +74,7 @@
       Compress=yes
   notify: Restart journald
 
+# Önce DURDUR, sonra MASKELE (ayrı görevler): tek çağrıda maskelemek zamanlayıcıyı "Unit to trigger vanished" ile `failed` bırakıp `systemctl --failed`te gösteriyordu (gerçek VM'de görüldü).
 # --- Küçük servis kapatmaları (CIS 1.5.7 apport, 1.6.12 update-notifier-motd) ve SUID/SGID özeti (7.1.13, salt okunur) ---
 # Birimler her dağıtımda yoktur: önce durumları (salt okunur) okunur, `LoadState` boş/not-found ise dokunulmaz.
 - name: Read apport.service state (read-only)
@@ -103,17 +104,27 @@
     line: enabled=0
   when: hardening_disable_apport | bool and hardening_base_apport_file.stat.exists
 
-- name: Stop and mask apport.service
+- name: Stop apport.service
   ansible.builtin.systemd:
     name: apport.service
     state: stopped
+  when: hardening_disable_apport | bool and (hardening_base_apport_unit.status | default({})).LoadState | default('') != 'not-found' and (hardening_base_apport_unit.status | default({})).LoadState | default('') != ''
+
+- name: Mask apport.service
+  ansible.builtin.systemd:
+    name: apport.service
     masked: true
   when: hardening_disable_apport | bool and (hardening_base_apport_unit.status | default({})).LoadState | default('') != 'not-found' and (hardening_base_apport_unit.status | default({})).LoadState | default('') != ''
 
-- name: Stop and mask update-notifier-motd.timer
+- name: Stop update-notifier-motd.timer
   ansible.builtin.systemd:
     name: update-notifier-motd.timer
     state: stopped
+  when: hardening_disable_update_notifier_motd | bool and (hardening_base_motd_unit.status | default({})).LoadState | default('') != 'not-found' and (hardening_base_motd_unit.status | default({})).LoadState | default('') != ''
+
+- name: Mask update-notifier-motd.timer
+  ansible.builtin.systemd:
+    name: update-notifier-motd.timer
     masked: true
   when: hardening_disable_update_notifier_motd | bool and (hardening_base_motd_unit.status | default({})).LoadState | default('') != 'not-found' and (hardening_base_motd_unit.status | default({})).LoadState | default('') != ''
 

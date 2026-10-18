@@ -78,6 +78,13 @@ ikinci koşu `changed=0`. Sonuç izinler: `passwd`/`group`/`shells` 644, `shadow
 etkisi, `grub.cfg`'nin sonraki `update-grub`'da 0444'e dönüp dönmediği, `timestamp_timeout`'un sudo-rs'te gerçekten uygulandığı (yalnızca sözdizimi kabul edildi). Bir `--check` koşusunda tek seferlik
 "privilege escalation prompt" zaman aşımı görüldü, iki tekrarda çıkmadı (nedeni bilinmiyor).
 
+**15. CIS grup 1 (apport, update-notifier-motd, APT izinleri, journald), gerçek VM (2026-10-18).** `--tags base,files`: `ok=33 changed=6 failed=0`, ikinci koşu `changed=0`.
+`/etc/default/apport` `enabled=0`, `apport.service` ve `update-notifier-motd.timer` maskeli, journald drop-in etkin (`systemd-analyze cat-config`: `Storage=persistent`, `Compress=yes`),
+APT dizinleri 755, `sources.list.d` dosyaları ve `.gpg` anahtarları 644, `sudo` çalışıyor. **Yolda bulunan hata:** zamanlayıcı tek çağrıda (`state: stopped` + `masked: true`) maskelenince
+`systemctl --failed`'te `failed (Result: resources)` ("Unit to trigger vanished") görünüyordu; durdurma ve maskeleme ayrı görevlere bölündü. Zamanlayıcı VM'de geri açılıp (`unmask`, `start`) düzeltilmiş rol
+yeniden uygulandı: `masked`/`inactive`, `systemctl --failed` boş, ikinci koşu `changed=0`. SUID/SGID özeti VM'de 24 dosya (0,7 sn). **Ölçülmedi:** apport'un kapalıyken çökme davranışı,
+`apt update`'in kısıtlı izinlerle etkisi (yalnızca izinler değişti).
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

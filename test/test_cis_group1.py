@@ -71,20 +71,23 @@ for n, unit in (("Read apport.service state (read-only)", "apport.service"), ("R
     sd = t["ansible.builtin.systemd"]
     check(f"{unit}: durum okuma salt okunur (state/enabled/masked yok), --check'te de calisir, durmaz", True,
           sd == {"name": unit} and t.get("check_mode") is False and t.get("failed_when") is False)
-for n, unit, var, reg in (("Stop and mask apport.service", "apport.service", "hardening_disable_apport", "hardening_base_apport_unit"),
-                          ("Stop and mask update-notifier-motd.timer", "update-notifier-motd.timer", "hardening_disable_update_notifier_motd", "hardening_base_motd_unit")):
-    t = task(n)
-    sd = t["ansible.builtin.systemd"]
-    check(f"{unit}: durdurulur ve maskelenir", True, sd == {"name": unit, "state": "stopped", "masked": True})
-    when = str(t["when"])
+for unit, var, reg in (("apport.service", "hardening_disable_apport", "hardening_base_apport_unit"),
+                       ("update-notifier-motd.timer", "hardening_disable_update_notifier_motd", "hardening_base_motd_unit")):
+    stop, mask = task(f"Stop {unit}"), task(f"Mask {unit}")
+    check(f"{unit}: ONCE durdurulur (state: stopped, maskesiz)", True, stop["ansible.builtin.systemd"] == {"name": unit, "state": "stopped"})
+    check(f"{unit}: SONRA maskelenir (masked: true, state yok)", True, mask["ansible.builtin.systemd"] == {"name": unit, "masked": True})
+    order = [t.get("name") for t in yaml.safe_load((ROOT / "roles/hardening_base/tasks/main.yml").read_text(encoding="utf-8"))]
+    check(f"{unit}: durdurma gorevi maskelemeden ONCE (tek cagrida maskelemek zamanlayiciyi 'failed' birakiyordu)", True, order.index(stop["name"]) < order.index(mask["name"]))
+    check(f"{unit}: iki gorevin kosulu ayni", True, stop["when"] == mask["when"])
+    when = str(mask["when"])
     check(f"{unit}: kendi degiskeniyle kapanir ({var})", True, var in when)
     for state, want in (("loaded", True), ("not-found", False), (None, False)):
         status = {} if state is None else {"LoadState": state}
         rc, out = play([{"ansible.builtin.set_fact": {reg: {"status": status}}},
-                        {"name": "probe", "ansible.builtin.debug": {"msg": "calisti"}, "when": t["when"]}], {var: True})
+                        {"name": "probe", "ansible.builtin.debug": {"msg": "calisti"}, "when": mask["when"]}], {var: True})
         check(f"{unit}: LoadState={state!r} iken " + ("calisir" if want else "ATLANIR"), want, "calisti" in out)
     rc, out = play([{"ansible.builtin.set_fact": {reg: {"status": {"LoadState": "loaded"}}}},
-                    {"name": "probe", "ansible.builtin.debug": {"msg": "calisti"}, "when": t["when"]}], {var: False})
+                    {"name": "probe", "ansible.builtin.debug": {"msg": "calisti"}, "when": mask["when"]}], {var: False})
     check(f"{unit}: {var}=false iken atlanir", False, "calisti" in out)
 
 # 3) SUID/SGID özeti: salt okunur
