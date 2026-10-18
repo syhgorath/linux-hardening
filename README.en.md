@@ -76,7 +76,7 @@ the code. Rows marked "Deliberately" are documented decisions; the others are **
 | Bootloader (GRUB password, `audit=1`) | Not yet | Design note for `audit=1`: [auditd-kapsam.md](docs/design/auditd-kapsam.md) (Turkish) |
 | AppArmor profiles | Not yet | |
 | Log management (rsyslog, journald, logrotate, remote logging) | Not yet | |
-| `cron`/`at` restrictions, `sudo` configuration | Not yet | `sudoers` changes are only **audited** by auditd |
+| `cron`/`at` restrictions, `sudo` configuration | Partial | Only cron file/directory **permissions** and a `sudoers.d` drop-in (`use_pty`, `logfile`, `timestamp_timeout`); `cron.allow`/`at.allow` are not created, `su` is not restricted. `sudoers` changes are also **audited** by auditd |
 | Disabling IPv6 | Not yet | |
 | Core dumps | Partial | Only `fs.suid_dumpable = 0`; no `systemd-coredump` settings |
 | Removing unused services/packages | Partial | Only `postfix`/`courier-*` are removed; avahi, cups, etc. are not |
@@ -108,6 +108,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |
 | `test_tags_and_hosts.sh` | preflight/guards not skipped with `--tags`, `hardening`/`ubuntu` group selection and no warning for a missing group |
 | `test_facts_namespace.sh` | Facts are read only via `ansible_facts[...]` (OS check under `INJECT_FACTS_AS_VARS=False`), ban on top-level fact names |
+| `test_files_role.py` | file permissions with real `ansible-playbook` in a temp tree: only ever tightens (0600 stays), never creates files, symlinks not followed, `--check` changes nothing, second run `changed=0` |
+| `test_sudo_role.py` | sudoers drop-in: validated with `visudo -cf` (generated content checked with the real `visudo`), `become` probe, cleanup on failure, no `NOPASSWD` |
 | `test_cis_quickwins.py` | CIS quick wins: module lists, ufw `routed` policy, `audit=1` (real `replace` module, idempotent), ssh restart refusal, risky options default to off |
 | `test_time_report.py` | time report decision (real `chronyc -c sources` format): healthy, stale/skewed clock, service down, no sources, threshold, malformed lines |
 | `test_time_tasks.py` | the time role stays read-only: read-only modules only, works in `--check`, can be disabled, no command changes the clock |

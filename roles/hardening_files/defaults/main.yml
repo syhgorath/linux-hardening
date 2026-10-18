@@ -1,0 +1,43 @@
+# Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
+# false: rol hiçbir şey yapmaz (kaçış anahtarı).
+hardening_files_enabled: true
+# Yalnızca TEST için (test/test_files_role.py): yollara önek, dinamik listelerde (sshd drop-in, ana bilgisayar anahtarları) sahip/grup. Gerçek kullanımda dokunmayın.
+hardening_files_root: ""
+hardening_files_owner: root
+hardening_files_group: root
+
+# Yalnızca MEVCUT dosya/dizinlere dokunulur (yoksa atlanır, oluşturulmaz). Modlar CIS düzeltmeleri gibi SEMBOLİKTİR ve yalnızca fazla izni KALDIRIR:
+# zaten daha kısıtlı bir dosya gevşetilmez (örn. 0600 olan /etc/passwd 0644 olmaz). group_ok: listedeki mevcut grup korunur, değilse group atanır.
+hardening_files_targets:
+  # CIS 7.1.1-7.1.4, 7.1.9
+  - { path: /etc/passwd, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/passwd-, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/group, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/group-, mode: "u-x,go-wx", owner: root, group: root }
+  - { path: /etc/shells, mode: "u-x,go-wx", owner: root, group: root }
+  # CIS 7.1.5-7.1.8: root:shadow (Ubuntu varsayılanı) ya da root:root kabul
+  - { path: /etc/shadow, mode: "u-x,g-wx,o-rwx", owner: root, group: shadow, group_ok: [root, shadow] }
+  - { path: /etc/shadow-, mode: "u-x,g-wx,o-rwx", owner: root, group: shadow, group_ok: [root, shadow] }
+  - { path: /etc/gshadow, mode: "u-x,g-wx,o-rwx", owner: root, group: shadow, group_ok: [root, shadow] }
+  - { path: /etc/gshadow-, mode: "u-x,g-wx,o-rwx", owner: root, group: shadow, group_ok: [root, shadow] }
+  # CIS 7.1.10
+  - { path: /etc/security/opasswd, mode: "u-x,go-rwx", owner: root, group: root }
+  - { path: /etc/security/opasswd.old, mode: "u-x,go-rwx", owner: root, group: root }
+  # CIS 5.1.1, 5.1.2 (dizin: group/other hiçbir şey)
+  - { path: /etc/ssh/sshd_config, mode: "u-x,og-rwx", owner: root, group: root }
+  - { path: /etc/ssh/sshd_config.d, mode: "go-rwx", owner: root, group: root }
+  # CIS 2.4.1 alt maddeleri: crontab ve cron dizinleri (cron kurulu değilse yoklar atlanır)
+  - { path: /etc/crontab, mode: "og-rwx", owner: root, group: root }
+  - { path: /etc/cron.hourly, mode: "og-rwx", owner: root, group: root }
+  - { path: /etc/cron.daily, mode: "og-rwx", owner: root, group: root }
+  - { path: /etc/cron.weekly, mode: "og-rwx", owner: root, group: root }
+  - { path: /etc/cron.monthly, mode: "og-rwx", owner: root, group: root }
+  - { path: /etc/cron.yearly, mode: "og-rwx", owner: root, group: root }
+  - { path: /etc/cron.d, mode: "og-rwx", owner: root, group: root }
+  # CIS 2.4.1 ve 2.4.2 (cron.allow, at.allow): yalnızca VARSA izinler sıkılaştırılır; dosya OLUŞTURULMAZ (boş cron.allow crontab kullanımını kapatırdı)
+  - { path: /etc/cron.allow, mode: "u-x,g-wx,o-rwx", owner: root, group: root, group_ok: [root, crontab] }
+  - { path: /etc/at.allow, mode: "u-x,g-wx,o-rwx", owner: root, group: root, group_ok: [root, daemon] }
+  # CIS 1.6.6, 1.6.9
+  - { path: /etc/motd, mode: "u-x,go-wx", owner: root, group: root }
+  # CIS 1.4.2 (update-grub dosyayı yeniden yazarsa 0444'e dönebilir; bir sonraki çalıştırmada yeniden sıkılaştırılır)
+  - { path: /boot/grub/grub.cfg, mode: "u-x,go-rwx", owner: root, group: root }

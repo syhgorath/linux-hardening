@@ -72,7 +72,7 @@ doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır
 | Önyükleyici (GRUB parolası, `audit=1`) | Henüz yok | `audit=1` için tasarım notu: [auditd-kapsam.md](docs/design/auditd-kapsam.md) |
 | AppArmor profilleri | Henüz yok | |
 | Günlük yönetimi (rsyslog, journald, logrotate, uzak günlük) | Henüz yok | |
-| `cron`/`at` kısıtları, `sudo` yapılandırması | Henüz yok | `sudoers` değişimleri yalnızca auditd ile **izlenir** |
+| `cron`/`at` kısıtları, `sudo` yapılandırması | Kısmi | Yalnızca cron dosya/dizin **izinleri** ve `sudoers.d` ayarı (`use_pty`, `logfile`, `timestamp_timeout`); `cron.allow`/`at.allow` oluşturulmaz, `su` kısıtlanmaz. `sudoers` değişimleri ayrıca auditd ile **izlenir** |
 | IPv6'yı kapatmak | Henüz yok | |
 | Core dump | Kısmi | Yalnızca `fs.suid_dumpable = 0`; `systemd-coredump` ayarı yok |
 | Kullanılmayan servis/paket kaldırma | Kısmi | Yalnızca `postfix`/`courier-*` kaldırılır; avahi, cups vb. yok |
@@ -104,6 +104,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |
 | `test_tags_and_hosts.sh` | `--tags` ile preflight/korumaların atlanmaması, `hardening`/`ubuntu` grubu seçimi ve olmayan grup için uyarı çıkmaması |
 | `test_facts_namespace.sh` | Fact'ler yalnızca `ansible_facts[...]` ile okunur (`INJECT_FACTS_AS_VARS=False` altında OS denetimi), üst düzey fact adı yasağı |
+| `test_files_role.py` | dosya izinleri gerçek `ansible-playbook` ile geçici ağaçta: yalnızca sıkılaşır (0600 gevşemez), olmayan dosya oluşturulmaz, sembolik bağ izlenmez, `--check` değiştirmez, ikinci koşu `changed=0` |
+| `test_sudo_role.py` | sudoers drop-in: `visudo -cf` ile doğrulanır (üretilen içerik gerçek `visudo` ile), `become` denemesi, başarısızlıkta temizlik, `NOPASSWD` yok |
 | `test_cis_quickwins.py` | CIS kolay kazançlar: modül listeleri, ufw `routed` ilkesi, `audit=1` (gerçek `replace` modülüyle, idempotent), ssh yeniden başlatma yasağı, riskli seçeneklerin varsayılanı kapalı |
 | `test_time_report.py` | zaman raporu kararı (gerçek `chronyc -c sources` biçimiyle): sağlıklı, bayat/kayık saat, servis kapalı, kaynak yok, eşik, bozuk satır |
 | `test_time_tasks.py` | zaman rolü salt okunur kalır: yalnızca okuma modülleri, `--check`'te çalışır, kapatılabilir, saati değiştiren komut yok |

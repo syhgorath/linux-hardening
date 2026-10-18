@@ -1,5 +1,5 @@
 # Önce: ansible-playbook playbooks/harden.yml --check --diff
-# Tek rol:  --tags base,auth,kernel,auditd,fail2ban,aide,ufw,ssh
+# Tek rol:  --tags base,auth,kernel,files,auditd,fail2ban,aide,time,ufw,ssh,sudo
 # SSH ve ufw en sonda; firewall SSH iznini enable'dan önce ekler.
 - name: Harden
   # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
@@ -27,6 +27,8 @@
     - { role: hardening_base, tags: [base] }
     - { role: hardening_auth, tags: [auth] }
     - { role: hardening_kernel, tags: [kernel] }
+    # Dosya izinleri auditd'den ÖNCE: kurallar yüklüyken chmod/chown kimlik dosyası izleme kurallarını (-w /etc/passwd ... -p wa) gürültüyle tetiklemesin.
+    - { role: hardening_files, tags: [files] }
     - { role: hardening_auditd, tags: [auditd] }
     - { role: hardening_fail2ban, tags: [fail2ban] }
     - { role: hardening_aide, tags: [aide] }
@@ -36,6 +38,8 @@
     - { role: hardening_rollback, tags: [ufw, ssh] }
     - { role: hardening_ufw, tags: [ufw] }
     - { role: hardening_ssh, tags: [ssh] }
+    # sudo en sonda: yazdıktan hemen sonra become ile denenir, başarısızsa dosya silinmeye çalışılır ve play durur.
+    - { role: hardening_sudo, tags: [sudo] }
   post_tasks:
     # ufw/ssh değiştikten sonra yeni bir bağlantı açıp doğrular; başarısızsa geri alır.
     - name: Yeni bağlantı doğrulaması ve geri alma
