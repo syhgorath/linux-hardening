@@ -73,3 +73,64 @@
       Storage=persistent
       Compress=yes
   notify: Restart journald
+
+# --- Küçük servis kapatmaları (CIS 1.5.7 apport, 1.6.12 update-notifier-motd) ve SUID/SGID özeti (7.1.13, salt okunur) ---
+# Birimler her dağıtımda yoktur: önce durumları (salt okunur) okunur, `LoadState` boş/not-found ise dokunulmaz.
+- name: Read apport.service state (read-only)
+  ansible.builtin.systemd:
+    name: apport.service
+  register: hardening_base_apport_unit
+  failed_when: false
+  check_mode: false
+
+- name: Read update-notifier-motd.timer state (read-only)
+  ansible.builtin.systemd:
+    name: update-notifier-motd.timer
+  register: hardening_base_motd_unit
+  failed_when: false
+  check_mode: false
+
+- name: Check apport defaults file
+  ansible.builtin.stat:
+    path: /etc/default/apport
+  register: hardening_base_apport_file
+  when: hardening_disable_apport | bool
+
+- name: Disable apport in its defaults file
+  ansible.builtin.lineinfile:
+    path: /etc/default/apport
+    regexp: '^\s*enabled\s*='
+    line: enabled=0
+  when: hardening_disable_apport | bool and hardening_base_apport_file.stat.exists
+
+- name: Stop and mask apport.service
+  ansible.builtin.systemd:
+    name: apport.service
+    state: stopped
+    masked: true
+  when: hardening_disable_apport | bool and (hardening_base_apport_unit.status | default({})).LoadState | default('') != 'not-found' and (hardening_base_apport_unit.status | default({})).LoadState | default('') != ''
+
+- name: Stop and mask update-notifier-motd.timer
+  ansible.builtin.systemd:
+    name: update-notifier-motd.timer
+    state: stopped
+    masked: true
+  when: hardening_disable_update_notifier_motd | bool and (hardening_base_motd_unit.status | default({})).LoadState | default('') != 'not-found' and (hardening_base_motd_unit.status | default({})).LoadState | default('') != ''
+
+- name: List SUID/SGID files (read-only)
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      timeout 120 find / -xdev -type f \( -perm -4000 -o -perm -2000 \) 2>/dev/null | sort || true
+    executable: /bin/bash
+  register: hardening_base_suid
+  changed_when: false
+  check_mode: false
+  when: hardening_suid_report | bool
+
+- name: Show SUID/SGID summary
+  ansible.builtin.debug:
+    msg: >-
+      SUID/SGID (CIS 7.1.13, gözden geçirin): {{ hardening_base_suid.stdout_lines | length }} dosya.
+      Beklenmeyen bir program varsa inceleyin. İlk 40: {{ hardening_base_suid.stdout_lines[:40] | join(', ') }}
+  when: hardening_suid_report | bool

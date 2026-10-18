@@ -37,6 +37,9 @@ hardening_files_targets:
   # CIS 2.4.1 ve 2.4.2 (cron.allow, at.allow): yalnızca VARSA izinler sıkılaştırılır; dosya OLUŞTURULMAZ (boş cron.allow crontab kullanımını kapatırdı)
   - { path: /etc/cron.allow, mode: "u-x,g-wx,o-rwx", owner: root, group: root, group_ok: [root, crontab] }
   - { path: /etc/at.allow, mode: "u-x,g-wx,o-rwx", owner: root, group: root, group_ok: [root, daemon] }
+  # CIS 1.2.1: APT dizinleri 0755 ya da daha kısıtlı (yalnız yazma izni kaldırılır; dosya izinleri aşağıdaki görevlerde)
+  - { path: /etc/apt/auth.conf.d, mode: "go-w", owner: root, group: root }
+  - { path: /etc/apt/sources.list.d, mode: "go-w", owner: root, group: root }
   # CIS 1.6.6, 1.6.9
   - { path: /etc/motd, mode: "u-x,go-wx", owner: root, group: root }
   # CIS 1.4.2 (update-grub dosyayı yeniden yazarsa 0444'e dönebilir; bir sonraki çalıştırmada yeniden sıkılaştırılır)
