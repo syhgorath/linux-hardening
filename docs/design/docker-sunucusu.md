@@ -30,7 +30,7 @@ Madde 1.1.2 (docker grubunun üyeleri kök eşdeğeridir): **salt okunur rapor**
 ## Bölüm 2: daemon ayarları (öneri: `daemon.json` BİRLEŞTİRME, varsayılan KAPALI)
 | Ayar | CIS | Etki / risk | Öneri |
 |---|---|---|---|
-| `live-restore: true` | 2.16 | Etki yok; daemon yeniden başlayınca konteynerler çalışmaya devam eder | **Önerilir**; yeniden başlatma olmadan `SIGHUP` ile uygulanabilir (doğrulanacak) |
+| `live-restore: true` | 2.16 | Etki yok; daemon yeniden başlayınca konteynerler çalışmaya devam eder | **Önerilir**; `SIGHUP` (`systemctl reload docker`) ile konteynerler **durmadan** açılır (mini labda gerçek Docker'la doğrulandı); `daemon.json`'da olup yüklenmemişken yeniden başlatma konteynerleri DURDURUR |
 | `no-new-privileges: true` | 2.15 | Konteyner içinde `setuid` ikili kullanan süreçler (örn. konteyner içinde `sudo`) bozulur | Seçenek, varsayılan kapalı |
 | `userland-proxy: false` | 2.17 | Yeni çekirdeklerde sorun yok; bazı ağ düzenlerinde ("hairpin NAT") fark eder | Seçenek, varsayılan kapalı, **test gerekir** |
 | `icc: false` | 2.2 | Varsayılan köprüdeki konteynerler birbirine ulaşamaz; compose projeleri kendi ağını kullandığından çoğunlukla sorun olmaz, eski `--link` bozulur | Seçenek, varsayılan kapalı |

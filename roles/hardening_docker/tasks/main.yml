@@ -111,11 +111,14 @@
             mode: "0644"
             backup: true
           when: hardening_docker_daemon_manage | bool and hardening_docker_merge.changed and hardening_docker_merge.error | length == 0
-          notify: Restart docker
+          notify:
+            - Reload docker
+            - Restart docker
 
         - name: Tell that Docker needs a restart
           ansible.builtin.debug:
             msg: >-
-              UYARI (docker): daemon.json değişti ama Docker yeniden başlatılmadı (hardening_docker_restart=false). Ayarların çoğu yeniden başlatma ister
-              (live-restore yoksa konteynerler durur): hazır olduğunuzda `systemctl restart docker`.
+              UYARI (docker): daemon.json değişti; Docker yeniden BAŞLATILMADI (hardening_docker_restart=false), yalnızca yeniden yüklendi (reload): live-restore
+              gibi ayarlar konteynerler durmadan etkinleşir, ama log-driver/log-opts gibi ayarlar yeniden başlatma ister. live-restore artık açıkken yeniden başlatma
+              konteynerleri durdurmaz: hazır olduğunuzda `systemctl restart docker`.
           when: hardening_docker_daemon_manage | bool and hardening_docker_merge.changed and hardening_docker_merge.error | length == 0 and not (hardening_docker_restart | bool)

@@ -59,8 +59,11 @@ check("daemon.json birlestirme kendi degiskeniyle (daemon_manage) kapanir", True
 w = by["Merge settings into daemon.json"]
 check("yazma: yalnizca DEGISINCE ve HATA YOKKEN, yedek alinir, 0644 root", True,
       "merge.changed" in str(w["when"]) and "error | length == 0" in str(w["when"]) and w["ansible.builtin.copy"]["backup"] is True and w["ansible.builtin.copy"]["mode"] == "0644")
-check("yazma bildirimi 'Restart docker' handler'ina gider", True, w["notify"] == "Restart docker" and handlers[0]["name"] == "Restart docker")
-check("handler yalnizca hardening_docker_restart=true iken calisir", True, "hardening_docker_restart" in str(handlers[0]["when"]))
+hn = {h["name"]: h for h in handlers}
+check("yazma bildirimi once 'Reload docker', sonra 'Restart docker' handler'larina gider", ["Reload docker", "Restart docker"], w["notify"])
+check("reload handler'i YALNIZ restart=false iken, restart handler'i YALNIZ restart=true iken calisir (cift islem yok)", True,
+      "not (hardening_docker_restart" in str(hn["Reload docker"]["when"]) and str(hn["Restart docker"]["when"]).strip() == "hardening_docker_restart | bool")
+check("reload handler'i systemd 'reloaded' (SIGHUP; konteynerleri durdurmaz)", "reloaded", hn["Reload docker"]["ansible.builtin.systemd"]["state"])
 
 # 2) uçtan uca: sahte register + gerçek betik çağrıları
 SS = ["LISTEN 0      4096         0.0.0.0:2375       0.0.0.0:*", "LISTEN 0      4096       127.0.0.53%lo:53       0.0.0.0:*", "LISTEN 0      4096            [::]:22          [::]:*"]
