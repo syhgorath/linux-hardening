@@ -60,8 +60,7 @@ Live verification log: [docs/verification-log.md](docs/verification-log.md); roa
 
 ## What it does not do (scope limits)
 
-This project **does not claim full CIS Benchmark compliance**: the goal is a "Level 1 Server *approach*". Which CIS items are covered has **not yet been mapped by item number**
-(the mapping will be built from the CIS Benchmark PDF, see [docs/ROADMAP.md](docs/ROADMAP.md), Turkish), so the table below is by **area**, not by item, and lists only limits verified in
+This project **does not claim full CIS Benchmark compliance**: the goal is a "Level 1 Server *approach*". The item-by-item mapping (Level 1 Server) is in [docs/cis-esleme.md](docs/cis-esleme.md) (Turkish); the table below is by **area**, not by item, and lists only limits verified in
 the code. Rows marked "Deliberately" are documented decisions; the others are **not done yet**, which does not mean they were skipped on purpose. If you find a missing area, please open an issue.
 
 | Area | Status | Note |
@@ -88,6 +87,27 @@ the code. Rows marked "Deliberately" are documented decisions; the others are **
 | fail2ban | Limited | `sshd` jail only |
 
 Known conflicts (places where hardening can break legitimate use): [docs/known-issues.md](docs/known-issues.md) (Turkish).
+
+## Heads-up: settings that change behaviour
+
+When `harden` is applied, the following are **on by default** and can break a legitimate use. Turn them off per server type with `group_vars`/`host_vars` or `-e`. Full list and escape hatches: [docs/known-issues.md](docs/known-issues.md) (Turkish).
+
+| Setting (default) | What it can break | How to turn off |
+|---|---|---|
+| `ufw`: incoming `deny` | Everything outside `hardening_ssh_allow_from` and `hardening_ufw_extra_allow` (web, Redis, monitoring) is closed. Ports published by Docker **bypass** ufw | `hardening_ssh_allow_from` (list all management networks), `hardening_ufw_extra_allow` |
+| `hardening_ufw_routed_deny` (on) | On servers that forward/NAT/bridge through ufw, including Docker hosts, container traffic can stop | `false` |
+| `base`: `postfix`/`courier` removed, `dma` installed | Apps expecting a local mail server break | `--skip-tags base` (skips the whole role) |
+| `base`: `usb-storage` disabled; `kernel`: `cramfs`, `hfs`, `jffs2`, `firewire-core`, `atm`, `can`, `dccp`, `sctp`, `rds`, `tipc` cannot load | Backups to USB disks, apps using these filesystems/protocols stop working | `--skip-tags kernel,base` |
+| `kernel`: `route_localnet=0` | Setups that DNAT to `localhost` (some Kubernetes `NodePort` layouts) break | `--skip-tags kernel` |
+| `ssh`: `DisableForwarding`, weak `MACs` removed, `MaxStartups 10:30:60` | Unix-socket forwarding, very old clients, many parallel SSH connections | `hardening_ssh_allow_tcp_forwarding=local` (forwarding), `--skip-tags ssh` for the rest |
+| `hardening_disable_apport` (on) | Ubuntu crash reports are not collected | `false` |
+| `hardening_disable_update_notifier_motd` (on) | The "updates available" login message is no longer refreshed | `false` |
+| `hardening_sudo_enabled` (on) | `use_pty`: background processes started via `sudo` can hang when the session closes | `false` |
+| `hardening_files_enabled` (on) | Permissions only ever **tighten**; scripts that read these files as another user can break | `false` |
+
+**Off by default, enable deliberately:** `hardening_kernel_disable_ipv6_ra` (cuts a server that gets IPv6 only from router advertisements), `hardening_auditd_grub_audit` (`audit=1`, needs a reboot, not covered by rollback), `hardening_auditd_restart_services` (service downtime), `hardening_ufw_prune_ssh` (deletes rules).
+
+**Planned, not coded yet (all will default to OFF):** disabling core dumps, shell `TMOUT`, password `INACTIVE`, `noexec` on `/tmp` and `/dev/shm`, restricting `su`, log file permissions, and **removing the `telnet`/`ftp` clients**. Note on the last one: these programs open no ports (no security risk by themselves), but removing them **breaks** scripts that probe ports with `telnet host port` and backup flows that use `ftp`; removal is `apt remove` (not `purge`), and undoing it is `apt install`. Details: [docs/ROADMAP.md](docs/ROADMAP.md) (Turkish).
 
 ## Tests
 The tests under `test/` run in CI on every PR (`.github/workflows/ci.yml`); locally:

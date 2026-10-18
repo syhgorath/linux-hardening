@@ -254,6 +254,15 @@ en_rows = scope_rows("README.en.md", "What it does not do")
 if tr_rows is not None and en_rows is not None and tr_rows != en_rows:
     err(f"README 'Ne yapmaz' tablosu: TR {tr_rows} satır, EN {en_rows} satır (eşit olmalı)")
 
+# 8) README "Dikkat" (davranışı değiştiren ayarlar) tabloları: TR/EN satır sayısı eşit; telnet/ftp uyarısı ve planlanan listesi iki dilde de olmalı
+tr_warn = scope_rows("README.md", "Dikkat: davranışı değiştiren ayarlar")
+en_warn = scope_rows("README.en.md", "Heads-up: settings that change behaviour")
+if tr_warn is not None and en_warn is not None and tr_warn != en_warn:
+    err(f"README 'Dikkat' tablosu: TR {tr_warn} satır, EN {en_warn} satır (eşit olmalı)")
+for doc, needle in (("README.md", "telnet"), ("README.en.md", "telnet")):
+    if needle not in (ROOT / doc).read_text(encoding="utf-8"):
+        err(f"{doc}: 'telnet/ftp kaldırma' uyarısı yok (Grup 2 unutulmasın)")
+
 if errors:
     print("TUTARSIZLIK:")
     for e in errors:
