@@ -150,6 +150,9 @@ for v in comp.get("vars", []):
             err(f"component.yml vars: {name} default ({dv}) min/max aralığı dışında")
     if "warn_if" in meta and vtype != "bool":
         err(f"component.yml vars: {name} warn_if yalnızca bool için")
+    if "warn_if" in meta and "default" in meta and meta["warn_if"] == meta["default"]:
+        # sshpocket warn_if değerini "değer buna eşitse uyar ve onay iste" diye yorumlar; varsayılan zaten o değerse HER çalıştırmada gereksiz onay istenir (#74)
+        err(f"component.yml vars: {name} warn_if ({meta['warn_if']}) varsayılana eşit: kullanıcı hiçbir şeyi değiştirmediği hâlde her çalıştırmada uyarı/onay çıkar (warn_if'i kaldırın)")
 
 # 5) eylemler
 for name, act in comp.get("actions", {}).items():

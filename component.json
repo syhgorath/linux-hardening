@@ -241,14 +241,12 @@
       "name": "hardening_disable_apport",
       "type": "bool",
       "default": true,
-      "warn_if": true,
       "description": "true: Ubuntu hata raporlayıcı apport kapatılır (enabled=0, servis durdurulup maskelenir; CIS 1.5.7). Çökme raporları toplanmaz. false: dokunulmaz"
     },
     {
       "name": "hardening_disable_update_notifier_motd",
       "type": "bool",
       "default": true,
-      "warn_if": true,
       "description": "true: update-notifier-motd zamanlayıcısı durdurulup maskelenir (CIS 1.6.12); oturum açılışındaki güncelleme iletisi yenilenmez. false: dokunulmaz"
     },
     {

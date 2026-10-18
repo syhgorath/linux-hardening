@@ -45,6 +45,7 @@ mutate "apply allow_from VPN uyarisi yok" component.yml    '/hardening_ssh_allow
 mutate "preview allow_from VPN uyarisi yok" component.yml  '/hardening_ssh_allow_from eksikse bunu/d'             "actions.preview: warnings içinde hardening_ssh_allow_from + VPN"
 mutate "README allow_from VPN uyarisi yok" README.md       's/VPN/AG/g'                                         "README.md: hardening_ssh_allow_from"
 mutate "HOWTO allow_from VPN uyarisi yok" HOWTO.md         's/VPN/AG/g'                                         "HOWTO.md: hardening_ssh_allow_from"
+mutate "warn_if varsayilana esit (#74)" component.yml '/name: hardening_disable_usb_storage/,/warn_if/ s/warn_if: false/warn_if: true/' "varsayılana eşit"
 mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinmiyor/'           "Desteklenir"
 mutate "README EN 'Ne yapmaz' satiri eksik" README.en.md '/^| fail2ban | Limited/d' "TR 20 satır, EN 19 satır"
 mutate "README TR 'Ne yapmaz' satiri eksik" README.md '/^| AppArmor profilleri/d' "TR 19 satır, EN 20 satır"
