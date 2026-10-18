@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `docs/design/docker-sunucusu.md`: Docker çalıştıran sunucu için tasarım notu (kod yok). CIS Docker Benchmark v1.9.0 bölüm 1-3 eşleme tablosu, `daemon.json` birleştirme mekanizması, ufw/Docker riski seçenekleri, önerilen değişkenler, test planı ve açık sorular.
 - `examples/` (3 sunucu: web / Docker / Redis+günlük+yedek): `inventory.example.yml`, `group_vars/{all,web,docker,infra}.yml`, sshpocket için `sshpocket/<sunucu>.yml` ve katmanları/liste tuzağını anlatan `examples/README.md`; HOWTO 7c. `test_examples.py`: gerçek `ansible-inventory` birleşimi ile sshpocket dosyaları aynı kalır.
 - `hardening_disable_usb_storage` (varsayılan `true`, yani bugünkü davranış): `false` iken `usb-storage` kural dosyası silinir, USB diske yedek alınabilir. `component.yml` `vars`'ta.
 - CIS "grup 2" (davranışı değiştirenler, **hepsi varsayılan KAPALI**, her biri kendi değişkeniyle; `test_cis_group2.py`, `test_files_role.py`):
