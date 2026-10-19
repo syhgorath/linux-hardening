@@ -121,6 +121,14 @@ vars:
     default: false
     warn_if: true                      # true = allow_from'da olmayan eski SSH kurallarını SİLER
     description: "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
+  - name: hardening_kernel_extra_sysctl
+    type: bool
+    default: true
+    description: "true (varsayılan): üç ek sysctl: fs.protected_fifos=2, kernel.sysrq=0 (VM konsolundan SysRq acil yeniden başlatma kullanılamaz), net.core.bpf_jit_harden=2 (eBPF yoğun iş yüklerinde küçük performans bedeli). false: yazılmaz"
+  - name: hardening_pam_tmpdir
+    type: bool
+    default: true
+    description: "true (varsayılan): libpam-tmpdir kurulur; her oturum özel 0700 bir geçici dizin (/tmp/user/<uid>) ve $TMPDIR alır. /tmp'i sabit varsayan betikler etkilenebilir. false: kurulmaz (kurulu paket kaldırılmaz)"
   - name: hardening_docker_enabled
     type: bool
     default: false

@@ -24,6 +24,11 @@ net.ipv6.conf.all.accept_ra = 0
 net.ipv6.conf.default.accept_ra = 0
 {% endif %}
 kernel.randomize_va_space = 2
+{% if hardening_kernel_extra_sysctl %}
+fs.protected_fifos = 2
+kernel.sysrq = 0
+net.core.bpf_jit_harden = 2
+{% endif %}
 kernel.dmesg_restrict = 1
 kernel.kptr_restrict = 2
 kernel.yama.ptrace_scope = 1

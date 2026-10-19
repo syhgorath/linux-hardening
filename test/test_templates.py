@@ -42,6 +42,7 @@ CASES = [
     ("sshd-hardening.pw-yes.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2",
      {"hardening_ssh_disable_password": False}),
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
+    ("sysctl.extra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_extra_sysctl": False}),
     ("sysctl.ra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_disable_ipv6_ra": True}),
     ("hardening.rules", "roles/hardening_auditd/templates/hardening.rules.j2", {}),
     ("hardening.docker.rules", "roles/hardening_auditd/templates/hardening.rules.j2",
@@ -151,6 +152,10 @@ if not UPDATE:
         assert_has(f"sysctl varsayilan: {n}", sy, n)
     assert_has("sysctl varsayilan: accept_ra YAZILMAZ (IPv6 kaybi riski)", sy, "accept_ra", want=False)
     assert_has("sysctl ip_forward'a dokunulmaz", sy, "ip_forward =", want=False)
+    for n in ("fs.protected_fifos = 2", "kernel.sysrq = 0", "net.core.bpf_jit_harden = 2"):
+        assert_has(f"sysctl varsayilan: {n}", sy, n)
+        assert_has(f"sysctl extra kapali: {n} YAZILMAZ", read("sysctl.extra-off.conf"), n, want=False)
+    assert_has("sysctl extra kapali iken temel satirlar korunur (rp_filter)", read("sysctl.extra-off.conf"), "net.ipv4.conf.all.rp_filter = 1")
     ra = read("sysctl.ra-off.conf")
     assert_has("sysctl ra_off: all.accept_ra = 0", ra, "net.ipv6.conf.all.accept_ra = 0")
     assert_has("sysctl ra_off: default.accept_ra = 0", ra, "net.ipv6.conf.default.accept_ra = 0")
