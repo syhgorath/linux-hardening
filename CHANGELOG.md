@@ -5,6 +5,18 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.4.0] - 2026-10-19
+
+v0.3.0'dan sonra: Lynis önce/sonra ölçümünden çıkan küçük maddeler, üç salt okunur rapor (root ortamı, `/tmp` ve `/dev/shm`, AIDE zamanlayıcı denetimi), `su` kısıtı, Docker `daemon.json` seçenekleri,
+Grup 3 tasarım notu ve CI'da yakalanan düzeltmeler. `component.yml` `vars` listesine 11 değişken eklendi (27'den 38'e) (`sshpocket_api` değişmedi).
+**Dikkat edilecekler (varsayılan AÇIK ve sunucuyu etkileyenler; kaçış yolu `docs/known-issues.md` ve README "Dikkat" tablosunda):**
+(1) `kernel`: `fs.protected_fifos=2`, `kernel.sysrq=0` (VM konsolundan SysRq acil yeniden başlatma kullanılamaz), `net.core.bpf_jit_harden=2` (`hardening_kernel_extra_sysctl`);
+(2) `auth`: `libpam-tmpdir` (`$TMPDIR` artık `/tmp` değil, `hardening_pam_tmpdir`); (3) `base`: `apt-listchanges` (`hardening_apt_listchanges`; yükseltmeyi bloklamaz);
+(4) `files`: `/etc/sudoers.d` `0750`; (5) `ansible.cfg`: `ServerAliveInterval` (ölü bağlantıda koşu ~45 sn sonra UNREACHABLE olur).
+**Salt okunur, varsayılan açık raporlar (hiçbir şeyi değiştirmez):** `hardening_root_env_report`, `hardening_tmp_report`; `hardening_aide_scheduled_check` paketin zaten açık kurduğu zamanlayıcıyı açık tutar.
+**Varsayılan KAPALI yeni seçenekler:** `hardening_su_restrict` (+ `hardening_su_group`), `hardening_docker_no_new_privileges`, `hardening_docker_userland_proxy_off`, `hardening_docker_icc_off`.
+**Doğrulama notu:** her madde gerçek VM ya da mini labda TEK TEK denendi (verification-log 21-28); bu sürümün TÜM yeni varsayılanlarıyla sıfırdan tam kurulumu ve ikinci koşusu v0.3.0 sonrası ayrıca yapılmadı.
+
 ### Eklendi
 - `hardening_tmp_report` (varsayılan **açık**, SALT OKUNUR, `warn_if` yok): `/tmp` ve `/dev/shm` bağlama seçenekleri raporu (CIS 1.1.2). `noexec` yoksa yalnızca NOT düşer (Ubuntu varsayılanı budur), `nodev`/`nosuid` yoksa, dizin ayrı bağlama değilse ya da Ansible `remote_tmp` `/tmp` altındaysa UYARIR. Hiçbir şeyi değiştirmez; `noexec` AÇMA seçeneği bilerek eklenmedi (paket betikleri ve Ansible etkilenebilir, `docs/design/grup3-tmp-su-root.md`). `hardening_files_enabled`'dan bağımsız. `test_tmp_report.py`, `test_tmp_tasks.py`.
 - `hardening_root_env_report` (varsayılan **açık**, SALT OKUNUR, `warn_if` yok): root ortamı raporu (CIS 5.4.2.5 `PATH` bütünlüğü, 5.4.2.6 `umask`). Hiçbir şeyi değiştirmez, `--check`'te de çalışır. `PATH`'te boş girdi, `.`, olmayan/yazılabilir/root'a ait olmayan dizin ve 027'den gevşek `umask` uyarılır. Karar mantığı `roles/hardening_auth/files/root_env_report.py`. `test_root_env_report.py`, `test_root_env_tasks.py`. Mini labda bilerek bozulmuş root ortamı yakalandı (verification-log 27).
@@ -158,7 +170,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.3.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/syhgorath/linux-hardening/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/syhgorath/linux-hardening/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/syhgorath/linux-hardening/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/syhgorath/linux-hardening/compare/v0.2.0...v0.2.1

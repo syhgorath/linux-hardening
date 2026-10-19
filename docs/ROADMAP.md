@@ -11,7 +11,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | Küçük Lynis maddeleri | Lynis önce/sonra ölçüldü (58 → 73, [verification-log.md](verification-log.md) madde 21). Kalan **küçük ve güvenli** olanlar: `fs.protected_fifos=2`, `kernel.sysrq=0`, `net.core.bpf_jit_harden=2`, AIDE SHA256/SHA512, `libpam-tmpdir`. `apt-listchanges` eklendi (apt-listbugs Ubuntu'da yok). Düşük değerli: `debsums`, `apt-show-versions`, `acct`. Sunucu davranışını değiştirir: canlı doğrulama gerekir |
 | Eski `ubuntu` grubunu kaldır | Uyarı artık çıkmıyor (#35, olmayan grup seçilmiyor); kaldırmak yalnızca bir temizlik ve BREAKING olarak işaretlenir |
 | Tarama klasörü zaman damgası | Klasör adı yerel saatle, `summary.json` UTC; tek biçime getirilebilir |
-| v0.3.0 yayını | Hazırlandı (CIS Ubuntu 26.04 Level 1 Server eşlemesi ve kolay kazançlar, `hardening_files`/`hardening_sudo`/`hardening_docker` rolleri, zaman raporu, `examples/`, README "Dikkat"). Etiket, imza ve Release bakımcıda; sonra sshpocket `components.lock` |
+| v0.3.0 yayını | Yayımlandı (CIS Ubuntu 26.04 Level 1 Server eşlemesi, `hardening_files`/`hardening_sudo`/`hardening_docker` rolleri, zaman raporu, `examples/`, README "Dikkat") |
+| v0.4.0 yayını | Hazırlandı (küçük Lynis maddeleri, `apt-listchanges`, AIDE zamanlayıcı, `su` kısıtı, Docker `daemon.json` seçenekleri, root ortamı ve `/tmp` raporları, Grup 3 tasarım notu). Etiket, imza ve Release bakımcıda; sonra sshpocket `components.lock` |
 
 ## Orta
 | İş | Not |
