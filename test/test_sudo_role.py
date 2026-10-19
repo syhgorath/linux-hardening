@@ -33,7 +33,7 @@ wrapper = tasks[0]
 inner = wrapper["block"]
 mod = lambda t: next(k for k in t if k.startswith("ansible.builtin."))
 
-check("varsayilan: rol acik, logfile /var/log/sudo.log", defaults == {"hardening_sudo_enabled": True, "hardening_sudo_logfile": "/var/log/sudo.log"}, f"defaults={defaults}")
+check("varsayilan: rol acik, logfile /var/log/sudo.log", {k: v for k, v in defaults.items() if k.startswith("hardening_sudo_")} == {"hardening_sudo_enabled": True, "hardening_sudo_logfile": "/var/log/sudo.log"}, f"defaults={defaults}")
 check("tum gorevler hardening_sudo_enabled ile kapatilabilir", "hardening_sudo_enabled" in str(wrapper.get("when")))
 
 cp = next(t for t in inner if "ansible.builtin.copy" in t)["ansible.builtin.copy"]

@@ -83,9 +83,18 @@
           when: hardening_docker_report.status == 'unknown'
 
         # --- daemon.json birleştirme (varsayılan KAPALI) ---
+        - name: Build the effective daemon.json settings
+          ansible.builtin.set_fact:
+            hardening_docker_effective_settings: >-
+              {{ hardening_docker_daemon_settings
+                 | combine({'no-new-privileges': true} if hardening_docker_no_new_privileges | bool else {})
+                 | combine({'userland-proxy': false} if hardening_docker_userland_proxy_off | bool else {})
+                 | combine({'icc': false} if hardening_docker_icc_off | bool else {}) }}
+          when: hardening_docker_daemon_manage | bool
+
         - name: Compute the merged daemon.json
           ansible.builtin.script:
-            cmd: "docker_daemon_merge.py {{ {'existing': (hardening_docker_daemon_raw.content | b64decode) if hardening_docker_daemon_raw.content is defined else '', 'settings': hardening_docker_daemon_settings} | to_json | quote }}"
+            cmd: "docker_daemon_merge.py {{ {'existing': (hardening_docker_daemon_raw.content | b64decode) if hardening_docker_daemon_raw.content is defined else '', 'settings': hardening_docker_effective_settings} | to_json | quote }}"
             executable: python3
           register: hardening_docker_merge_raw
           changed_when: false
