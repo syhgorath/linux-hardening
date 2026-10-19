@@ -141,6 +141,14 @@ Kategori (öneri sayısı, önce→sonra): SSH 18→2, AUTH 14→2, NETW 8→0, 
 - *Ortam:* `PKGS-7392` uyarısı (`python3-jwt`, `python3-urllib3` için bekleyen güvenlik güncellemesi): Lynis `apt-get update` yapınca görüyor, snapshot eski; `unattended-upgrades` açık ve günlük uyguluyor. Temiz kurulumdan hemen sonra puan, güncel olmayan paketler yüzünden düşük çıkabilir.
 Not: Lynis puanı CIS uyumu değildir; öznel bir araçtır. Aynı sunucuda ölçüldü, başka sunucuda puanlar farklı olabilir. **Ölçülmedi:** `systemd-analyze security` (servis sandbox puanları, Lynis BOOT-5264), farklı bir sunucu türü (web/Docker), Lynis'in eski sürümleri.
 
+**22. Küçük Lynis maddeleri, gerçek VM (2026-10-19).** `--tags kernel,auth` ile (zaten sertleştirilmiş VM'in üstüne): `ok=15 changed=3`, ikinci koşu `changed=0`. `sysctl`: `kernel.sysrq=0`, `fs.protected_fifos=2`, `net.core.bpf_jit_harden=2` (root ile okundu);
+`libpam-tmpdir` 0.11build1 (12 KB, Ubuntu arşivi) kuruldu, `common-session`'da `pam_tmpdir.so`; yeni SSH oturumunda `TMPDIR=/tmp/user/1000`, `sudo` altında `/tmp/user/0`; `sudo` çalışıyor.
+**Lynis: 73 → 80, uyarı 1 → 0, öneri 26 → 24, farklı sysctl 5 → 2** (kalan: `kernel.modules_disabled`, bilerek yok; `kernel.unprivileged_bpf_disabled` 2 vs 1, eşdeğer güvence).
+**Puanın ne kadarı bizden? (Lynis günlüğünü okuyarak):** alınan puan 272 → 277 (**+5**: `DEB-0280` +2, ek sysctl ~+3). Bizden gelen fark ~**+1,5 puanlık endeks** (73 → ~75). Kalan ~5 endeks puanı **ortamdan**: önceki taramada `PKGS-7392` ("13 güvenlik güncellemesi bekliyor") 25 puan
+üzerinden 0 almıştı; bu arada `unattended-upgrades` güncellemeleri uyguladı (apt geçmişi: 18 Eki 06:18 ve 19 Eki 06:52), test artık "no vulnerable packages" der ve 25 puanlık ağırlık paydadan düştü (olası puan 368 → 343). Yani "80" gerçek, ama güncel olmayan bir snapshot'ta aynı sertleştirme ~75 gösterir;
+puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günlüğündeki `Hardening: assigned` satırlarından; Lynis'in iç hesabını doğrulamadım.)
+`FINT-4402` (AIDE özetleri) bilerek düzeltilmedi (yanlış pozitif, `docs/known-issues.md`). **Ölçülmedi:** `libpam-tmpdir`'in uzun süren servis/cron işleri ve Docker/web sunucusu üzerindeki etkisi, `sysrq=0`'ın gerçek VM konsolundaki etkisi.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
