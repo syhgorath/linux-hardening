@@ -2,6 +2,7 @@
   ansible.builtin.apt:
     name: [aide, aide-common]
     state: present
+  register: hardening_aide_install
 
 - name: Initialize AIDE database (ilk seferde dakikalar sürebilir)
   ansible.builtin.command: aideinit -y -f
@@ -9,3 +10,11 @@
     creates: /var/lib/aide/aide.db
   async: 1800
   poll: 15
+
+- name: Make sure the daily AIDE check timer is enabled (CIS 6.3.2)
+  ansible.builtin.systemd:
+    name: dailyaidecheck.timer
+    enabled: true
+    state: started
+  # --check ile temiz sunucuda paket kurulmaz, birim henüz yoktur (systemd "servis bulunamadı" derdi): o durumda atlanır.
+  when: hardening_aide_scheduled_check | bool and not (ansible_check_mode and hardening_aide_install is changed)

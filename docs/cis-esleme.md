@@ -40,12 +40,12 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 2 | 16 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 6 |  | 7 | 2 |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 1 |  | 9 | 3 |
-| 6.3 | Bütünlük denetimi (AIDE) | 2 | 1 |  |  |  | 1 |
+| 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **102** | **29** | **5** | **100** | **38** |
+| | **Toplam** | **274** | **103** | **29** | **5** | **100** | **37** |
 
-Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %48'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %48'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -143,6 +143,7 @@ Yani Level 1 Server maddelerinin yaklaşık %37'i ✅, %48'i en azından kısmen
 | 6.1.1.1.6 | journald drop-in: Storage=persistent, Compress=yes | `roles/hardening_base/tasks/main.yml` |
 | 6.1.1.1.7 | journald drop-in: Storage=persistent, Compress=yes | `roles/hardening_base/tasks/main.yml` |
 | 6.3.1 | AIDE kurulur, veritabanı üretilir | `roles/hardening_aide/tasks/main.yml` |
+| 6.3.2 | Günlük AIDE kontrol zamanlayıcısı (`dailyaidecheck.timer`) açık ve başlatılmış | `roles/hardening_aide/tasks/main.yml` |
 | 7.1.1 | passwd/group/shadow/gshadow (+ yedekleri), shells, opasswd izinleri (var olanlar; yalnızca fazla izni kaldırır) | `roles/hardening_files/defaults/main.yml` |
 | 7.1.2 | passwd/group/shadow/gshadow (+ yedekleri), shells, opasswd izinleri (var olanlar; yalnızca fazla izni kaldırır) | `roles/hardening_files/defaults/main.yml` |
 | 7.1.3 | passwd/group/shadow/gshadow (+ yedekleri), shells, opasswd izinleri (var olanlar; yalnızca fazla izni kaldırır) | `roles/hardening_files/defaults/main.yml` |
@@ -243,7 +244,6 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 5.4.2.5, 5.4.2.6 |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5 |
-| 6.3 | Bütünlük denetimi (AIDE) | 6.3.2 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
 
 ## Level 1 dışında yaptıklarımız
