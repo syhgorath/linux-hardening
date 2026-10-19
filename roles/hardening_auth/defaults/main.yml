@@ -13,3 +13,6 @@ hardening_shell_timeout_seconds: 0
 hardening_password_inactive_days: 0
 # Yalnızca TEST için: shadow dosyasının yolu.
 hardening_auth_shadow_path: /etc/shadow
+# true (varsayılan): libpam-tmpdir kurulur (Lynis DEB-0280): her oturum için özel, 0700 bir geçici dizin (/tmp/user/<uid>) ve $TMP/$TMPDIR; /tmp'te sembolik bağ yarışlarını azaltır.
+# Bedeli: $TMPDIR artık /tmp değildir; /tmp'i sabit varsayan betikler ve oturumlar arası paylaşılan geçici dosyalar etkilenebilir.
+hardening_pam_tmpdir: true

@@ -5,3 +5,6 @@ hardening_kernel_disable_ipv6_ra: false
 # true: core dump'lar kapatılır (limits.d `* hard core 0`, systemd-coredump `Storage=none`, `ProcessSizeMax=0`; CIS 1.5 core dump maddeleri).
 # Bedeli: bir süreç çöktüğünde çökme dökümü OLMAZ, hata ayıklama (Redis/PHP/Docker çökmeleri) zorlaşır. Varsayılan kapalı.
 hardening_disable_coredump: false
+# true (varsayılan): üç ek sysctl (Lynis KRNL-6000): fs.protected_fifos=2 (sticky dizinlerde başkasının FIFO'sunu açmayı kısıtlar), kernel.sysrq=0 (SysRq tuşları kapalı;
+# VM konsolundan "acil yeniden başlatma" kullanılamaz), net.core.bpf_jit_harden=2 (BPF JIT sabit körleme; eBPF yoğun iş yüklerinde küçük bir performans bedeli).
+hardening_kernel_extra_sysctl: true

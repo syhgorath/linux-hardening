@@ -88,3 +88,10 @@
       ({{ hardening_auth_inactive_other.stdout_lines | join(', ') }}). Mevcut hesaplar DEĞİŞTİRİLMEDİ (süre dolunca kilitlenme riski);
       istediğiniz hesap için elle: chage -I {{ hardening_password_inactive_days | int }} <kullanıcı>.
   when: hardening_password_inactive_days | int > 0 and hardening_auth_inactive_other.stdout_lines | length > 0
+
+# --- Oturum başına özel geçici dizin (libpam-tmpdir; paket kurulumunda pam-auth-update ile PAM'e eklenir) ---
+- name: Install libpam-tmpdir
+  ansible.builtin.apt:
+    name: libpam-tmpdir
+    state: present
+  when: hardening_pam_tmpdir | bool

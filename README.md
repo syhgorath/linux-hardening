@@ -100,6 +100,8 @@ Bilinen çakışmalar (sertleştirmenin meşru kullanımları bozabileceği yerl
 | `base`: `usb-storage` kapalı; `kernel`: `cramfs`, `hfs`, `jffs2`, `firewire-core`, `atm`, `can`, `dccp`, `sctp`, `rds`, `tipc` yüklenemez | USB diske yedek, bu dosya sistemi/protokolü kullanan uygulama çalışmaz | `--skip-tags kernel,base` |
 | `kernel`: `route_localnet=0` | `localhost`'a DNAT yapan düzenler (bazı Kubernetes `NodePort`) bozulur | `--skip-tags kernel` |
 | `ssh`: `DisableForwarding`, `MACs` zayıf liste, `MaxStartups 10:30:60` | Unix soket yönlendirme, çok eski istemciler, çok paralel SSH bağlantısı | `hardening_ssh_allow_tcp_forwarding=local` (yönlendirme), diğerleri için `--skip-tags ssh` |
+| `hardening_kernel_extra_sysctl` (açık) | `kernel.sysrq=0`: VM konsolundan SysRq ile acil yeniden başlatma kullanılamaz; `net.core.bpf_jit_harden=2`: eBPF yoğun iş yüklerinde küçük performans bedeli | `false` |
+| `hardening_pam_tmpdir` (açık) | `libpam-tmpdir`: `$TMPDIR` artık `/tmp` değil (`/tmp/user/<uid>`); `/tmp`'i sabit varsayan betikler etkilenebilir | `false` |
 | `hardening_disable_apport` (açık) | Ubuntu çökme raporları toplanmaz | `false` |
 | `hardening_disable_update_notifier_motd` (açık) | Oturum açılışındaki güncelleme iletisi yenilenmez | `false` |
 | `hardening_sudo_enabled` (açık) | `use_pty`: arka plana atılan `sudo` süreçleri oturum kapanınca takılabilir | `false` |
@@ -133,6 +135,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_examples.py` | `examples/` tutarlılığı: gerçek `ansible-inventory` ile `group_vars` birleşimi, sshpocket dosyalarıyla aynı; yalnız var olan değişkenler, ek ufw kuralları doğrulama kalıbına uyar, DB portu açılmaz |
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
+| `test_lynis_small.py` | Lynis'ten çıkan küçük maddeler: ek sysctl (şablon varyantları) ve `libpam-tmpdir` (gerçek `when`), `warn_if` yok |
 | `test_cis_group2.py` | Grup 2 (hepsi varsayılan kapalı): core dump, `telnet`/`ftp` kaldırma (`remove`, purge yok), `TMOUT` ve `INACTIVE` sınırları ve idempotensi, mevcut hesaplara dokunulmaması |
 | `test_cis_group1.py` | apport ve `update-notifier-motd` kapatma (olmayan birime dokunulmaz, kendi değişkeniyle kapanır, `lineinfile` idempotent) ve SUID/SGID özetinin salt okunur kalması |
 | `test_files_role.py` | dosya izinleri gerçek `ansible-playbook` ile geçici ağaçta: yalnızca sıkılaşır (0600 gevşemez), olmayan dosya oluşturulmaz, sembolik bağ izlenmez, `--check` değiştirmez, ikinci koşu `changed=0` |

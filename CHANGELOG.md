@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- Lynis önce/sonra ölçümünden (58 → 73, verification-log 21) çıkan küçük ve güvenli maddeler: `hardening_kernel_extra_sysctl` (varsayılan **açık**: `fs.protected_fifos=2`, `kernel.sysrq=0`, `net.core.bpf_jit_harden=2`) ve `hardening_pam_tmpdir` (varsayılan **açık**: `libpam-tmpdir`, oturum başına özel `$TMPDIR`). İkisi de `component.yml` `vars`'ta, `warn_if` yok. `test_lynis_small.py`. Lynis FINT-4402'nin (AIDE özetleri) yanlış pozitif olduğu `docs/known-issues.md`'de açıklandı; yapılandırma daraltılmadı.
+
 ### Değişti
 - `component.yml`: `hardening_disable_apport` ve `hardening_disable_update_notifier_motd` değişkenlerinden `warn_if` kaldırıldı (#74). Varsayılanları zaten `true` olduğu için sshpocket kullanıcı hiçbir şeyi değiştirmediği hâlde her `apply`'da "riskli değer" onayı istiyordu. `scripts/check-consistency.py` artık `warn_if` varsayılana eşitse hata verir (sürüm 0.3.0'da ikisi de bu hataya sahipti).
 - `ansible.cfg`: `[ssh_connection] ssh_extra_args = -o ServerAliveInterval=15 -o ServerAliveCountMax=3`. Ölü bir TCP bağlantısında (ağ değişti, Mac uyudu) `ansible-playbook` artık ~45 sn yanıt gelmezse görevi UNREACHABLE yapar. Ansible'ın varsayılan `ssh_args`'ı (ControlMaster/ControlPersist) ezilmez. `test_ansible_cfg.py`. Mini labda sessiz paket düşürmeyle ölçüldü: ayar yokken 153 sn, varken 58 sn.
