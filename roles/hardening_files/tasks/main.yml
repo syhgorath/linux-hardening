@@ -173,3 +173,49 @@
         mode: "g-wx,o-rwx"
         follow: false
       loop: "{{ hardening_files_logs.stdout_lines }}"
+
+# --- /tmp ve /dev/shm bağlama seçenekleri raporu (CIS 1.1.2: ayrı bağlama, nodev, nosuid, noexec). SALT OKUNUR: hiçbir şeyi değiştirmez, `--check`'te de çalışır.
+# Karar mantığı files/tmp_report.py. noexec davranışı değiştirdiği için (paket betikleri, Ansible remote_tmp) yalnızca raporlanır; tasarım: docs/design/grup3-tmp-su-root.md ---
+- name: Temporary directory mount report (read-only)
+  when: hardening_tmp_report | bool
+  block:
+    - name: Read the mounts behind /tmp and /dev/shm
+      ansible.builtin.shell:
+        cmd: |
+          for t in /tmp /dev/shm; do
+            echo "$t: $(findmnt -n -o TARGET,FSTYPE,OPTIONS --target "$t" 2>/dev/null)"
+          done
+        executable: /bin/sh
+      register: hardening_tmp_mounts
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Evaluate the temporary directory mounts
+      ansible.builtin.script:
+        cmd: >-
+          tmp_report.py {{ {'mounts': hardening_tmp_mounts.stdout_lines | default([]),
+          'remote_tmp': ansible_remote_tmp | default('')} | to_json | quote }}
+        executable: python3
+      register: hardening_tmp_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the temporary directory report
+      ansible.builtin.set_fact:
+        hardening_tmp_result: "{{ hardening_tmp_raw.stdout | from_json }}"
+
+    - name: Warn about temporary directory mount problems
+      ansible.builtin.debug:
+        msg: "UYARI (tmp, CIS 1.1.2): {{ hardening_tmp_result.warnings | join(' ') }} Hiçbir şey değiştirilmedi."
+      when: hardening_tmp_result.status == 'warn'
+
+    - name: Show the temporary directory report
+      ansible.builtin.debug:
+        msg: "NOT (tmp): {{ (hardening_tmp_result.summary ~ ' ' ~ (hardening_tmp_result.notes | join(' '))) | trim }}"
+      when: hardening_tmp_result.status != 'unknown' and (hardening_tmp_result.notes | length > 0 or hardening_tmp_result.summary | length > 0)
+
+    - name: Note that the temporary directory report could not be evaluated
+      ansible.builtin.debug:
+        msg: "UYARI (tmp): rapor değerlendirilemedi: {{ hardening_tmp_result.error }}"
+      when: hardening_tmp_result.status == 'unknown'

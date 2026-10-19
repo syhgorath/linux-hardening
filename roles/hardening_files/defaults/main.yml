@@ -60,3 +60,6 @@ hardening_files_targets:
 # true: /var/log altındaki dosyalarda grup yazma ve diğer erişimi kaldırır (CIS günlük dosyası erişimi). wtmp/btmp/lastlog/faillog ve journal dosyalarına dokunulmaz.
 # Bedeli: `adm` grubunda olmayan okuyucular (izleme/günlük toplayıcı ajanları) bazı günlükleri okuyamaz. Varsayılan kapalı.
 hardening_log_file_permissions: false
+# true (varsayılan): /tmp ve /dev/shm bağlama seçenekleri SALT OKUNUR raporu (CIS 1.1.2: ayrı bağlama, nodev, nosuid, noexec). Hiçbir şeyi DEĞİŞTİRMEZ; noexec yoksa yalnızca not düşer
+# (Ubuntu varsayılanı budur), nodev/nosuid yoksa, ayrı bağlama değilse ya da Ansible remote_tmp /tmp altındaysa uyarır. `--check`'te de çalışır.
+hardening_tmp_report: true
