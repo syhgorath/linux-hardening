@@ -182,6 +182,19 @@
       "description": "true (varsayılan): libpam-tmpdir kurulur; her oturum özel 0700 bir geçici dizin (/tmp/user/<uid>) ve $TMPDIR alır. /tmp'i sabit varsayan betikler etkilenebilir. false: kurulmaz (kurulu paket kaldırılmaz)"
     },
     {
+      "name": "hardening_su_restrict",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: su yalnızca hardening_su_group üyelerine açılır (CIS 5.2.7). Grup yoksa BOŞ oluşturulur: root dışında kimse su yapamaz (root pam_rootok ile geçer). sudo, ssh ve konsol girişi etkilenmez; kök olmayan hesapla su çağıran betikler/insanlar bozulur. Geri almak için /etc/pam.d/su'daki pam_wheel satırını silin. Varsayılan kapalı"
+    },
+    {
+      "name": "hardening_su_group",
+      "type": "string",
+      "default": "sugroup",
+      "description": "su yapabilecek grup (hardening_su_restrict=true iken). Varsayılan sugroup boş oluşturulur (en sıkı). Mevcut bir gruba (örn. sudo) çevrilirse o grubun üyeleri su yapabilir. Küçük harf, rakam, _ ve -; en çok 32 karakter"
+    },
+    {
       "name": "hardening_docker_enabled",
       "type": "bool",
       "default": false,

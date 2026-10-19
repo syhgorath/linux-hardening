@@ -70,3 +70,30 @@
         msg: >-
           sudo ayarı uygulanamadı ya da sonrasında yetki yükseltme çalışmadı; /etc/sudoers.d/60-hardening silinmeye çalışıldı. Sunucuda doğrulayın:
           ls -l /etc/sudoers.d/60-hardening (kalmışsa root olarak silin).
+
+# su kısıtı (CIS 5.2.7), varsayılan KAPALI. /etc/pam.d/su'ya `pam_wheel` satırı eklenir: yalnızca <hardening_su_group> üyeleri su yapabilir; grup varsayılan
+# olarak BOŞ oluşturulur, yani root dışında kimse su yapamaz (root pam_rootok ile geçer). sudo, ssh ve konsol girişi etkilenmez. Üye eklenmez.
+- name: Restrict su to a group (CIS 5.2.7)
+  when: hardening_su_restrict | bool
+  block:
+    - name: Check the su group name
+      ansible.builtin.assert:
+        that: hardening_su_group is match('^[a-z_][a-z0-9_-]{0,31}$')
+        fail_msg: "hardening_su_group geçerli bir grup adı değil (küçük harf, rakam, _ ve -; en çok 32 karakter): {{ hardening_su_group }}"
+        quiet: true
+
+    - name: Make sure the su group exists (empty when created here)
+      ansible.builtin.group:
+        name: "{{ hardening_su_group }}"
+        state: present
+        system: true
+
+    - name: Require membership of the su group in /etc/pam.d/su
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/su
+        regexp: '^\s*auth\s+(required|requisite)\s+pam_wheel\.so'
+        insertafter: '^\s*auth\s+sufficient\s+pam_rootok\.so'
+        line: "auth       required   pam_wheel.so use_uid group={{ hardening_su_group }}"
+        owner: root
+        group: root
+        mode: "0644"

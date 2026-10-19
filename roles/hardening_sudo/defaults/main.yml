@@ -3,3 +3,8 @@
 hardening_sudo_enabled: true
 # sudo komutlarının kaydı (CIS 5.2.3), YALNIZCA klasik sudo'da yazılır (sudo-rs `logfile` desteklemez; olaylar journald'e gider). Dosyayı sudo ilk kullanımda kendisi oluşturur.
 hardening_sudo_logfile: /var/log/sudo.log
+# true: su yalnızca hardening_su_group üyelerine açılır (CIS 5.2.7). Grup yoksa BOŞ oluşturulur: root dışında kimse su yapamaz (root pam_rootok ile geçer);
+# sudo, ssh ve konsol girişi etkilenmez. Kök olmayan hesapla `su` çağıran betikler/insanlar bozulur. Varsayılan kapalı. Geri almak için /etc/pam.d/su'daki pam_wheel satırını silin.
+hardening_su_restrict: false
+# su yapabilecek grup. Boş bırakılan varsayılan `sugroup` en sıkısıdır; mevcut bir gruba (örn. sudo) çevrilirse o grubun üyeleri su yapabilir.
+hardening_su_group: sugroup
