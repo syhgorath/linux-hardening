@@ -12,6 +12,13 @@ hardening_docker_daemon_settings:
   log-opts:
     max-size: 10m
     max-file: "3"
+# Tek tek açılan sertleştirme seçenekleri (hepsi varsayılan KAPALI; yalnızca hardening_docker_daemon_manage=true iken daemon.json'a yazılır, etkileri için yeniden başlatma gerekir).
+# no-new-privileges (CIS Docker 2.15): konteyner içinde setuid ikili kullanan süreçler (örn. konteyner içinde sudo) bozulur.
+hardening_docker_no_new_privileges: false
+# userland-proxy=false (CIS Docker 2.17): docker-proxy yerine iptables; bazı ağ düzenlerinde ("hairpin NAT") fark eder, canlıda denenmelidir.
+hardening_docker_userland_proxy_off: false
+# icc=false (CIS Docker 2.2): varsayılan köprüdeki konteynerler birbirine ulaşamaz; kendi ağını kullanan compose projeleri çoğunlukla etkilenmez, eski --link bozulur.
+hardening_docker_icc_off: false
 # true: daemon.json değişince Docker yeniden başlatılır (live-restore yoksa konteynerler durur). false: yalnızca "yeniden başlatma gerekli" uyarısı yazılır.
 hardening_docker_restart: false
 # Raporda "beklenen" sayılan, her arayüze yayınlanabilecek portlar (ters vekil). Başka bir port herkese yayınlanırsa uyarılır.
