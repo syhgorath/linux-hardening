@@ -38,14 +38,14 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 5.1 | SSH sunucusu | 24 | 20 | 3 |  |  | 1 |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 3 |  | 1 |  |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 2 | 16 |
-| 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 6 |  | 7 | 2 |
+| 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 8 |  | 7 |  |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 1 |  | 9 | 3 |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **103** | **29** | **5** | **100** | **37** |
+| | **Toplam** | **274** | **103** | **31** | **5** | **100** | **35** |
 
-Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %48'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %49'u en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -176,6 +176,8 @@ Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %48'i en azından kısmen
 | 5.1.14 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
 | 5.2.3 | sudo-rs (26.04 varsayılanı) `logfile` desteklemez; olaylar varsayılan olarak journald'e gider (CIS yöntem A) ama kodla garanti/yapılandırma yok. Klasik sudo'da `logfile` yazılır |
 | 5.2.7 | `su` kısıtı yalnızca `hardening_su_restrict=true` ile (varsayılan kapalı: kök olmayan hesapla `su` kullanan betik/insan bozulur); `pam_wheel` + varsayılan boş `sugroup` |
+| 5.4.2.5 | root `PATH` bütünlüğü yalnızca **SALT OKUNUR raporlanır** (`hardening_root_env_report`, varsayılan açık): boş girdi, `.`, olmayan/yazılabilir/root'a ait olmayan dizin uyarılır, düzeltme yapılmaz |
+| 5.4.2.6 | root `umask`: `login.defs` `UMASK 027` yazılır (`hardening_umask`) ve rapor 027'den gevşek umask'ı uyarır; root'un kendi dosyalarındaki satırlar DEĞİŞTİRİLMEZ |
 | 5.2.5 | sudoers'ta `!authenticate` varsa yalnızca UYARIR, değiştirmez |
 | 5.3.1.3 | libpam-pwquality kurulur; 'son sürüm' denetlenmez |
 | 5.3.2.3 | paket kurulur ve pwquality.conf yazılır; pam-configs'te etkin olduğu doğrulanmadı |
@@ -242,7 +244,6 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 3.2 | Ağ çekirdek modülleri | 3.2.7 |
 | 5.1 | SSH sunucusu | 5.1.5 |
 | 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
-| 5.4 | Kullanıcı hesapları ve ortamı | 5.4.2.5, 5.4.2.6 |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
 

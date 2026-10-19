@@ -95,3 +95,82 @@
     name: libpam-tmpdir
     state: present
   when: hardening_pam_tmpdir | bool
+
+# --- root ortamı raporu (CIS 5.4.2: PATH bütünlüğü ve umask). SALT OKUNUR: hiçbir şeyi değiştirmez; `--check`'te de çalışır. Karar mantığı files/root_env_report.py ---
+- name: Root environment report (read-only)
+  when: hardening_root_env_report | bool
+  block:
+    - name: Read root's login PATH
+      # `command` modülü komut satırındaki $PATH'i KENDİSİ açar (sudo'nun PATH'i gelirdi); `shell` ile tek tırnak bunu korur.
+      ansible.builtin.shell:
+        cmd: env -i HOME=/root bash -lc 'echo "$PATH"'
+        executable: /bin/sh
+      become: true
+      register: hardening_root_env_path
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Inspect the directories in root's PATH
+      ansible.builtin.shell:
+        cmd: |
+          IFS=:
+          for d in $HARDENING_ROOT_PATH; do
+            [ -n "$d" ] || continue
+            if [ -e "$d" ]; then stat -L -c '%a %U %n' "$d"; else echo "MISSING - $d"; fi
+          done
+        executable: /bin/sh
+      environment:
+        HARDENING_ROOT_PATH: "{{ hardening_root_env_path.stdout | default('') | trim }}"
+      register: hardening_root_env_dirs
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read the umask settings that apply to root (read-only)
+      ansible.builtin.shell:
+        cmd: |
+          awk '/^[[:space:]]*UMASK[[:space:]]/ {print "LOGINDEFS:" $2}' /etc/login.defs 2>/dev/null
+          grep -Eq '^[[:space:]]*session[[:space:]]+[^#]*pam_umask\.so' /etc/pam.d/common-session 2>/dev/null && echo "PAMUMASK:yes"
+          for f in /root/.bashrc /root/.bash_profile /root/.profile /etc/profile /etc/bash.bashrc /etc/profile.d/*.sh; do
+            [ -f "$f" ] && awk -v f="$f" '/^[[:space:]]*umask[[:space:]]/ {print f ":" $0}' "$f" 2>/dev/null
+          done
+          true
+        executable: /bin/sh
+      become: true
+      register: hardening_root_env_umask
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Evaluate the root environment
+      ansible.builtin.script:
+        cmd: >-
+          root_env_report.py {{ {'path': hardening_root_env_path.stdout | default('') | trim,
+          'dirs': hardening_root_env_dirs.stdout_lines | default([]),
+          'login_defs_umask': (hardening_root_env_umask.stdout_lines | default([]) | select('match', '^LOGINDEFS:') | map('regex_replace', '^LOGINDEFS:', '') | list | first | default('')),
+          'pam_umask': 'PAMUMASK:yes' in (hardening_root_env_umask.stdout_lines | default([])),
+          'file_umasks': hardening_root_env_umask.stdout_lines | default([]) | reject('match', '^(LOGINDEFS|PAMUMASK):') | list} | to_json | quote }}
+        executable: python3
+      register: hardening_root_env_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the root environment report
+      ansible.builtin.set_fact:
+        hardening_root_env_result: "{{ hardening_root_env_raw.stdout | from_json }}"
+
+    - name: Show the root environment report
+      ansible.builtin.debug:
+        msg: "ROOT ORTAMI: {{ hardening_root_env_result.summary }}"
+      when: hardening_root_env_result.status == 'ok'
+
+    - name: Warn about root environment problems
+      ansible.builtin.debug:
+        msg: "UYARI (root ortamı, CIS 5.4.2, PATH/umask): {{ hardening_root_env_result.messages | join(' ') }} Hiçbir şey değiştirilmedi."
+      when: hardening_root_env_result.status == 'warn'
+
+    - name: Note that the root environment report could not be evaluated
+      ansible.builtin.debug:
+        msg: "UYARI (root ortamı): rapor değerlendirilemedi: {{ hardening_root_env_result.error }}"
+      when: hardening_root_env_result.status == 'unknown'
