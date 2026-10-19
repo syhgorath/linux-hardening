@@ -123,9 +123,9 @@ check("temiz sunucu (grup yok, yalniz izinli port, daemon.json okunamadi): ok", 
 with tempfile.TemporaryDirectory() as d:
     dest = Path(d) / "daemon.json"
     dest.write_text('{"data-root": "/srv/docker"}', encoding="utf-8")
-    merge_tasks = [script_task(by["Compute the merged daemon.json"]), by["Parse the merged daemon.json"]]
+    merge_tasks = [by["Build the effective daemon.json settings"], script_task(by["Compute the merged daemon.json"]), by["Parse the merged daemon.json"]]
     cp = dict(w); cpm = dict(cp["ansible.builtin.copy"]); cpm["dest"] = str(dest); cpm.pop("owner"); cpm.pop("group"); cp["ansible.builtin.copy"] = cpm; cp.pop("notify")
-    v = {**vars_, "hardening_docker_daemon_manage": True}
+    v = {**vars_, "hardening_docker_daemon_manage": True, "hardening_docker_no_new_privileges": False, "hardening_docker_userland_proxy_off": False, "hardening_docker_icc_off": False}
     regs3 = {"hardening_docker_daemon_raw": {"content": base64.b64encode(dest.read_bytes()).decode()}}
     rc, out = play(merge_tasks + [cp], v, regs3)
     got = json.loads(dest.read_text(encoding="utf-8"))
@@ -139,6 +139,26 @@ with tempfile.TemporaryDirectory() as d:
     regs3 = {"hardening_docker_daemon_raw": {"content": base64.b64encode(b"{ bozuk").decode()}}
     rc, out = play(merge_tasks + [by["Refuse to touch an unreadable daemon.json"], cp], v, regs3)
     check("bozuk daemon.json: UYARI yazilir, dosyaya DOKUNULMAZ", (0, "{ bozuk", True), (rc, dest.read_text(encoding="utf-8"), "daemon.json birleştirilemedi" in out))
+
+# 3b) tek tek seçenekler (no-new-privileges / userland-proxy / icc): varsayılan KAPALI, açılınca daemon.json'a doğru anahtar yazılır
+for opt in ("no_new_privileges", "userland_proxy_off", "icc_off"):
+    check(f"varsayilan KAPALI: hardening_docker_{opt}", False, defaults[f"hardening_docker_{opt}"])
+    cv = next(x for x in yaml.safe_load((ROOT / "component.yml").read_text(encoding="utf-8"))["vars"] if isinstance(x, dict) and x["name"] == f"hardening_docker_{opt}")
+    check(f"component.yml: {opt} bool, varsayilan false, warn_if true (davranis degistirir)", (True, False, True), (cv["type"] == "bool", cv["default"], cv.get("warn_if") is True))
+WANT = {"no_new_privileges": ("no-new-privileges", True), "userland_proxy_off": ("userland-proxy", False), "icc_off": ("icc", False)}
+for opt, (key, val) in WANT.items():
+    for on in (False, True):
+        with tempfile.TemporaryDirectory() as d:
+            dest = Path(d) / "daemon.json"
+            dest.write_text("{}", encoding="utf-8")
+            cp = dict(w); cpm = dict(cp["ansible.builtin.copy"]); cpm["dest"] = str(dest); cpm.pop("owner"); cpm.pop("group"); cp["ansible.builtin.copy"] = cpm; cp.pop("notify")
+            vv = {**vars_, "hardening_docker_daemon_manage": True, "hardening_docker_no_new_privileges": False, "hardening_docker_userland_proxy_off": False, "hardening_docker_icc_off": False}
+            vv[f"hardening_docker_{opt}"] = on
+            play(merge_tasks + [cp], vv, {"hardening_docker_daemon_raw": {"content": base64.b64encode(b"{}").decode()}})
+            got = json.loads(dest.read_text(encoding="utf-8"))
+            others = [k for _, (k, _v) in WANT.items() if k != key]
+            check(f"{opt}={on}: daemon.json'da {key} " + (f"= {val}" if on else "YOK") + ", digerleri YOK",
+                  (val if on else "YOK", ["YOK"] * 2), (got.get(key, "YOK"), [got.get(k, "YOK") for k in others]))
 
 # 4) auditd Docker kuralları: yalnızca VAR OLAN yollar
 atasks = yaml.safe_load((ROOT / "roles/hardening_auditd/tasks/main.yml").read_text(encoding="utf-8"))
