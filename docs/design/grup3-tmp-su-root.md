@@ -30,8 +30,8 @@ CIS: `/etc/pam.d/su` içine `auth required pam_wheel.so use_uid group=<boş grup
 - Öneri: `hardening_su_restrict` (varsayılan `false`), `hardening_su_group` (varsayılan `sugroup`); grup yoksa **boş** olarak oluşturulur, üye eklenmez (üye yönetimi proje kapsamı dışı). Üyelik isteyen `hardening_su_group` değerini mevcut bir gruba (örn. `sudo`) çevirir.
 
 ## 3) Root ortamı (5.4.2.5, 5.4.2.6)
-- **5.4.2.5 root `PATH` bütünlüğü:** `PATH`'te boş giriş, `.`, var olmayan dizin veya grup/diğer yazılabilir dizin olmamalı. Karar verici **salt okunur rapor**: `sudo -i printenv PATH` (ya da `env -i`) çıktısını ayrıştıran, hiçbir şeyi değiştirmeyen bir betik (`time_report.py` deseni). Otomatik düzeltme önerilmez (dağıtımın `PATH`'i `/etc/environment` ve `login.defs`'te).
-- **5.4.2.6 root `umask`:** `0027` ya da daha kısıtlı. Yazılacak yer `/root/.bashrc`/`/root/.profile` (kullanıcı dosyasına yazmak "kullanıcı dot dosyası" sorusunu açar) ya da `login.defs` `UMASK` (tüm kullanıcıları etkiler, zaten Lynis/CIS'te başka madde). Öneri: önce **rapor**, değişiklik opt-in.
+- **5.4.2.5 root `PATH` bütünlüğü (YAPILDI: `hardening_root_env_report`, salt okunur):** `PATH`'te boş giriş, `.`, var olmayan dizin veya grup/diğer yazılabilir dizin olmamalı. Karar verici **salt okunur rapor**: `sudo -i printenv PATH` (ya da `env -i`) çıktısını ayrıştıran, hiçbir şeyi değiştirmeyen bir betik (`time_report.py` deseni). Otomatik düzeltme önerilmez (dağıtımın `PATH`'i `/etc/environment` ve `login.defs`'te).
+- **5.4.2.6 root `umask` (rapor YAPILDI, değişiklik seçeneği yapılmadı):** `0027` ya da daha kısıtlı. Yazılacak yer `/root/.bashrc`/`/root/.profile` (kullanıcı dosyasına yazmak "kullanıcı dot dosyası" sorusunu açar) ya da `login.defs` `UMASK` (tüm kullanıcıları etkiler, zaten Lynis/CIS'te başka madde). Öneri: önce **rapor**, değişiklik opt-in.
 
 ## 4) Kullanıcı dot dosyaları (7.2.9, ⚪ ölçüldü)
 Örnek hesapta grup/diğer yazma yok. Yeni davranış önerilmez; yalnızca `hardening_files` desenindeki gibi **fazla izni kaldıran** bir seçenek ve salt okunur rapor düşünülebilir. `.netrc`, `.forward`, `.rhosts` varlığı rapor olur, silinmez.

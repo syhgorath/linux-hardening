@@ -96,7 +96,7 @@
     state: present
   when: hardening_pam_tmpdir | bool
 
-# --- root ortamı raporu (CIS 5.4.2.5 PATH bütünlüğü, 5.4.2.6 umask). SALT OKUNUR: hiçbir şeyi değiştirmez; `--check`'te de çalışır. Karar mantığı files/root_env_report.py ---
+# --- root ortamı raporu (CIS 5.4.2: PATH bütünlüğü ve umask). SALT OKUNUR: hiçbir şeyi değiştirmez; `--check`'te de çalışır. Karar mantığı files/root_env_report.py ---
 - name: Root environment report (read-only)
   when: hardening_root_env_report | bool
   block:
@@ -167,7 +167,7 @@
 
     - name: Warn about root environment problems
       ansible.builtin.debug:
-        msg: "UYARI (root ortamı, CIS 5.4.2.5/5.4.2.6): {{ hardening_root_env_result.messages | join(' ') }} Hiçbir şey değiştirilmedi."
+        msg: "UYARI (root ortamı, CIS 5.4.2, PATH/umask): {{ hardening_root_env_result.messages | join(' ') }} Hiçbir şey değiştirilmedi."
       when: hardening_root_env_result.status == 'warn'
 
     - name: Note that the root environment report could not be evaluated

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""root ortamı raporu: CIS 5.4.2.5 (root PATH bütünlüğü) ve 5.4.2.6 (root umask). SALT OKUNUR; hiçbir şeyi değiştirmez, yalnızca karar verir.
+"""root ortamı raporu: CIS 5.4.2 (root PATH bütünlüğü ve root umask). SALT OKUNUR; hiçbir şeyi değiştirmez, yalnızca karar verir.
 
 Girdi (argv[1], JSON): path (root giriş kabuğunun PATH değeri), dirs (PATH girdileri için satırlar: `<mod> <sahip> <yol>` ya da `MISSING - <yol>`; `stat -L` ile alınır),
 login_defs_umask (/etc/login.defs UMASK değeri ya da ""), pam_umask (common-session'da etkin pam_umask.so satırı var mı), file_umasks (`<dosya>:<umask komutu satırı>` listesi:
