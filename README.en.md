@@ -141,6 +141,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
 | `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
+| `test_aide_timer.py` | daily AIDE timer (CIS 6.3.2): `dailyaidecheck.timer` enabled+started, the AIDE job itself is unchanged, no `warn_if` |
 | `test_lynis_small.py` | small Lynis items: extra sysctl (template variants) and `libpam-tmpdir` (real `when`), no `warn_if` |
 | `test_cis_group2.py` | Group 2 (all off by default): core dumps, `telnet`/`ftp` removal (`remove`, no purge), `TMOUT` and `INACTIVE` bounds and idempotence, existing accounts left alone |
 | `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |

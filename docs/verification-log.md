@@ -152,6 +152,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **23. apt-listchanges, gerçek VM (2026-10-19).** `--tags base`: `ok=24 changed=2` (paket + `/etc/apt/listchanges.conf` `0644 root:root`), ikinci koşu `changed=0`. Paket `apt-listchanges 4.8+nmu1` (Ubuntu arşivi). Etkileşimsiz çalışma bozulmadı: `apt-get -s upgrade </dev/null` rc=0, `unattended-upgrade --dry-run -v` rc=0, `apt-get install --reinstall -y </dev/null` rc=0 (onay beklemedi). Lynis: DEB-0811 `Installed and enabled for apt`; `apt-listbugs` hâlâ `Not Installed` (DEB-0810 önerisi kalır, paket Ubuntu 26.04'te yok). Puan 81 (öncesi 80). Yalnızca tek VM.
 
+**24. AIDE günlük zamanlayıcı, gerçek VM (2026-10-19).** `--tags aide`: iki koşu da `ok=7 changed=0` (paket `dailyaidecheck.timer`'ı zaten açık kuruyor). Zamanlayıcı bilerek `disable --now` ile kapatıldı, rol yeniden çalıştı: `changed=1`, `enabled`/`active` geri geldi. Mevcut düzenin bulguları (rol değiştirmedi): `COMMAND=update`, `COPYNEWDB=no`; kontrol ~8,5 dk, ~7,5 dk CPU, ~2,4 GB bellek tepesi; günlükte `mail(1)` uyarısı (e-posta teslim edilmiyor), sonuç yalnızca `/var/log/aide/aide.log`. Yalnızca tek VM.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

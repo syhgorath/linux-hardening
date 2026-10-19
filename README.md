@@ -137,6 +137,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
 | `test_apt_listchanges.py` | `apt-listchanges`: kurulum + bloklamayan yapılandırma (`confirm=false`, `frontend=text`), idempotent, `warn_if` yok |
+| `test_aide_timer.py` | AIDE günlük zamanlayıcısı (CIS 6.3.2): `dailyaidecheck.timer` açık+başlatılmış, AIDE işi değişmez, `warn_if` yok |
 | `test_lynis_small.py` | Lynis'ten çıkan küçük maddeler: ek sysctl (şablon varyantları) ve `libpam-tmpdir` (gerçek `when`), `warn_if` yok |
 | `test_cis_group2.py` | Grup 2 (hepsi varsayılan kapalı): core dump, `telnet`/`ftp` kaldırma (`remove`, purge yok), `TMOUT` ve `INACTIVE` sınırları ve idempotensi, mevcut hesaplara dokunulmaması |
 | `test_cis_group1.py` | apport ve `update-notifier-motd` kapatma (olmayan birime dokunulmaz, kendi değişkeniyle kapanır, `lineinfile` idempotent) ve SUID/SGID özetinin salt okunur kalması |

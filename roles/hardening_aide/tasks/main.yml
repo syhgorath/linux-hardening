@@ -9,3 +9,10 @@
     creates: /var/lib/aide/aide.db
   async: 1800
   poll: 15
+
+- name: Make sure the daily AIDE check timer is enabled (CIS 6.3.2)
+  ansible.builtin.systemd:
+    name: dailyaidecheck.timer
+    enabled: true
+    state: started
+  when: hardening_aide_scheduled_check | bool
