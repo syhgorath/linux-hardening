@@ -109,6 +109,7 @@ When `harden` is applied, the following are **on by default** and can break a le
 | `hardening_apt_listchanges` (on) | `apt-listchanges` is installed; `apt` upgrades print change notes (no prompt, no e-mail); scripts parsing apt output may see extra text | `false` (an installed package is not removed) |
 | `hardening_disable_apport` (on) | Ubuntu crash reports are not collected | `false` |
 | `hardening_disable_update_notifier_motd` (on) | The "updates available" login message is no longer refreshed | `false` |
+| `hardening_su_restrict` (off) | When enabled, `su` is limited to members of `hardening_su_group`; with the default empty `sugroup` nobody but `root` can `su` (`sudo` and ssh are unaffected) | `false` (a written line is removed by hand) |
 | `hardening_sudo_enabled` (on) | `use_pty`: background processes started via `sudo` can hang when the session closes | `false` |
 | `hardening_files_enabled` (on) | Permissions only ever **tighten**; scripts that read these files as another user can break | `false` |
 
@@ -141,6 +142,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
 | `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
+| `test_su_restrict.py` | `su` restriction (CIS 5.2.7): real `lineinfile` on a real `/etc/pam.d/su` (after `pam_rootok`, no duplicates), invalid group name rejected, off by default |
 | `test_lynis_small.py` | small Lynis items: extra sysctl (template variants) and `libpam-tmpdir` (real `when`), no `warn_if` |
 | `test_cis_group2.py` | Group 2 (all off by default): core dumps, `telnet`/`ftp` removal (`remove`, no purge), `TMOUT` and `INACTIVE` bounds and idempotence, existing accounts left alone |
 | `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |
