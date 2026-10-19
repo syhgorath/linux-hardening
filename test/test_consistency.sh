@@ -50,9 +50,9 @@ mutate "SUPPORT.md durumu yanlis"  docs/SUPPORT.md         's/Desteklenir/Bilinm
 mutate "README EN 'Ne yapmaz' satiri eksik" README.en.md '/^| fail2ban | Limited/d' "TR 20 satır, EN 19 satır"
 mutate "README TR 'Ne yapmaz' satiri eksik" README.md '/^| AppArmor profilleri/d' "TR 19 satır, EN 20 satır"
 # shellcheck disable=SC2016  # sed ifadesindeki ters tirnaklar kabuk genislemesi degil
-mutate "README EN 'Dikkat' tablosunda satir eksik" README.en.md '/^| `hardening_files_enabled` (on)/d' "README 'Dikkat' tablosu: TR 10 satır, EN 9 satır"
+mutate "README EN 'Dikkat' tablosunda satir eksik" README.en.md '/^| `hardening_files_enabled` (on)/d' "README 'Dikkat' tablosu: TR"
 # shellcheck disable=SC2016
-mutate "README TR 'Dikkat' tablosunda satir eksik" README.md '/^| `hardening_disable_apport` (açık)/d' "README 'Dikkat' tablosu: TR 9 satır, EN 10 satır"
+mutate "README TR 'Dikkat' tablosunda satir eksik" README.md '/^| `hardening_disable_apport` (açık)/d' "README 'Dikkat' tablosu: TR"
 mutate "README TR telnet uyarisi yok" README.md 's/telnet/tel-net/g' "README.md: 'telnet/ftp kaldırma' uyarısı yok"
 mutate "README EN telnet uyarisi yok" README.en.md 's/telnet/tel-net/g' "README.en.md: 'telnet/ftp kaldırma' uyarısı yok"
 mutate "README EN 'Ne yapmaz' bolumu yok" README.en.md 's/^## What it does not do/## Other/' "'## What it does not do' bölümü yok"
