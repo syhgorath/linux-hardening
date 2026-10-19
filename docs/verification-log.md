@@ -160,6 +160,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **27. Root ortamı raporu, gerçek VM + mini lab (2026-10-19).** Gerçek VM, `--check --tags auth`: `ok=17 changed=0`, "root PATH temiz (7 dizin) ve umask 027". Mini labda `hl-server1` root ortamı bilerek bozuldu (`/root/.profile`: `umask 022`, `PATH`'e `::`, `/yok/dizin`, `.` ve 777'li `/opt/yazilabilir` eklendi); rapor hepsini yakaladı (boş girdi, `.`, olmayan dizin, root'a ait olmayan, yazılabilir dizin, `umask` 0022), geri alınınca "temiz". **Yolda bulunan iki hata:** (1) `command` modülü komut satırındaki `$PATH`'i kendisi açıp sudo'nun PATH'ini veriyordu (bozuk `PATH` görünmedi); `shell` modülüne geçildi. (2) `printenv PATH` dışa aktarılmamış PATH'te boş döndü ("PATH boş" yanlış alarmı); `echo "$PATH"` kullanıldı. Sınır: gerçek giriş oturumunun PAM ortamı taklit edilmez. Yalnızca tek VM ve tek mini lab.
 
+**28. `/tmp` ve `/dev/shm` raporu, gerçek VM + mini lab (2026-10-19).** `--check --tags files`: gerçek VM `changed=0`, çıktı "NOT (tmp): /tmp: tmpfs nodev,nosuid; /dev/shm: tmpfs nodev,nosuid" + iki `noexec yok` notu. Mini lab konteyneri: `/dev/shm` zaten `noexec` (tek not `/tmp` için). `-e ansible_remote_tmp=/tmp/.ansible` ile "UYARI (tmp): Ansible uzak geçici dizini ... noexec açılırsa Ansible modülleri çalışmaz". Hiçbir şey değişmedi. Yalnızca tek VM ve tek mini lab; `noexec` açma etkisi DENENMEDİ (seçenek yok).
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

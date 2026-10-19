@@ -20,7 +20,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 
 | Bölüm | Konu | Level 1 madde | ✅ | 🟡 | ⏸️ | ⚪ | ❌ |
 |---|---|---:|---:|---:|---:|---:|---:|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 7 |  |  | 19 | 3 |
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 7 | 2 |  | 19 | 1 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 4 | 1 |  | 8 | 2 |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
 | 1.4 | Önyükleyici | 2 |  | 1 |  |  | 1 |
@@ -43,9 +43,9 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **103** | **31** | **5** | **100** | **35** |
+| | **Toplam** | **274** | **103** | **33** | **5** | **100** | **33** |
 
-Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %49'u en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %50'si en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -175,6 +175,8 @@ Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %49'u en azından kısmen
 | 5.1.13 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
 | 5.1.14 | kodda yazılmıyor; test VM'inde (OpenSSH 10.2) `sshd -T` varsayılanı zaten uygun (zayıf şifre/KEX yok; sntrup761x25519 ve mlkem768x25519 var). Varsayılan değişirse garanti yok |
 | 5.2.3 | sudo-rs (26.04 varsayılanı) `logfile` desteklemez; olaylar varsayılan olarak journald'e gider (CIS yöntem A) ama kodla garanti/yapılandırma yok. Klasik sudo'da `logfile` yazılır |
+| 1.1.2.1.4 | `/tmp` `noexec` yalnızca **SALT OKUNUR raporlanır** (`hardening_tmp_report`, varsayılan açık): noexec yoksa not düşer, değiştirmez (davranışı değiştirir; tasarım notu `docs/design/grup3-tmp-su-root.md`) |
+| 1.1.2.2.4 | `/dev/shm` `noexec` yalnızca **SALT OKUNUR raporlanır** (aynı rapor); değiştirmez |
 | 5.2.7 | `su` kısıtı yalnızca `hardening_su_restrict=true` ile (varsayılan kapalı: kök olmayan hesapla `su` kullanan betik/insan bozulur); `pam_wheel` + varsayılan boş `sugroup` |
 | 5.4.2.5 | root `PATH` bütünlüğü yalnızca **SALT OKUNUR raporlanır** (`hardening_root_env_report`, varsayılan açık): boş girdi, `.`, olmayan/yazılabilir/root'a ait olmayan dizin uyarılır, düzeltme yapılmaz |
 | 5.4.2.6 | root `umask`: `login.defs` `UMASK 027` yazılır (`hardening_umask`) ve rapor 027'den gevşek umask'ı uyarır; root'un kendi dosyalarındaki satırlar DEĞİŞTİRİLMEZ |
@@ -234,7 +236,7 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 
 | Bölüm | Konu | Madde numaraları |
 |---|---|---|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11, 1.1.2.1.4, 1.1.2.2.4 |
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.6, 1.2.1.11 |
 | 1.4 | Önyükleyici | 1.4.1 |
 | 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9 |

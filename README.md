@@ -138,6 +138,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
 | `test_apt_listchanges.py` | `apt-listchanges`: kurulum + bloklamayan yapılandırma (`confirm=false`, `frontend=text`), idempotent, `warn_if` yok |
+| `test_tmp_report.py`, `test_tmp_tasks.py` | `/tmp` ve `/dev/shm` bağlama seçenekleri raporu (CIS 1.1.2): `nodev`/`nosuid`/`noexec`/ayrı bağlama kararları + gerçek görev zinciri, salt okunur |
 | `test_root_env_report.py`, `test_root_env_tasks.py` | root ortamı raporu (CIS 5.4.2, PATH/umask): `PATH` ve `umask` kararları (betik) + gerçek görev zinciri, salt okunur, kapatılabilir |
 | `test_aide_timer.py` | AIDE günlük zamanlayıcısı (CIS 6.3.2): `dailyaidecheck.timer` açık+başlatılmış, AIDE işi değişmez, `warn_if` yok |
 | `test_su_restrict.py` | `su` kısıtı (CIS 5.2.7): gerçek `/etc/pam.d/su` üzerinde `lineinfile` (`pam_rootok` sonrası, çoğalmaz), geçersiz grup adı reddedilir, varsayılan kapalı |
