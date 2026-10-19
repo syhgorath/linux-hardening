@@ -20,6 +20,7 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | İkinci sunucu/yapılandırma | Tek VM ile sınırlı kanıtı genişletmek |
 | CIS eşlemesinin devamı | Madde numaralı eşleme var: [cis-esleme.md](cis-esleme.md). Kalan ❌ maddeler "Grup 2" ve "Grup 3" olarak ayrıldı (aşağıdaki "Yakın" satırı ve PAM/zaman/AIDE tasarım notları) |
 | auditd kapsamı | Kurallar play sonunda yükleniyor (P3), auditd'den önce başlayan süreçler denetlenmiyor (P1), `time-change` kuralı chrony'yi kapsamıyor (P2). **Tasarım notu var (kod yok):** [design/auditd-kapsam.md](design/auditd-kapsam.md) |
+| Grup 3: `/tmp`+`/dev/shm` noexec, `su` kısıtı, root ortamı | CIS 5.2.7 ve 1.1.2 / 5.4.2 altındaki `noexec` ile root ortamı maddeleri (numaralar tasarım notunda). **Tasarım notu var (kod yok):** [design/grup3-tmp-su-root.md](design/grup3-tmp-su-root.md) |
 | `pam_faillock` / `pam_pwhistory` | CIS 5.3 PAM maddeleri; kilitlenme riski yüksek. **Tasarım notu var (kod yok):** [design/pam-faillock.md](design/pam-faillock.md) |
 | Zaman senkronizasyonu rolü | Snapshot dönüşünde saat geride kaldı; `chrony` yapılandırması bir hardening maddesi olabilir. **Tasarım notu var (kod yok):** [design/zaman-ntp.md](design/zaman-ntp.md) |
 | Çok sunuculu çalıştırma | `serial`/`any_errors_fatal`: bir sunucudaki hata diğerlerini durdurmalı mı |
