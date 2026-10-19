@@ -201,6 +201,12 @@
       "description": "su yapabilecek grup (hardening_su_restrict=true iken). Varsayılan sugroup boş oluşturulur (en sıkı). Mevcut bir gruba (örn. sudo) çevrilirse o grubun üyeleri su yapabilir. Küçük harf, rakam, _ ve -; en çok 32 karakter"
     },
     {
+      "name": "hardening_root_env_report",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): root ortamı SALT OKUNUR raporu (CIS 5.4.2.5 root PATH bütünlüğü, 5.4.2.6 root umask): PATH'te boş girdi, '.', olmayan ya da yazılabilir dizin ve 027'den gevşek umask uyarılır. Hiçbir şeyi değiştirmez. false: rapor çalışmaz"
+    },
+    {
       "name": "hardening_docker_enabled",
       "type": "bool",
       "default": false,
