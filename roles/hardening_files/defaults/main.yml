@@ -50,6 +50,9 @@ hardening_files_targets:
   - { path: /etc/default/docker, mode: "u-x,go-wx", owner: root, group: root }
   - { path: /run/docker.sock, mode: "u-x,g-x,o-rwx", owner: root, group: docker, group_ok: [root, docker] }
   - { path: /run/containerd/containerd.sock, mode: "u-x,g-x,o-rwx", owner: root, group: root }
+  # /etc/sudoers.d dizini: grup yazma ve diğer erişim yok (0750; klasik sudo'nun Debian varsayılanı; sudo-rs 0755 bırakıyor). Lynis AUTH-9252 0755'i "possibly unsafe" sayar.
+  # sudo kök olarak okur; sudoers.d içindeki dosyalar zaten 0440.
+  - { path: /etc/sudoers.d, mode: "g-w,o-rwx", owner: root, group: root }
   # CIS 1.6.6, 1.6.9
   - { path: /etc/motd, mode: "u-x,go-wx", owner: root, group: root }
   # CIS 1.4.2 (update-grub dosyayı yeniden yazarsa 0444'e dönebilir; bir sonraki çalıştırmada yeniden sıkılaştırılır)
