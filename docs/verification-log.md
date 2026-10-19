@@ -150,6 +150,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 **Sonradan (aynı gün):** Lynis ekranında hem öncesi hem sonrası taramada kırmızı `Permissions for directory: /etc/sudoers.d [WARNING]` vardı (`AUTH-9252`: dizin `0755`; Lynis `0750` veya daha kısıtlısını bekler). `hardening_files` hedeflerine `/etc/sudoers.d` (`g-w,o-rwx`) eklendi; VM'de `--tags files` `changed=1`, ikinci koşu `changed=0`, dizin `drwxr-x---`, `sudo` çalışıyor, Lynis artık `directory /etc/sudoers.d permissions OK` (endeks 80 aynı: test puan vermiyor, yalnızca uyarı gösteriyordu).
 `FINT-4402` (AIDE özetleri) bilerek düzeltilmedi (yanlış pozitif, `docs/known-issues.md`). **Ölçülmedi:** `libpam-tmpdir`'in uzun süren servis/cron işleri ve Docker/web sunucusu üzerindeki etkisi, `sysrq=0`'ın gerçek VM konsolundaki etkisi.
 
+**23. apt-listchanges, gerçek VM (2026-10-19).** `--tags base`: `ok=24 changed=2` (paket + `/etc/apt/listchanges.conf` `0644 root:root`), ikinci koşu `changed=0`. Paket `apt-listchanges 4.8+nmu1` (Ubuntu arşivi). Etkileşimsiz çalışma bozulmadı: `apt-get -s upgrade </dev/null` rc=0, `unattended-upgrade --dry-run -v` rc=0, `apt-get install --reinstall -y </dev/null` rc=0 (onay beklemedi). Lynis: DEB-0811 `Installed and enabled for apt`; `apt-listbugs` hâlâ `Not Installed` (DEB-0810 önerisi kalır, paket Ubuntu 26.04'te yok). Puan 81 (öncesi 80). Yalnızca tek VM.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

@@ -106,6 +106,7 @@ When `harden` is applied, the following are **on by default** and can break a le
 | `ssh`: `DisableForwarding`, weak `MACs` removed, `MaxStartups 10:30:60` | Unix-socket forwarding, very old clients, many parallel SSH connections | `hardening_ssh_allow_tcp_forwarding=local` (forwarding), `--skip-tags ssh` for the rest |
 | `hardening_kernel_extra_sysctl` (on) | `kernel.sysrq=0`: no SysRq emergency reboot from a VM console; `net.core.bpf_jit_harden=2`: small cost for eBPF-heavy workloads | `false` |
 | `hardening_pam_tmpdir` (on) | `libpam-tmpdir`: `$TMPDIR` is no longer `/tmp` (it is `/tmp/user/<uid>`); scripts that hard-code `/tmp` can be affected | `false` |
+| `hardening_apt_listchanges` (on) | `apt-listchanges` is installed; `apt` upgrades print change notes (no prompt, no e-mail); scripts parsing apt output may see extra text | `false` (an installed package is not removed) |
 | `hardening_disable_apport` (on) | Ubuntu crash reports are not collected | `false` |
 | `hardening_disable_update_notifier_motd` (on) | The "updates available" login message is no longer refreshed | `false` |
 | `hardening_sudo_enabled` (on) | `use_pty`: background processes started via `sudo` can hang when the session closes | `false` |
@@ -139,6 +140,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_examples.py` | `examples/` consistency: the `group_vars` merge (real `ansible-inventory`) equals the sshpocket files; only existing variables, extra ufw rules match the validation pattern, the database port is never opened |
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
+| `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
 | `test_lynis_small.py` | small Lynis items: extra sysctl (template variants) and `libpam-tmpdir` (real `when`), no `warn_if` |
 | `test_cis_group2.py` | Group 2 (all off by default): core dumps, `telnet`/`ftp` removal (`remove`, no purge), `TMOUT` and `INACTIVE` bounds and idempotence, existing accounts left alone |
 | `test_cis_group1.py` | turning off apport and `update-notifier-motd` (missing units are left alone, each has its own switch, `lineinfile` is idempotent) and the SUID/SGID summary staying read-only |
