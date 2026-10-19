@@ -152,6 +152,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **23. apt-listchanges, gerçek VM (2026-10-19).** `--tags base`: `ok=24 changed=2` (paket + `/etc/apt/listchanges.conf` `0644 root:root`), ikinci koşu `changed=0`. Paket `apt-listchanges 4.8+nmu1` (Ubuntu arşivi). Etkileşimsiz çalışma bozulmadı: `apt-get -s upgrade </dev/null` rc=0, `unattended-upgrade --dry-run -v` rc=0, `apt-get install --reinstall -y </dev/null` rc=0 (onay beklemedi). Lynis: DEB-0811 `Installed and enabled for apt`; `apt-listbugs` hâlâ `Not Installed` (DEB-0810 önerisi kalır, paket Ubuntu 26.04'te yok). Puan 81 (öncesi 80). Yalnızca tek VM.
 
+**25. Docker `daemon.json` seçenekleri, mini lab (2026-10-19).** `hl-server2` (docker.io 29.1.3, `vfs`): üç seçenek açık + `daemon_manage` + `restart`: ilk koşu `changed=2`, ikinci `changed=0`; `daemon.json`'da `no-new-privileges`, `userland-proxy=false`, `icc=false` eklendi, mevcut anahtarlar (`storage-driver`, `registry-mirrors`) korundu. Sonuçlar: yeni konteynerde `NoNewPrivs: 1`; `docker-proxy` süreci yok, yayınlar (80, 6379, 127.0.0.1:8080) çalışıyor. **Bulgu:** `live-restore` açıkken Docker yeniden başlatıldıktan sonra bile `icc` etkisizdi (`docker network inspect bridge` `enable_icc` hâlâ `true`, iki konteyner birbirine ping atabildi). Konteynerler durdurulup `systemctl restart docker` yapılınca `enable_icc:false`, `DOCKER-FORWARD ... -i docker0 -o docker0 -j DROP` ve ping %100 kayıp. Yalnızca mini lab (iç içe Docker); gerçek ana makine Docker'ında denenmedi.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

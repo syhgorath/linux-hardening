@@ -196,6 +196,27 @@
       "description": "true: daemon.json'a live-restore ve günlük boyutu sınırı gibi anahtarlar BİRLEŞTİRİLİR (mevcut anahtarlar korunur, yedek alınır; geçersiz JSON'a dokunulmaz). Değişiklik çoğu zaman Docker yeniden başlatması ister. Varsayılan kapalı"
     },
     {
+      "name": "hardening_docker_no_new_privileges",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: daemon.json'a no-new-privileges (CIS Docker 2.15) yazılır; konteyner içinde setuid ikili kullanan süreçler (örn. sudo) bozulur. Yalnızca hardening_docker_daemon_manage=true iken etkilidir; yeniden başlatma ister. Varsayılan kapalı"
+    },
+    {
+      "name": "hardening_docker_userland_proxy_off",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: daemon.json'a userland-proxy=false (CIS Docker 2.17) yazılır; docker-proxy yerine iptables kullanılır, bazı ağ düzenlerinde ('hairpin NAT') fark eder. Yalnızca hardening_docker_daemon_manage=true iken etkilidir; yeniden başlatma ister. Varsayılan kapalı"
+    },
+    {
+      "name": "hardening_docker_icc_off",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: daemon.json'a icc=false (CIS Docker 2.2) yazılır; varsayılan köprüdeki konteynerler birbirine ulaşamaz (kendi ağını kullanan compose projeleri çoğunlukla etkilenmez, eski --link bozulur). Yalnızca hardening_docker_daemon_manage=true iken etkilidir; yeniden başlatma ister. Varsayılan kapalı"
+    },
+    {
       "name": "hardening_docker_restart",
       "type": "bool",
       "default": false,

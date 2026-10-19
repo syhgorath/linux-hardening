@@ -31,9 +31,9 @@ Madde 1.1.2 (docker grubunun üyeleri kök eşdeğeridir): **salt okunur rapor**
 | Ayar | CIS | Etki / risk | Öneri |
 |---|---|---|---|
 | `live-restore: true` | 2.16 | Etki yok; daemon yeniden başlayınca konteynerler çalışmaya devam eder | **Önerilir**; `SIGHUP` (`systemctl reload docker`) ile konteynerler **durmadan** açılır (mini labda gerçek Docker'la doğrulandı); `daemon.json`'da olup yüklenmemişken yeniden başlatma konteynerleri DURDURUR |
-| `no-new-privileges: true` | 2.15 | Konteyner içinde `setuid` ikili kullanan süreçler (örn. konteyner içinde `sudo`) bozulur | Seçenek, varsayılan kapalı |
-| `userland-proxy: false` | 2.17 | Yeni çekirdeklerde sorun yok; bazı ağ düzenlerinde ("hairpin NAT") fark eder | Seçenek, varsayılan kapalı, **test gerekir** |
-| `icc: false` | 2.2 | Varsayılan köprüdeki konteynerler birbirine ulaşamaz; compose projeleri kendi ağını kullandığından çoğunlukla sorun olmaz, eski `--link` bozulur | Seçenek, varsayılan kapalı |
+| `no-new-privileges: true` (`hardening_docker_no_new_privileges`, mini labda `NoNewPrivs: 1` doğrulandı) | 2.15 | Konteyner içinde `setuid` ikili kullanan süreçler (örn. konteyner içinde `sudo`) bozulur | Seçenek, varsayılan kapalı |
+| `userland-proxy: false` (`hardening_docker_userland_proxy_off`, mini labda `docker-proxy` süreci kalmadı, 80/6379/127.0.0.1:8080 yayınları çalışıyor) | 2.17 | Yeni çekirdeklerde sorun yok; bazı ağ düzenlerinde ("hairpin NAT") fark eder | Seçenek, varsayılan kapalı, **test gerekir** |
+| `icc: false` (`hardening_docker_icc_off`; **yalnızca konteynerler durdurulup Docker yeniden başlatılınca işler**: `live-restore` açıkken restart eski köprüyü korur, ping hâlâ geçer) | 2.2 | Varsayılan köprüdeki konteynerler birbirine ulaşamaz; compose projeleri kendi ağını kullandığından çoğunlukla sorun olmaz, eski `--link` bozulur | Seçenek, varsayılan kapalı |
 | `log-driver: json-file` + `log-opts: max-size, max-file` | 2.14 benzeri | Günlük sınırı yok → home lab'da disk dolar (CIS bunu doğrudan istemez, ama gerçek risk) | **Önerilir** (örn. `10m` x `3`) |
 | `experimental: false`, `log-level: info` | 2.3, 2.19 | Zaten varsayılan | Yalnızca **rapor** |
 | `iptables: true` | 2.4 | `false` Docker ağını bozar | **Dokunma**, `false` bulunursa uyar |
