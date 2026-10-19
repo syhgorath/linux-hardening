@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_apt_listchanges` (varsayılan **açık**, `warn_if` yok): `apt-listchanges` kurulur (Lynis DEB-0811) ve `/etc/apt/listchanges.conf` yükseltmeyi ASLA bloklamayacak şekilde yazılır (`frontend=text`, `confirm=false`, e-posta yok). `apt-listbugs` Ubuntu 26.04 depolarında olmadığı için eklenmedi (DEB-0810 uygulanamaz); rkhunter/malware tarayıcı bilinçli eklenmedi (`docs/known-issues.md`). `test_apt_listchanges.py`.
 - `hardening_files`: `/etc/sudoers.d` dizini `0750` (grup yazma ve diğer erişim kaldırılır; yalnızca sıkılaşır). Lynis AUTH-9252 `0755`'i "possibly unsafe" sayıp ekranda kırmızı WARNING gösteriyordu (hem sertleştirme öncesi hem sonrası taramada). Ubuntu 26.04'ün sudo-rs'i dizini `0755` bırakıyor; klasik sudo'nun Debian varsayılanı `0750`'dir. `sudo` kök olarak okuduğu için işlev etkilenmez.
 - Lynis önce/sonra ölçümünden (58 → 73, verification-log 21) çıkan küçük ve güvenli maddeler: `hardening_kernel_extra_sysctl` (varsayılan **açık**: `fs.protected_fifos=2`, `kernel.sysrq=0`, `net.core.bpf_jit_harden=2`) ve `hardening_pam_tmpdir` (varsayılan **açık**: `libpam-tmpdir`, oturum başına özel `$TMPDIR`). İkisi de `component.yml` `vars`'ta, `warn_if` yok. `test_lynis_small.py`. Lynis FINT-4402'nin (AIDE özetleri) yanlış pozitif olduğu `docs/known-issues.md`'de açıklandı; yapılandırma daraltılmadı.
 

@@ -16,3 +16,7 @@ hardening_remove_legacy_clients: false
 # ping-pong yapar (gerçek VM'de görüldü: ftp -> ftp-ssl -> ftp+tnftp ...). Bu bir METAPAKETTİR (dosya içermez); kalkınca bağımlılıkları sunucuda kalır, ama
 # `apt autoremove` onlardan otomatik kurulmuş olanları aday gösterebilir. İstemiyorsanız hardening_remove_legacy_clients'i açmayın.
 hardening_legacy_client_packages: [telnet, telnet-ssl, inetutils-telnet, ftp, ftp-ssl, tnftp, inetutils-ftp, ubuntu-standard]
+# true (varsayılan): apt-listchanges kurulur (Lynis DEB-0811) ve yükseltmeyi ASLA BLOKLAMAYACAK şekilde ayarlanır (frontend=text, confirm=false, e-posta yok):
+# yükseltilen paketlerin değişiklik notları apt çıktısında/günlüğünde (/var/log/apt/term.log) görünür. Bilgilendirmedir, güvenlik denetimi değildir.
+# apt-listbugs Ubuntu 26.04 depolarında YOK (Lynis DEB-0810 Ubuntu için uygulanamaz); eklenmez.
+hardening_apt_listchanges: true

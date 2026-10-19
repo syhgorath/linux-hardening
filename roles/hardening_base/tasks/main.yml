@@ -161,3 +161,25 @@
     purge: false
     autoremove: false
   when: hardening_remove_legacy_clients | bool
+
+# --- apt-listchanges (bilgilendirme; yükseltmeyi bloklamaz) ---
+- name: Install apt-listchanges
+  ansible.builtin.apt:
+    name: apt-listchanges
+    state: present
+  when: hardening_apt_listchanges | bool
+
+- name: Configure apt-listchanges (never prompts, no mail)
+  ansible.builtin.copy:
+    dest: /etc/apt/listchanges.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      [apt]
+      frontend=text
+      confirm=false
+      which=both
+      save_seen=/var/lib/apt/listchanges.db
+  when: hardening_apt_listchanges | bool

@@ -164,6 +164,12 @@
       "description": "false (varsayılan): allow_from'da olmayan, bu rolün yazdığı biçimdeki ufw SSH kurallarını yalnızca uyarır. true: bunları siler (kontrol makinesinin adresini kapsayanlara dokunmaz; silmeden sonra eksik kural varsa ufw'yi etkinleştirmeden durur)"
     },
     {
+      "name": "hardening_apt_listchanges",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): apt-listchanges kurulur ve yükseltmeyi bloklamayacak şekilde ayarlanır (frontend=text, confirm=false, e-posta yok); değişiklik notları apt çıktısında/günlüğünde görünür. Bilgilendirmedir. apt-listbugs Ubuntu'da yoktur ve eklenmez. false: kurulmaz (kurulu paket kaldırılmaz)"
+    },
+    {
       "name": "hardening_kernel_extra_sysctl",
       "type": "bool",
       "default": true,
