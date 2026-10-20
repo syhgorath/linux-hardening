@@ -67,3 +67,26 @@
       ansible.builtin.debug:
         msg: "UYARI (zaman): rapor değerlendirilemedi: {{ hardening_time_result.error }}"
       when: hardening_time_result.status == 'unknown'
+
+# --- Saat düzeltme (isteğe bağlı, varsayılan KAPALI). Rapor "makestep" ya da "restart" önerdiyse uygular. Saati sıçratır: bkz. defaults. ---
+- name: Correct a large clock drift (opt-in)
+  when: hardening_time_makestep | bool and hardening_time_result is defined and hardening_time_result.fix | default('') | length > 0 and not ansible_check_mode
+  block:
+    - name: Step the clock (sources are selected)
+      ansible.builtin.command: chronyc makestep
+      become: true
+      changed_when: true
+      when: hardening_time_result.fix == 'makestep'
+
+    - name: Restart chrony (no source is selected, makestep would do nothing)
+      ansible.builtin.systemd:
+        name: chrony
+        state: restarted
+      become: true
+      when: hardening_time_result.fix == 'restart'
+
+    - name: Tell that the clock was corrected
+      ansible.builtin.debug:
+        msg: >-
+          NOT (zaman): saat düzeltme uygulandı ({{ hardening_time_result.fix }}). Sonuç bu çalıştırmanın raporuna yansımaz; doğrulamak için
+          `chronyc tracking` ya da rolü yeniden çalıştırın.

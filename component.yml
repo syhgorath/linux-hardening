@@ -107,6 +107,11 @@ vars:
     type: bool
     default: true
     description: "Salt okunur zaman raporu: chrony çalışıyor mu, kaynaklar seçili mi, saat kaynaklara göre kayık mı (snapshot dönüşünde 'synchronized: yes' yanıltıcı olabilir). Saati ya da yapılandırmayı DEĞİŞTİRMEZ; false = rapor çalışmaz"
+  - name: hardening_time_makestep
+    type: bool
+    default: false
+    warn_if: true                      # true = büyük saat kaymasında chronyc makestep / chrony yeniden başlatma (saati sıçratır)
+    description: "true: zaman raporu büyük bir saat kayması bulursa düzeltir (chronyc makestep; kaynak seçilmemişse chrony yeniden başlatılır). Saati SIÇRATIR: sertifika geçerliliği, cron/zamanlayıcı sırası ve günlük zaman damgaları etkilenebilir. --check'te çalışmaz. Varsayılan kapalı"
   - name: hardening_time_max_offset_seconds
     type: int
     default: 5

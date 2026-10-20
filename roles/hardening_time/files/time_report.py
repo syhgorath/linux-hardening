@@ -4,7 +4,8 @@
 Girdi (argv[1], JSON): service (`systemctl is-active chrony` çıktısı), sources (`chronyc -c sources` satırları), ntp_synchronized
 (`timedatectl show -p NTPSynchronized --value`), max_offset (saniye); isteğe bağlı target_epoch / controller_epoch (sunucunun ve kontrol makinesinin
 `date +%s` değeri; ikisi de sayıysa çapraz kontrol yapılır). Çıktı (stdout, JSON): status (ok|warn|unknown), messages, summary,
-max_offset, sources, reachable, selected, error.
+max_offset, sources, reachable, selected, fix, error. `fix`: raporun önerdiği düzeltme ("makestep" | "restart" | ""); YALNIZCA bilgidir, bu betik hiçbir şey çalıştırmaz
+(isteğe bağlı hardening_time_makestep açıksa rol bunu uygular).
 
 Neden yalnızca `timedatectl` değil: snapshot dönüşünde "System clock synchronized: yes" derken saat günlerce kayık olabiliyor ve `chronyc tracking` bayat bir
 "0,016 s yavaş" gösteriyor. Güvenilir işaret kaynakların ÖLÇTÜĞÜ ofsettir (`chronyc -c sources`, alanlar: mod,durum,ad,katman,poll,reach,lastrx,ayarlı_ofset,
@@ -61,7 +62,7 @@ def skew_message(diff):
 
 
 def decide(cfg):
-    res = {"status": "ok", "messages": [], "summary": "", "max_offset": None, "sources": 0, "reachable": 0, "selected": False, "error": ""}
+    res = {"status": "ok", "messages": [], "summary": "", "max_offset": None, "sources": 0, "reachable": 0, "selected": False, "fix": "", "error": ""}
     try:
         limit = float(cfg.get("max_offset", 5))
     except (TypeError, ValueError):
@@ -110,6 +111,7 @@ def decide(cfg):
         if str(cfg.get("ntp_synchronized", "")).strip() == "yes":
             problems.append("`timedatectl` \"synchronized: yes\" diyor ama bu yanıltıcı olabilir (snapshot dönüşünde görüldü): `date -u` ile kontrol edin.")
         problems.append("Düzeltme: `sudo chronyc makestep`; kaynaklar `?` ise etkisizdir, `sudo systemctl restart chrony` kullanın.")
+        res["fix"] = "makestep" if res["selected"] else "restart"
     if not res["selected"]:
         problems.append("Hiçbir kaynak seçilmedi (senkron değil); chrony henüz kaynak seçemedi.")
     if problems:
@@ -127,7 +129,7 @@ def main(argv):
             raise ValueError("nesne değil")
     except (IndexError, ValueError) as exc:
         print(json.dumps({"status": "unknown", "messages": [], "summary": "", "max_offset": None, "sources": 0, "reachable": 0, "selected": False,
-                          "error": "girdi okunamadı: %s" % exc}))
+                          "fix": "", "error": "girdi okunamadı: %s" % exc}))
         return 0
     print(json.dumps(decide(cfg), sort_keys=True, ensure_ascii=False))
     return 0
