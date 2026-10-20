@@ -168,5 +168,59 @@ out=$(HR_TIMER_OUT="" HR_NOW=1088 hr status)
 expect_eq "  timer bos cikti: unknown" "$PFX armed=yes timer=unknown remaining_seconds=unknown timeout_seconds=300" "$out"
 n=$(printf '%s\n' "$out" | wc -l | tr -d ' ')
 expect_eq "  status tek satir" "1" "$n"
+echo "-- 9) PAM: arm yedekler, restore ONCEKI haline dondurur (bozuk yigin dahil), sayaclar silinir"
+pam_setup() {
+  setup
+  mkdir -p "$R/etc/pam.d" "$R/var/lib/pam" "$R/usr/share/pam-configs" "$R/etc/security" "$R/run/faillock"
+  for f in common-auth common-account common-password common-session common-session-noninteractive; do printf 'ORIJINAL-%s\n' "$f" > "$R/etc/pam.d/$f"; done
+  for f in account auth password session session-noninteractive seen; do printf 'DURUM-%s\n' "$f" > "$R/var/lib/pam/$f"; done
+  printf 'ORIJINAL-FAILLOCK-CONF\n' > "$R/etc/security/faillock.conf"
+  printf 'kilit\n' > "$R/run/faillock/lhtest"
+}
+pam_setup; hr arm >/dev/null
+file_eq "common-auth yedeklendi" "$R/var/lib/hardening-rollback/pam/common-auth" "ORIJINAL-common-auth"
+file_eq "common-password yedeklendi" "$R/var/lib/hardening-rollback/pam/common-password" "ORIJINAL-common-password"
+file_eq "/var/lib/pam/auth yedeklendi" "$R/var/lib/hardening-rollback/pam-state/auth" "DURUM-auth"
+file_eq "faillock.conf yedeklendi" "$R/var/lib/hardening-rollback/faillock.conf" "ORIJINAL-FAILLOCK-CONF"
+absent "faillock profili ONCEDEN yoktu: had isareti yok" "$R/var/lib/hardening-rollback/had-faillock-profile"
+# degisiklik: bozuk yigin + yeni profil + degismis conf + yeni durum
+printf 'auth required pam_deny.so\n' > "$R/etc/pam.d/common-auth"
+printf 'BOZUK\n' > "$R/etc/pam.d/common-account"
+printf 'Name: faillock\n' > "$R/usr/share/pam-configs/hardening-faillock"
+printf 'DEGISTI\n' > "$R/etc/security/faillock.conf"
+printf 'YENI-DURUM\n' > "$R/var/lib/pam/auth"
+: > "$HR_LOG"; out=$(hr restore); rc=$?
+expect_eq "restore cikis 0" "0" "$rc"
+file_eq "bozuk common-auth ORIJINALE dondu" "$R/etc/pam.d/common-auth" "ORIJINAL-common-auth"
+file_eq "common-account geri yuklendi" "$R/etc/pam.d/common-account" "ORIJINAL-common-account"
+file_eq "/var/lib/pam/auth geri yuklendi" "$R/var/lib/pam/auth" "DURUM-auth"
+absent "sonradan eklenen faillock profili SILINDI" "$R/usr/share/pam-configs/hardening-faillock"
+file_eq "faillock.conf geri yuklendi" "$R/etc/security/faillock.conf" "ORIJINAL-FAILLOCK-CONF"
+absent "kilit sayaclari silindi (kimse kilitli kalmaz)" "$R/run/faillock/lhtest"
+expect_contains "  PAM mesaji" "$out" "PAM dosyalari onceki icerige donduruldu"
+if log_lacks "pam-auth-update"; then ok "pam-auth-update CAGRILMADI (dosyalar oldugu gibi geri yazilir)"; else bad "pam-auth-update cagrildi"; fi
+absent "PAM yedegi temizlendi" "$R/var/lib/hardening-rollback/pam"
+echo "-- 9b) faillock profili ONCEDEN vardi: restore ESKI icerigi yazar (silmez)"
+pam_setup; printf 'ESKI-PROFIL\n' > "$R/usr/share/pam-configs/hardening-faillock"; hr arm >/dev/null
+printf 'YENI-PROFIL\n' > "$R/usr/share/pam-configs/hardening-faillock"; hr restore >/dev/null
+file_eq "eski profil geri yazildi" "$R/usr/share/pam-configs/hardening-faillock" "ESKI-PROFIL"
+echo "-- 9c) disarm: PAM yedegi de silinir, onayli degisiklik KORUNUR"
+pam_setup; hr arm >/dev/null; printf 'ONAYLI\n' > "$R/etc/pam.d/common-auth"; hr disarm >/dev/null
+absent "pam yedek klasoru silindi" "$R/var/lib/hardening-rollback/pam"
+absent "pam-state yedegi silindi" "$R/var/lib/hardening-rollback/pam-state"
+file_eq "onayli common-auth KORUNDU" "$R/etc/pam.d/common-auth" "ONAYLI"
+echo "-- 9d) PAM dosyalari hic yokken (eski/baska sistem): arm ve restore hata vermez"
+setup; hr arm >/dev/null; out=$(hr restore); rc=$?; expect_eq "cikis 0" "0" "$rc"
+echo "-- 9e) restore sirasi: PAM, ssh/ufw adimlarindan ONCE (ssh/ufw takilsa bile PAM donmus olur)"
+pam_setup; touch "$HR_UFW_ACTIVE"; hr arm >/dev/null; printf 'BOZUK\n' > "$R/etc/pam.d/common-auth"
+cat > "$BIN/ufw" <<'F'
+#!/bin/sh
+echo "ufw $*" >> "$HR_LOG"
+[ "$1" = status ] && { [ -e "$HR_UFW_ACTIVE" ] && echo "Status: active" || echo "Status: inactive"; }
+[ "$1" = "--force" ] && exit 1
+exit 0
+F
+chmod +x "$BIN/ufw"; hr restore >/dev/null 2>&1
+file_eq "ufw basarisiz olsa da PAM donmustu" "$R/etc/pam.d/common-auth" "ORIJINAL-common-auth"
 out=$(hr foo); rc=$?; expect_eq "gecersiz komut cikis 2" "2" "$rc"; expect_contains "  kullanim" "$out" "kullanim:"
 finish

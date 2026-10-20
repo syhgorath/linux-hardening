@@ -27,7 +27,7 @@ Rol: `hardening_auth` (`hardening_pam_pwhistory_remember`, `hardening_pam_pwhist
 
 ## Neden riskli
 - **Kilitlenme:** `deny=5` aşılınca hesap kilitlenir; SSH **anahtar** girişi `pam auth` yığınına girmez (kilitlemeden etkilenmez), ama `sudo` parola denemeleri ve konsol/`su` girişi etkilenir. Otomasyon kullanıcısı parola gerektiren bir akışta kilitlenirse `harden` ya da kurtarma durur.
-- **Yanlış PAM yığını erişimi tamamen keser** (SSH `UsePAM yes` iken `account`/`session` aşamaları da PAM'den geçer). Geri alma güvenlik ağı PAM'i **kapsamaz**.
+- **Yanlış PAM yığını erişimi tamamen keser** (SSH `UsePAM yes` iken `account`/`session` aşamaları da PAM'den geçer). Geri alma güvenlik ağı artık PAM dosyalarını da kapsar (arm ile disarm ARASINDA yapılan değişiklikler için; docs/design/rollback-timer.md §4.6, verification-log 36). `faillock` rolü bu pencerenin İÇİNDE çalışmalıdır.
 - **fail2ban ile örtüşme:** fail2ban IP bazlı yasaklar (ağ), faillock hesap bazlıdır (yerel). Biri ötekinin yerine geçmez (CIS yalnızca faillock'u sayar).
 - **Kök hesabı:** `even_deny_root` kök için de kilit demektir; kök yalnızca konsoldan kurtarılabilir.
 
@@ -61,7 +61,7 @@ Eklenirse `component.yml` `vars`'ına tür/varsayılan/açıklama zorunlu (`chec
 1. Otomasyon kullanıcısı (`ansible_user`) parola ile `sudo` kullanıyor mu? Evetse kilit eşiği ve istisna (`audit`/`silent`) nasıl olmalı?
 2. `even_deny_root` varsayılan olmalı mı (CIS istiyor, konsol erişimi olmayan bulut sunucusunda tehlikeli)?
 3. `pam-auth-update` profili `Priority`/`Auth-Type` değerleri Ubuntu 26.04'te `unix` profiliyle doğru sıralanıyor mu? (VM'de `--enable` sonrası `common-auth` çıktısı incelenmeli.)
-4. Geri alma: PAM değişikliğini `hardening_rollback` kapsamına almak mı, yoksa "elle geri alınır" belgesi mi?
+4. Geri alma: **CEVAPLANDI**, PAM `hardening_rollback` kapsamına alındı (zamanlı geri alma; gerçek VM'de bilerek bozuk `common-auth` ile denendi).
 5. Raspberry Pi / LXC / bulut imajları için PAM yığını farklı olabilir mi?
 
 ## Kapsam dışı

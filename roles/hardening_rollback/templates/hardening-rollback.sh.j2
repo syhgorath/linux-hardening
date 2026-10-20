@@ -6,6 +6,9 @@
 #   hardening-rollback restore  önceki duruma döner (zamanlayıcı bunu çağırır); armed değilse hiçbir şey yapmaz
 #   hardening-rollback status   durumu TEK satir olarak yazar (kararli anahtarlar; docs/design/rollback-timer.md 4.4)
 #
+# Kapsam: sshd drop-in, ufw dosyaları ve PAM (common-* dosyaları, /var/lib/pam durumu, hardening-faillock profili, faillock.conf). PAM geri alınırken
+# kilit sayaçları (/run/faillock) da silinir: geri alma kimseyi kilitli bırakmamalı.
+#
 # Test için ortam değişkenleri: HR_ROOT (yol öneki), HR_UFW, HR_SSHD, HR_SYSTEMCTL, HR_SSH_SERVICE, HR_NOW (epoch saniye).
 set -eu
 
@@ -22,6 +25,14 @@ SSH_SERVICE="${HR_SSH_SERVICE:-$DEFAULT_SSH_SERVICE}"
 TIMER="hardening-rollback.timer"
 TIMEOUT_SECONDS={{ hardening_rollback_timeout | int }}
 UFW_FILES="ufw.conf user.rules user6.rules"
+PAMDIR="$ROOT/etc/pam.d"
+PAMSTATEDIR="$ROOT/var/lib/pam"
+PAMCONFIGS="$ROOT/usr/share/pam-configs"
+FAILLOCK_PROFILE="$PAMCONFIGS/hardening-faillock"
+FAILLOCK_CONF="$ROOT/etc/security/faillock.conf"
+FAILLOCK_TALLY="$ROOT/run/faillock"
+PAM_FILES="common-auth common-account common-password common-session common-session-noninteractive"
+PAM_STATE_FILES="account auth password session session-noninteractive seen"
 
 # systemd altinda (INVOCATION_ID dolu) stdout zaten journal'a (hardening-rollback etiketiyle) gider; logger'i da
 # cagirmak her satiri iki kez kaydederdi. Elle/Ansible calistirmada stdout journal'a gitmez: logger ile yazilir.
@@ -37,6 +48,7 @@ do_backup() {
   chmod 0700 "$STATE"
   rm -f "$STATE/had-dropin" "$STATE/00-hardening.conf" "$STATE/ufw-active"
   for f in $UFW_FILES; do rm -f "$STATE/ufw/$f"; done
+  pam_clear_backup
   if [ -e "$DROPIN" ]; then
     cp -p "$DROPIN" "$STATE/00-hardening.conf"
     : > "$STATE/had-dropin"
@@ -44,11 +56,60 @@ do_backup() {
   for f in $UFW_FILES; do
     if [ -e "$UFWDIR/$f" ]; then cp -p "$UFWDIR/$f" "$STATE/ufw/$f"; fi
   done
+  pam_backup
   if "$UFW" status 2>/dev/null | grep -q '^Status: active'; then
     echo yes > "$STATE/ufw-active"
   else
     echo no > "$STATE/ufw-active"
   fi
+}
+
+pam_clear_backup() {
+  rm -rf "$STATE/pam" "$STATE/pam-state"
+  rm -f "$STATE/had-faillock-profile" "$STATE/hardening-faillock" "$STATE/had-faillock-conf" "$STATE/faillock.conf"
+}
+
+pam_backup() {
+  mkdir -p "$STATE/pam" "$STATE/pam-state"
+  for f in $PAM_FILES; do
+    if [ -e "$PAMDIR/$f" ]; then cp -p "$PAMDIR/$f" "$STATE/pam/$f"; fi
+  done
+  for f in $PAM_STATE_FILES; do
+    if [ -e "$PAMSTATEDIR/$f" ]; then cp -p "$PAMSTATEDIR/$f" "$STATE/pam-state/$f"; fi
+  done
+  if [ -e "$FAILLOCK_PROFILE" ]; then
+    cp -p "$FAILLOCK_PROFILE" "$STATE/hardening-faillock"
+    : > "$STATE/had-faillock-profile"
+  fi
+  if [ -e "$FAILLOCK_CONF" ]; then
+    cp -p "$FAILLOCK_CONF" "$STATE/faillock.conf"
+    : > "$STATE/had-faillock-conf"
+  fi
+}
+
+pam_restore() {
+  # PAM dosyalari OLDUGU GIBI (arm anindaki hallerine) geri yazilir; pam-auth-update calistirilmaz (yigin bozuksa o da bozuk calisabilir)
+  if [ -d "$STATE/pam" ]; then
+    for f in $PAM_FILES; do
+      if [ -e "$STATE/pam/$f" ]; then cp -p "$STATE/pam/$f" "$PAMDIR/$f"; fi
+    done
+    log "PAM dosyalari onceki icerige donduruldu"
+  fi
+  if [ -d "$STATE/pam-state" ]; then
+    for f in $PAM_STATE_FILES; do
+      if [ -e "$STATE/pam-state/$f" ]; then cp -p "$STATE/pam-state/$f" "$PAMSTATEDIR/$f"; fi
+    done
+  fi
+  if [ -e "$STATE/had-faillock-profile" ]; then
+    cp -p "$STATE/hardening-faillock" "$FAILLOCK_PROFILE"
+  else
+    rm -f "$FAILLOCK_PROFILE"
+  fi
+  if [ -e "$STATE/had-faillock-conf" ]; then
+    cp -p "$STATE/faillock.conf" "$FAILLOCK_CONF"
+  fi
+  # kilit sayaclari: geri alma kimseyi kilitli birakmamali (yalniz /run/faillock icindeki dosyalar)
+  if [ -d "$FAILLOCK_TALLY" ]; then find "$FAILLOCK_TALLY" -mindepth 1 -maxdepth 1 -type f -delete 2>/dev/null || true; fi
 }
 
 do_arm() {
@@ -71,6 +132,7 @@ do_disarm() {
   rm -f "$ARMED" "$STATE/had-dropin" "$STATE/00-hardening.conf" "$STATE/ufw-active"
   for f in $UFW_FILES; do rm -f "$STATE/ufw/$f"; done
   rmdir "$STATE/ufw" 2>/dev/null || true
+  pam_clear_backup
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
   log "disarmed"
 }
@@ -80,6 +142,8 @@ do_restore() {
     log "armed degil: yapilacak bir sey yok"
     exit 0
   fi
+  # PAM EN ONCE: bozuk bir yigin giris ve sudo'yu kapatir; ssh/ufw geri alma adimlari bir nedenle takilsa bile PAM dondurulmus olmali
+  pam_restore
   # ssh: onceki drop-in icerigini geri yaz; yoksa sil
   if [ -e "$STATE/had-dropin" ]; then
     cp -p "$STATE/00-hardening.conf" "$DROPIN"
@@ -107,6 +171,7 @@ do_restore() {
     fi
   fi
   rm -f "$ARMED"
+  pam_clear_backup
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
   log "geri alma tamamlandi"
 }
