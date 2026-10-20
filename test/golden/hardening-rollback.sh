@@ -28,7 +28,7 @@ UFW_FILES="ufw.conf user.rules user6.rules"
 PAMDIR="$ROOT/etc/pam.d"
 PAMSTATEDIR="$ROOT/var/lib/pam"
 PAMCONFIGS="$ROOT/usr/share/pam-configs"
-FAILLOCK_PROFILE="$PAMCONFIGS/hardening-faillock"
+FAILLOCK_PROFILE_NAME='hardening-faillock*'
 FAILLOCK_CONF="$ROOT/etc/security/faillock.conf"
 FAILLOCK_TALLY="$ROOT/run/faillock"
 PAM_FILES="common-auth common-account common-password common-session common-session-noninteractive"
@@ -65,21 +65,21 @@ do_backup() {
 }
 
 pam_clear_backup() {
-  rm -rf "$STATE/pam" "$STATE/pam-state"
-  rm -f "$STATE/had-faillock-profile" "$STATE/hardening-faillock" "$STATE/had-faillock-conf" "$STATE/faillock.conf"
+  rm -rf "$STATE/pam" "$STATE/pam-state" "$STATE/faillock-profiles"
+  rm -f "$STATE/had-faillock-conf" "$STATE/faillock.conf"
 }
 
 pam_backup() {
-  mkdir -p "$STATE/pam" "$STATE/pam-state"
+  mkdir -p "$STATE/pam" "$STATE/pam-state" "$STATE/faillock-profiles"
   for f in $PAM_FILES; do
     if [ -e "$PAMDIR/$f" ]; then cp -p "$PAMDIR/$f" "$STATE/pam/$f"; fi
   done
   for f in $PAM_STATE_FILES; do
     if [ -e "$PAMSTATEDIR/$f" ]; then cp -p "$PAMSTATEDIR/$f" "$STATE/pam-state/$f"; fi
   done
-  if [ -e "$FAILLOCK_PROFILE" ]; then
-    cp -p "$FAILLOCK_PROFILE" "$STATE/hardening-faillock"
-    : > "$STATE/had-faillock-profile"
+  # faillock profilleri (ad onekiyle): arm anindaki hepsi saklanir
+  if [ -d "$PAMCONFIGS" ]; then
+    find "$PAMCONFIGS" -maxdepth 1 -type f -name "$FAILLOCK_PROFILE_NAME" -exec cp -p {} "$STATE/faillock-profiles/" \; 2>/dev/null || true
   fi
   if [ -e "$FAILLOCK_CONF" ]; then
     cp -p "$FAILLOCK_CONF" "$STATE/faillock.conf"
@@ -100,10 +100,10 @@ pam_restore() {
       if [ -e "$STATE/pam-state/$f" ]; then cp -p "$STATE/pam-state/$f" "$PAMSTATEDIR/$f"; fi
     done
   fi
-  if [ -e "$STATE/had-faillock-profile" ]; then
-    cp -p "$STATE/hardening-faillock" "$FAILLOCK_PROFILE"
-  else
-    rm -f "$FAILLOCK_PROFILE"
+  # simdiki faillock profilleri silinir, arm anindakiler (varsa) geri yazilir
+  find "$PAMCONFIGS" -maxdepth 1 -type f -name "$FAILLOCK_PROFILE_NAME" -delete 2>/dev/null || true
+  if [ -d "$STATE/faillock-profiles" ]; then
+    find "$STATE/faillock-profiles" -maxdepth 1 -type f -exec cp -p {} "$PAMCONFIGS/" \; 2>/dev/null || true
   fi
   if [ -e "$STATE/had-faillock-conf" ]; then
     cp -p "$STATE/faillock.conf" "$FAILLOCK_CONF"

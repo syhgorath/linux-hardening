@@ -37,7 +37,9 @@
     - { role: hardening_time, tags: [time] }
     # Geri alma güvenlik ağı: ufw/ssh değişmeden HEMEN ÖNCE arm edilir; hardening_verify_access doğrulayınca disarm eder.
     # Arada herhangi bir hata/kopma olursa sunucu N sn sonra kendini önceki duruma döndürür (docs/design/rollback-timer.md).
-    - { role: hardening_rollback, tags: [ufw, ssh] }
+    - { role: hardening_rollback, tags: [ufw, ssh, pam] }
+    # PAM'i değiştiren rol, arm penceresinin İÇİNDE (arm'dan sonra, doğrulama/disarm'dan önce) çalışır; varsayılan KAPALI. Bozulursa süre dolunca PAM özgün hâline döner.
+    - { role: hardening_pam_faillock, tags: [pam] }
     - { role: hardening_ufw, tags: [ufw] }
     - { role: hardening_ssh, tags: [ssh] }
     # sudo en sonda: yazdıktan hemen sonra become ile denenir, başarısızsa dosya silinmeye çalışılır ve play durur.
@@ -48,5 +50,5 @@
       ansible.builtin.include_role:
         name: hardening_verify_access
         apply:
-          tags: [ufw, ssh]
-      tags: [ufw, ssh]
+          tags: [ufw, ssh, pam]
+      tags: [ufw, ssh, pam]

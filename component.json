@@ -75,7 +75,7 @@
       "warnings": [
         "hardening_ssh_allow_from'a sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...). ufw yalnızca bunlardan SSH'a izin verir; yalnızca VPN yazarsan LAN'dan SSH kesilir (ping/ARP çalışır, ssh zaman aşar) ve geri alma güvenlik ağı bunu yakalamaz.",
         "SSH ve ufw kurallarını değiştirir; bağlantınız kopabilir. Çalıştırmadan önce anahtarın ssh-agent'ta olduğunu doğrulayın (ssh-add -l).",
-        "Geri alma güvenlik ağı yalnızca SSH drop-in ve ufw'yi geri alır; paketler, sysctl, auditd, fail2ban ve AIDE geri alınmaz.",
+        "Geri alma güvenlik ağı SSH drop-in, ufw ve (hardening_pam_faillock açıksa) PAM'i geri alır; paketler, sysctl, auditd, fail2ban ve AIDE geri alınmaz.",
         "Doğrulama başarısız olursa ya da bağlantı kaybolursa sunucu hardening_rollback_timeout sn sonra kendini önceki duruma döndürür; o sürede erişim olmayabilir.",
         "hardening_rollback_enabled=false güvenlik ağını kapatır."
       ]
@@ -120,7 +120,7 @@
       "requires_sudo": true,
       "confirm": "type-server-name",
       "warnings": [
-        "SSH drop-in ve ufw kurallarını değişiklikten ÖNCEKİ duruma döndürür; diğer roller (sysctl, auditd, fail2ban, AIDE, paketler) geri alınmaz.",
+        "SSH drop-in, ufw kuralları ve PAM dosyalarını (faillock açıksa) değişiklikten ÖNCEKİ duruma döndürür; diğer roller (sysctl, auditd, fail2ban, AIDE, paketler) geri alınmaz.",
         "Geri alma güvenlik ağı kurulu ve armed değilse hiçbir şey yapmaz."
       ]
     }
@@ -335,6 +335,44 @@
       "type": "bool",
       "default": false,
       "description": "true: parola geçmişi kuralı root'un parola değişikliğine de uygulanır (yalnızca hardening_pam_pwhistory_remember > 0 iken etkili). Varsayılan false"
+    },
+    {
+      "name": "hardening_pam_faillock",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: hesap kilitleme (pam_faillock, CIS 5.3.3.1.x). deny kadar yanlış parola denemesinden sonra hesap unlock_time boyunca kilitlenir (sudo/su/konsol; SSH anahtar girişi etkilenmez). Her yanlış sudo parolası ve Ansible'ın yanlış become parolası sayılır (klasik sudo koşu başına 2 kayıt). Geri alma güvenlik ağı (hardening_rollback_enabled) AÇIK olmalı, yoksa rol durur. Varsayılan kapalı"
+    },
+    {
+      "name": "hardening_pam_faillock_deny",
+      "type": "int",
+      "default": 5,
+      "min": 1,
+      "max": 10,
+      "description": "Kilitlenmeden önce izin verilen başarısız deneme sayısı (CIS: 5 ya da daha az). Yalnızca hardening_pam_faillock=true iken etkili"
+    },
+    {
+      "name": "hardening_pam_faillock_unlock_time",
+      "type": "int",
+      "default": 900,
+      "min": 0,
+      "max": 604800,
+      "description": "Kilidin açılma süresi (saniye; CIS: 0 ya da en az 900). 0 = yönetici elle açana dek kilitli (faillock --user x --reset). Yalnızca hardening_pam_faillock=true iken etkili"
+    },
+    {
+      "name": "hardening_pam_faillock_fail_interval",
+      "type": "int",
+      "default": 900,
+      "min": 1,
+      "max": 900,
+      "description": "Başarısız denemelerin sayıldığı pencere (saniye; CIS: en çok 900). Yalnızca hardening_pam_faillock=true iken etkili"
+    },
+    {
+      "name": "hardening_pam_faillock_even_deny_root",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: root hesabı da kilitlenir (CIS ister). Konsol erişimi olmayan sunucuda tehlikeli; Ubuntu'da root parolası zaten kilitlidir. Yalnızca hardening_pam_faillock=true iken etkili. Varsayılan kapalı"
     },
     {
       "name": "hardening_log_file_permissions",

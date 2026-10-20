@@ -1,0 +1,15 @@
+# Hesap kilitleme (pam_faillock, CIS 5.3.3.1.x). Varsayılan KAPALI: yanlış parola eşiği aşılınca hesap kilitlenir.
+# Tasarım ve ölçülen davranış: docs/design/pam-faillock.md. GERİ ALMA GÜVENLİK AĞI ŞARTTIR: rol yalnızca hardening_rollback ARMED iken çalışır
+# (hardening_rollback_enabled=false ise rol DURUR); yığın bozulursa süre dolunca PAM dosyaları özgün hâline döner.
+# true: pam_faillock kurulur (pam-auth-update profilleri) ve /etc/security/faillock.conf'a aşağıdaki değerler yazılır.
+# BEDELİ: parolayla giren hesaplar (sudo/su/konsol; SSH anahtar girişi auth yığınına girmez) deny kadar yanlış denemeden sonra unlock_time boyunca kilitlenir;
+# her yanlış `sudo` parolası ve Ansible'ın yanlış become parolası koşu başına 1 deneme sayılır. Kilitler /run/faillock altındadır (tmpfs): yeniden başlatma temizler.
+hardening_pam_faillock: false
+# Kilitlenmeden önce izin verilen başarısız deneme sayısı (CIS: 5 ya da daha az). 1..10.
+hardening_pam_faillock_deny: 5
+# Kilidin açılma süresi, saniye (CIS: 0 ya da en az 900). 0 = yönetici elle açana dek kilitli (`faillock --user x --reset`). 0..604800.
+hardening_pam_faillock_unlock_time: 900
+# Başarısız denemelerin sayıldığı pencere, saniye (CIS: en çok 900). 1..900.
+hardening_pam_faillock_fail_interval: 900
+# true: root hesabı da kilitlenir (CIS ister). Konsol erişimi olmayan sunucuda TEHLİKELİ; Ubuntu'da root parolası zaten kilitlidir. Varsayılan false.
+hardening_pam_faillock_even_deny_root: false
