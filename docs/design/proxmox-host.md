@@ -1,5 +1,7 @@
 # Proxmox VE hostu (iskelet, işlevsiz)
 
+> **Koruma YAPILDI (v0.4.0 sonrası):** `hardening_preflight` artık Proxmox hostunda (`/etc/pve` ya da `/usr/bin/pveversion`) `hardening_allow_unsupported` dahil HİÇBİR bayrakla atlatılamayacak şekilde durur. Proxmox hostunu SERTLEŞTİRME hâlâ yok ve aşağıdaki açık sorular cevaplanmadan yazılmaz.
+>
 > **Durum: tasarım notu + boş iskelet.** Burada hiçbir sertleştirme yazılı değil ve `harden.yml` bu dosyalara bağlı değil.
 > Amaç, Proxmox hostu desteği eklendiğinde dosyaların nereye geleceğini önceden görmek. Karar bekleyen konular aşağıda.
 

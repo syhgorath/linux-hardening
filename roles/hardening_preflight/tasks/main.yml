@@ -1,3 +1,20 @@
+# Proxmox VE hostu (hipervizör) bu paketle sertleştirilmez: Ubuntu kuralları (root girişi, ufw, ip_forward, SSH) küme ve VM ağını bozabilir (docs/design/proxmox-host.md).
+# Bu denetim `hardening_allow_unsupported` ile ATLANAMAZ ve `--check`'te de çalışır; Proxmox için ayrı bir bayrak YOKTUR (Proxmox desteği tasarım kararlarını bekliyor).
+- name: Look for Proxmox VE markers
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ hardening_proxmox_markers }}"
+  register: hardening_proxmox_stat
+  check_mode: false
+
+- name: Refuse to run on a Proxmox VE host
+  ansible.builtin.fail:
+    msg: >-
+      Bu sunucu bir Proxmox VE hostu ({{ hardening_proxmox_stat.results | selectattr('stat.exists') | map(attribute='item') | join(', ') }} var). Bu paket Proxmox hostunu
+      sertleştirmez; hiçbir bayrak (hardening_allow_unsupported dahil) bu denetimi atlatmaz. Proxmox üstündeki sıradan Ubuntu VM'leri etkilenmez.
+      docs/design/proxmox-host.md'ye bak.
+  when: hardening_proxmox_stat.results | selectattr('stat.exists') | list | length > 0
+
 - name: Check distribution and version are supported
   ansible.builtin.assert:
     that:

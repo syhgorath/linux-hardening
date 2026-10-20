@@ -164,6 +164,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **29. v0.4.0, sshpocket üzerinden TAZE kurulum, gerçek VM (2026-10-20; sshpocket 3.6.4 tarafından bildirildi).** Snapshot'tan geri yüklenmiş Ubuntu 26.04.1 VM'inde, sshpocket akışıyla: `audit` (Lynis `hardening_index` 62, 0 uyarı) → `preview` → `apply`: `ok=131 changed=38 failed=0`; yeni SSH bağlantı doğrulaması geçti, güvenlik ağı `disarm` edildi. Uygulama sonrası bakılanlar: `kernel.sysrq=0`, `fs.protected_fifos=2`, `/etc/sudoers.d` `0750`, `libpam-tmpdir`, `apt-listchanges`, AIDE zamanlayıcısı. **`warn_if` onayı çıkmadı** (#74 gerçek akışta çalışıyor). Bu kayıt v0.4.0 notundaki "tüm yeni varsayılanlarla sıfırdan tam kurulum yapılmadı" cümlesini kapatır. **Henüz yapılmadı:** `apply` SONRASI `audit` (önce/sonra Lynis karşılaştırması) ve v0.3.0 üzerine ikinci koşu (`changed=0`). Kaynak: sshpocket tarafı raporu; ham çıktılar bu repoda yok. Yalnızca tek VM.
 
+**30. Proxmox koruması ve saat düzeltme, gerçek VM (2026-10-20).** `--check --tags auth` (gerçek VM, Proxmox değil): normal akış `ok=18 failed=0`. `hardening_proxmox_markers` bilerek VM'de var olan bir dosyaya (`/etc/hostname`) çevrilince rol `failed=1` ile durdu ("Bu sunucu bir Proxmox VE hostu ...") ve `hardening_allow_unsupported=true` ile BİLE durdu. **Denenmedi:** gerçek bir Proxmox hostu; `hardening_time_makestep`'in saati kaymış gerçek bir VM'de uygulanması (yalnız birim ve görev testleri). Mini lab (Colima) o sırada kapalıydı. Yalnızca tek VM.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
