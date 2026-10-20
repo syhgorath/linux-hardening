@@ -88,6 +88,8 @@ with tempfile.TemporaryDirectory() as tmp:
         return {"path": path, "mode": mode, "owner": me, "group": mygrp, **kw}
     vars_ = {
         "hardening_files_root": str(root), "hardening_files_owner": me, "hardening_files_group": mygrp,
+        # Bu test rolü GERÇEK makinede çalıştırır: /tmp, /dev/shm ve /etc/fstab'a dokunan noexec uygulaması kapalı olmalı (CI Linux runner'ında gerçekten yazardı). Onun kendi testi test_tmp_noexec_tasks.py.
+        "hardening_tmp_noexec": False, "hardening_shm_noexec": False,
         "hardening_files_targets": [
             tg("/etc/passwd", "u-x,go-wx"), tg("/etc/group", "u-x,go-wx"),
             tg("/etc/shadow", "u-x,g-wx,o-rwx", group="nogroup", group_ok=[mygrp]),
