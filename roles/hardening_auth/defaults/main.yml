@@ -18,3 +18,10 @@ hardening_auth_shadow_path: /etc/shadow
 hardening_pam_tmpdir: true
 # true (varsayılan): root ortamı SALT OKUNUR raporu (CIS 5.4.2: root PATH bütünlüğü ve root umask). Hiçbir şeyi DEĞİŞTİRMEZ, yalnızca uyarır; `--check`'te de çalışır.
 hardening_root_env_report: true
+# Parola geçmişi (pam_pwhistory, CIS 5.3.3.3.x): 0 = KAPALI (varsayılan); 1..400 = bu kadar eski parola hatırlanır ve yeniden kullanılamaz (CIS 24). Açılınca
+# /usr/share/pam-configs/hardening-pwhistory profili yazılıp `pam-auth-update` ile etkinleştirilir ve /etc/security/pwhistory.conf'a `remember` yazılır.
+# Bedeli: parolayı betikle (chpasswd vb.) değiştiren otomasyon, daha önce kullanılmış bir parolayı tekrar atayamaz. Yalnızca PAROLA DEĞİŞTİRMEYİ etkiler, girişi/sudo'yu değil.
+# 0'a geri almak profili SİLMEZ (bkz. docs/known-issues.md).
+hardening_pam_pwhistory_remember: 0
+# true: geçmiş kuralı root'un parola değişikliğine de uygulanır (pwhistory enforce_for_root). Varsayılan false (Ubuntu'da root parolası zaten kilitli).
+hardening_pam_pwhistory_enforce_for_root: false
