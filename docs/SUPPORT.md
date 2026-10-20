@@ -15,4 +15,6 @@
 
 Desteklenmeyen sistemde zorla çalıştırmak (önerilmez): `-e hardening_allow_unsupported=true`.
 
+**Proxmox VE hostunda çalışmaz, bayrak atlatamaz:** `/etc/pve` ya da `/usr/bin/pveversion` varsa rol en başta durur (`--check`'te de). `hardening_allow_unsupported=true` bu denetimi atlatmaz ve Proxmox için ayrı bir bayrak yoktur. Proxmox **üstündeki** Ubuntu VM'leri etkilenmez.
+
 Makine-okunur karşılığı `component.yml` içindeki `profiles` alanıdır; tutarlılığı `scripts/check-consistency.py` denetler.
