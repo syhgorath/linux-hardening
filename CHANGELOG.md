@@ -7,18 +7,15 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ### Eklendi
 - `hardening_tmp_noexec` ve `hardening_shm_noexec` (varsayılan **açık**, `warn_if: false`): `/tmp` ve `/dev/shm`'ye `nodev,nosuid,noexec` uygulanır (CIS 1.1.2.1.4 ve 1.1.2.2.4 🟡 → ✅). `/tmp`: `tmp.mount` drop-in'i + anında remount; `/dev/shm`: `/etc/fstab` satırı + remount. Yalnızca ayrı ve tmpfs olan dizin yönetilir; fstab'da `/dev/shm` satırı varsa üstüne yazılmaz. **Davranışı değiştirir:** `/tmp`'ten doğrudan çalıştırma kapanır (`sh betik` çalışır); sorun olursa `false` yapın (yazılmış yapılandırma elle silinir). Ansible etkilenmez. Karar mantığı `tmp_plan.py`. `test_tmp_plan.py`, `test_tmp_noexec_tasks.py`. Gerçek VM'de PHP/nginx/composer ile denendi (verification-log 33).
-
-### Belgeler
-- `examples/yedek-pull.md`: çeken (pull) yedek örneği, kısıtlı `rrsync -ro` anahtarıyla (sunucu başına kullanıcı, `authorized_keys` kısıtı, `hardening_ssh_allow_from`, `--link-dest`). **ÖRNEKTİR ve denenmedi** (yedek sunucusu yok); yalnız `rrsync`'in Ubuntu 26.04'te bulunduğu doğrulandı.
-- `examples/README.md`: "Ayarlarım nerede? Güncellemede ne olur?" bölümü (kod / kendi ayarlarınız / sunucu ayrımı, ayarları klasörün dışında tutma, bir ayarı hepsinde açıp bir grupta kapatma, yeni sürüme geçiş adımları).
-
-### Eklendi
 - Tam `harden` + idempotens, gerçek VM (verification-log 32): üçüncü koşu `ok=126 changed=0`; uygulama sonrası Lynis 80 (öncesi 62). İkinci koşu tek seferlik ssh bağlantı kopmasıyla yarım kaldı, sebep belirlenmedi.
 - `hardening_time_makestep` gerçek VM'de denendi (verification-log 31): saat 3 gün geri alınınca `restart` yolu saati düzeltti, saat doğruyken ikinci koşu `changed=0`. `makestep` dalı (kaynak seçiliyken büyük kayma) VM'de üretilemediği için yalnız birim testlidir.
 - `hardening_preflight`: Proxmox VE hostu koruması. `/etc/pve` ya da `/usr/bin/pveversion` varsa rol en başta DURUR; `hardening_allow_unsupported=true` bunu ATLATMAZ, `--check`'te de çalışır ve Proxmox için ayrı bir bayrak yoktur. Proxmox üstündeki Ubuntu VM'leri etkilenmez. Proxmox hostunu sertleştirme hâlâ yok (`docs/design/proxmox-host.md`). Bildirim sshpocket tarafından geldi. `test_proxmox_guard.py`.
 - `hardening_time_makestep` (varsayılan **kapalı**, `warn_if: true`): zaman raporu büyük bir saat kayması bulursa düzeltir (`chronyc makestep`; kaynak seçilmemişse `systemctl restart chrony`, çünkü o durumda `makestep` etkisiz). Saati sıçratır, `--check`'te çalışmaz. `time_report.py` çıktısına `fix` alanı eklendi (`makestep` | `restart` | boş; betik hiçbir şey çalıştırmaz). Fikir sshpocket tarafından geldi. Gerçek (saati kaymış) VM'de denenmedi.
 
 ### Belgeler
+- **Önemli bulgu (gerçek VM):** Ubuntu 26.04'ün sudo-rs'i ile Ansible'ın parolalı `become`'ı (`--ask-become-pass`) doğru parolayla bile `Timeout (12s) waiting for privilege escalation prompt` verir; çözüm `-e ansible_become_exe=/usr/bin/sudo.ws`. `HOWTO.md` (bölüm 2, 4, sorun giderme), `docs/known-issues.md`, verification-log madde 34. `docs/design/pam-faillock.md`'ye faillock öncesi taban çizgisi ölçümü eklendi.
+- `examples/yedek-pull.md`: çeken (pull) yedek örneği, kısıtlı `rrsync -ro` anahtarıyla (sunucu başına kullanıcı, `authorized_keys` kısıtı, `hardening_ssh_allow_from`, `--link-dest`). **ÖRNEKTİR ve denenmedi** (yedek sunucusu yok); yalnız `rrsync`'in Ubuntu 26.04'te bulunduğu doğrulandı.
+- `examples/README.md`: "Ayarlarım nerede? Güncellemede ne olur?" bölümü (kod / kendi ayarlarınız / sunucu ayrımı, ayarları klasörün dışında tutma, bir ayarı hepsinde açıp bir grupta kapatma, yeni sürüme geçiş adımları).
 - `docs/verification-log.md` madde 29: v0.4.0'ın sshpocket üzerinden TAZE kurulumda doğrulanması (`ok=131 changed=38 failed=0`, `warn_if` onayı çıkmadı). v0.4.0 sürüm notundaki "tam kurulum yapılmadı" cümlesi bununla kapandı; apply sonrası audit ve ikinci koşu hâlâ yapılmadı.
 - `component.yml` önizleme uyarısı: `--check`'te `dma` kurulmadığı için apt simülasyonu AIDE'nin posta bağımlılığı olarak `postfix`'i "yeni paket" gösterebilir; gerçek uygulamada `dma` önce kurulur ve `postfix` gelmez.
 

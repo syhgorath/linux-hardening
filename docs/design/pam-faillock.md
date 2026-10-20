@@ -9,6 +9,15 @@
 - `/etc/security/faillock.conf` var ama etkin satır yok; `/etc/security/pwhistory.conf` var.
 - Sonuç: bu modülleri açmak `pam-auth-update` ile **bizim yazacağımız bir profil** (`/usr/share/pam-configs/hardening-faillock`) ya da `/etc/pam.d/common-*` dosyalarını doğrudan düzenlemek demektir.
 
+## Taban çizgisi ölçümü (faillock YOKKEN, gerçek VM, Ubuntu 26.04, sudo-rs 0.2.13, 2026-10-20)
+Parola isteyen `sudo` kuralı olan ayrı bir test hesabıyla ölçüldü (verification-log madde 34):
+- Doğru parola çalışır; **yanlış parola sınırsızca denenebilir, hiçbir kilit yok** (7 art arda yanlış deneme sonrası doğru parola yine geçti).
+- Yanlış parolalı her `sudo -S` çağrısı günlükte **1** `pam_unix(sudo:auth): authentication failure` bırakır; bir çağrıda en çok 3 yanlış satır denenir (`maximum 3 incorrect authentication attempts`).
+- `sudo -n` (parolasız deneme) hata **SAYILMAZ** (`interactive authentication is required`, günlükte kayıt yok).
+- Ansible: yanlış `become` parolası koşu başına **1** başarısız deneme sayar (ilk görevde durur), görev sayısına bağlı değildir. Bu, `deny=5` ile 5 başarısız koşunun hesabı kilitleyeceği anlamına gelir.
+- **Engel:** sudo-rs ile Ansible'ın parolalı `become`'ı hiç çalışmıyor (istem sarmalanıyor); `ansible_become_exe=/usr/bin/sudo.ws` ile çalışıyor. Bu `faillock` öncesinde çözülmesi gereken bir önkoşul: aksi hâlde parolalı sudo'yla `faillock` denenemez.
+- `/run/faillock` yok (tmpfs; `faillock` açılınca oluşur, yeniden başlatmada temizlenir).
+
 ## Neden riskli
 - **Kilitlenme:** `deny=5` aşılınca hesap kilitlenir; SSH **anahtar** girişi `pam auth` yığınına girmez (kilitlemeden etkilenmez), ama `sudo` parola denemeleri ve konsol/`su` girişi etkilenir. Otomasyon kullanıcısı parola gerektiren bir akışta kilitlenirse `harden` ya da kurtarma durur.
 - **Yanlış PAM yığını erişimi tamamen keser** (SSH `UsePAM yes` iken `account`/`session` aşamaları da PAM'den geçer). Geri alma güvenlik ağı PAM'i **kapsamaz**.
