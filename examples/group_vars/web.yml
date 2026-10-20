@@ -4,3 +4,5 @@ hardening_ufw_extra_allow:
 # İsteğe bağlı, davranışı değiştirenler (varsayılan KAPALI; açmadan önce README "Dikkat" bölümüne bakın):
 # hardening_remove_legacy_clients: true
 # hardening_disable_coredump: true
+# /tmp'ten ikili ÇALIŞTIRAN bir uygulamanız (PHP paketi dışarıdan program çağırıyorsa, Java/Node işleri) hata verirse bu grup için kapatın:
+# hardening_tmp_noexec: false

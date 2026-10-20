@@ -11,7 +11,7 @@ Kapsanan CIS Ubuntu 26.04 Level 1 Server maddeleri (hepsi `docs/cis-esleme.md`'d
 - Kullanıcı dosyaları (örnek hesap): `.bashrc` `0644`, `.profile` `0644`, `.ssh` `0700`, `.bash_history` `0600` (grup/diğer yazma yok).
 
 ## 1) `/tmp` ve `/dev/shm` için `noexec`
-**Durum:** salt okunur RAPOR yapıldı (`hardening_tmp_report`, açık). `noexec` AÇMA seçeneği henüz yok; açık sorular 1, 2 ve 5 cevaplanınca eklenir.
+**Durum:** salt okunur RAPOR (`hardening_tmp_report`) ve UYGULAMA yapıldı: `hardening_tmp_noexec` / `hardening_shm_noexec` (varsayılan AÇIK, kullanıcı kararı; gerçek VM'de PHP/nginx/composer ile ve reboot sonrası denendi: verification-log 33). Açık sorular 1 ve 2 çoğunlukla çözüldü (PHP sorunu tekrarlanamadı), 5 hâlâ açık (LXC/RPi: `/tmp` ayrı bağlama değilse uygulanmaz ve uyarılır).
 
 Etki: bu dizinlerden doğrudan çalıştırma kapanır (indirilen ikili, kabuk betiği `./x`, `ld.so` ile de yüklenen kütüphane). Saldırganın `/tmp`'ye bırakıp çalıştırdığı klasik yolu keser, ama **tam koruma değildir** (`sh /tmp/x.sh` yorumlayıcı üzerinden çalışmaya devam eder).
 

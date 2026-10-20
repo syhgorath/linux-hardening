@@ -105,6 +105,8 @@ When `harden` is applied, the following are **on by default** and can break a le
 | `kernel`: `route_localnet=0` | Setups that DNAT to `localhost` (some Kubernetes `NodePort` layouts) break | `--skip-tags kernel` |
 | `ssh`: `DisableForwarding`, weak `MACs` removed, `MaxStartups 10:30:60` | Unix-socket forwarding, very old clients, many parallel SSH connections | `hardening_ssh_allow_tcp_forwarding=local` (forwarding), `--skip-tags ssh` for the rest |
 | `hardening_kernel_extra_sysctl` (on) | `kernel.sysrq=0`: no SysRq emergency reboot from a VM console; `net.core.bpf_jit_harden=2`: small cost for eBPF-heavy workloads | `false` |
+| `hardening_tmp_noexec` (on) | `nodev,nosuid,noexec` on `/tmp`: running programs directly from this directory is blocked; apps that execute binaries from `/tmp` (PHP/Java/Node jobs, some package scripts) can break. Ansible is not affected | `false` (the written drop-in is removed by hand) |
+| `hardening_shm_noexec` (on) | `nodev,nosuid,noexec` on `/dev/shm` (an `/etc/fstab` line); apps that execute from shared memory can break | `false` (the written fstab line is removed by hand) |
 | `hardening_pam_tmpdir` (on) | `libpam-tmpdir`: `$TMPDIR` is no longer `/tmp` (it is `/tmp/user/<uid>`); scripts that hard-code `/tmp` can be affected | `false` |
 | `hardening_apt_listchanges` (on) | `apt-listchanges` is installed; `apt` upgrades print change notes (no prompt, no e-mail); scripts parsing apt output may see extra text | `false` (an installed package is not removed) |
 | `hardening_disable_apport` (on) | Ubuntu crash reports are not collected | `false` |
@@ -142,6 +144,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
 | `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
+| `test_tmp_plan.py`, `test_tmp_noexec_tasks.py` | `/tmp` and `/dev/shm` noexec APPLY: plan decisions (separate tmpfs only, an existing fstab line is never overwritten) + the real `copy`/`lineinfile` chain, idempotence |
 | `test_tmp_report.py`, `test_tmp_tasks.py` | `/tmp` and `/dev/shm` mount options report (CIS 1.1.2): `nodev`/`nosuid`/`noexec`/separate-mount decisions + the real task chain, read-only |
 | `test_root_env_report.py`, `test_root_env_tasks.py` | root environment report (CIS 5.4.2, PATH/umask): `PATH` and `umask` decisions (script) + the real task chain, read-only, can be disabled |
 | `test_aide_timer.py` | daily AIDE timer (CIS 6.3.2): `dailyaidecheck.timer` enabled+started, the AIDE job itself is unchanged, no `warn_if` |
