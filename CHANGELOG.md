@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Belgeler
+- `examples/README.md`: "Ayarlarım nerede? Güncellemede ne olur?" bölümü (kod / kendi ayarlarınız / sunucu ayrımı, ayarları klasörün dışında tutma, bir ayarı hepsinde açıp bir grupta kapatma, yeni sürüme geçiş adımları).
+
 ### Eklendi
 - Tam `harden` + idempotens, gerçek VM (verification-log 32): üçüncü koşu `ok=126 changed=0`; uygulama sonrası Lynis 80 (öncesi 62). İkinci koşu tek seferlik ssh bağlantı kopmasıyla yarım kaldı, sebep belirlenmedi.
 - `hardening_time_makestep` gerçek VM'de denendi (verification-log 31): saat 3 gün geri alınınca `restart` yolu saati düzeltti, saat doğruyken ikinci koşu `changed=0`. `makestep` dalı (kaynak seçiliyken büyük kayma) VM'de üretilemediği için yalnız birim testlidir.
