@@ -1,0 +1,186 @@
+# Hesap kilitleme (pam_faillock), varsayılan KAPALI. PAM'i değiştirir: yanlış yığın giriş ve sudo'yu kapatır. Bu yüzden:
+#   - rol YALNIZCA hardening_rollback ARMED iken çalışır (harden.yml'de hardening_rollback'ten HEMEN sonra, ufw/ssh'tan önce); armed değilse DURUR;
+#   - yığın pam-auth-update ile üretilir (common-* elle düzenlenmez) ve sıra assert ile doğrulanır; hata olursa rescue `hardening-rollback restore` çalıştırır;
+#   - değişiklikten sonra become denenir; başarısızsa aynı geri alma.
+# Doğrulama (hardening_verify_access) başarılı olunca zamanlayıcıyı disarm eder; olmazsa süre dolunca PAM dosyaları özgün hâline döner.
+# İki profil gerekir çünkü sıra önemli: preauth + account, pam_unix'ten ÖNCE (öncelik 512); authfail, pam_unix'ten SONRA (öncelik 128).
+- name: Account lockout (pam_faillock)
+  when: hardening_pam_faillock | bool
+  block:
+    - name: Check the faillock settings
+      ansible.builtin.assert:
+        that:
+          - hardening_pam_faillock_deny | string is match('^[0-9]+$')
+          - hardening_pam_faillock_deny | int >= 1
+          - hardening_pam_faillock_deny | int <= 10
+          - hardening_pam_faillock_unlock_time | string is match('^[0-9]+$')
+          - hardening_pam_faillock_unlock_time | int <= 604800
+          - hardening_pam_faillock_fail_interval | string is match('^[0-9]+$')
+          - hardening_pam_faillock_fail_interval | int >= 1
+          - hardening_pam_faillock_fail_interval | int <= 900
+        fail_msg: >-
+          faillock ayarları geçersiz: deny 1..10, unlock_time 0..604800 (0 = elle açılana dek), fail_interval 1..900 olmalı.
+        quiet: true
+
+    - name: Refuse to change PAM without the rollback safety net
+      ansible.builtin.assert:
+        that: hardening_rollback_enabled | bool
+        fail_msg: >-
+          hardening_pam_faillock=true ama hardening_rollback_enabled=false: PAM'i geri alma güvenlik ağı olmadan değiştirmeyi REDDEDİYORUM
+          (yanlış bir yığın sudo'yu ve girişi kapatır). Güvenlik ağını açın (varsayılan) ya da faillock'u kapatın.
+        quiet: true
+
+    - name: Look for the faillock tool and module
+      ansible.builtin.stat:
+        path: /usr/sbin/faillock
+      register: hardening_faillock_tool
+      check_mode: false
+
+    - name: Stop if pam_faillock is not available
+      ansible.builtin.assert:
+        that: hardening_faillock_tool.stat.exists
+        fail_msg: "/usr/sbin/faillock yok (libpam-modules-bin kurulu değil); PAM'e dokunulmadı."
+        quiet: true
+
+    - name: Read the rollback safety net status
+      ansible.builtin.command: /usr/local/sbin/hardening-rollback status
+      register: hardening_faillock_net
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      when: not ansible_check_mode
+
+    - name: Refuse to change PAM when the safety net is not armed
+      ansible.builtin.assert:
+        that: "'armed=yes' in hardening_faillock_net.stdout"
+        fail_msg: >-
+          Geri alma güvenlik ağı ARMED değil ({{ hardening_faillock_net.stdout | default('betik yok') }}); PAM'e dokunulmadı. Rol, harden.yml'de hardening_rollback'ten
+          sonra çalıştırılmalıdır (--tags pam kullanın, yalnızca rolü değil).
+        quiet: true
+      when: not ansible_check_mode
+
+    - name: Write the faillock settings (deny, fail_interval, unlock_time)
+      ansible.builtin.lineinfile:
+        path: /etc/security/faillock.conf
+        regexp: '^\s*#?\s*{{ item.key }}\s*='
+        line: "{{ item.key }} = {{ item.value | int }}"
+        create: false
+      loop:
+        - { key: deny, value: "{{ hardening_pam_faillock_deny }}" }
+        - { key: fail_interval, value: "{{ hardening_pam_faillock_fail_interval }}" }
+        - { key: unlock_time, value: "{{ hardening_pam_faillock_unlock_time }}" }
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Lock root as well (optional)
+      ansible.builtin.lineinfile:
+        path: /etc/security/faillock.conf
+        regexp: '^\s*#?\s*even_deny_root\b'
+        line: "even_deny_root"
+        create: false
+      when: hardening_pam_faillock_even_deny_root | bool
+
+    - name: Do not lock root (only an active line is removed, the commented example stays)
+      ansible.builtin.lineinfile:
+        path: /etc/security/faillock.conf
+        regexp: '^\s*even_deny_root\b'
+        state: absent
+        create: false
+      when: not (hardening_pam_faillock_even_deny_root | bool)
+
+    - name: Write the faillock profile that runs before pam_unix (preauth and account)
+      ansible.builtin.copy:
+        dest: /usr/share/pam-configs/hardening-faillock-preauth
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Name: Account lockout, preauth and account (hardening)
+          Default: yes
+          Priority: 512
+          Auth-Type: Primary
+          Auth:
+              requisite    pam_faillock.so preauth
+          Auth-Initial:
+              requisite    pam_faillock.so preauth
+          Account-Type: Primary
+          Account:
+              required    pam_faillock.so
+          Account-Initial:
+              required    pam_faillock.so
+
+    - name: Write the faillock profile that runs after pam_unix (authfail)
+      ansible.builtin.copy:
+        dest: /usr/share/pam-configs/hardening-faillock-authfail
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Name: Account lockout, authfail (hardening)
+          Default: yes
+          Priority: 128
+          Auth-Type: Primary
+          Auth:
+              [default=die]    pam_faillock.so authfail
+          Auth-Initial:
+              [default=die]    pam_faillock.so authfail
+
+    - name: Look for pam_faillock in common-auth
+      ansible.builtin.command: grep -q 'pam_faillock.so' /etc/pam.d/common-auth
+      register: hardening_faillock_active
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Enable the profiles with pam-auth-update
+      ansible.builtin.command: pam-auth-update --package --enable hardening-faillock-preauth hardening-faillock-authfail
+      changed_when: true
+      when: hardening_faillock_active.rc != 0 and not ansible_check_mode
+
+    - name: Read the generated auth and account stacks
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      register: hardening_faillock_stacks
+      loop:
+        - /etc/pam.d/common-auth
+        - /etc/pam.d/common-account
+      loop_control:
+        label: "{{ item }}"
+      check_mode: false
+      when: not ansible_check_mode
+
+    - name: Check the order, preauth before pam_unix, authfail after it, account entry present
+      ansible.builtin.assert:
+        that:
+          - >-
+            (hardening_faillock_stacks.results[0].content | b64decode).splitlines() | select('match', '^auth\s')
+            | map('regex_search', 'pam_(faillock[.]so (preauth|authfail)|unix[.]so)') | select('string') | list
+            == ['pam_faillock.so preauth', 'pam_unix.so', 'pam_faillock.so authfail']
+          - >-
+            (hardening_faillock_stacks.results[1].content | b64decode).splitlines() | select('match', '^account\s')
+            | map('regex_search', 'pam_(faillock|unix)[.]so') | select('string') | list == ['pam_faillock.so', 'pam_unix.so']
+        fail_msg: "faillock yığını beklenen sırada değil (auth: preauth, unix, authfail; account: faillock, unix)."
+        quiet: true
+      when: not ansible_check_mode
+
+    # Parolayla become (ansible_become_password) auth yığınından geçer; parolasız sudo geçmez, bu yüzden bu deneme PAM'in tamamını KANITLAMAZ ama bozuk bir yığını çoğu kez yakalar.
+    - name: Check that privilege escalation still works
+      ansible.builtin.command: id -u
+      become: true
+      register: hardening_faillock_probe
+      changed_when: false
+      failed_when: hardening_faillock_probe.stdout | trim != '0'
+      check_mode: false
+      when: not ansible_check_mode
+
+  rescue:
+    - name: Restore PAM from the rollback backup after a failure
+      ansible.builtin.command: /usr/local/sbin/hardening-rollback restore
+      changed_when: true
+      failed_when: false
+
+    - name: Stop after the faillock failure
+      ansible.builtin.fail:
+        msg: >-
+          faillock uygulanamadı ya da sonrasında yetki yükseltme çalışmadı; PAM dosyaları geri alma yedeğinden geri yazılmaya çalışıldı.
+          Sunucuda doğrulayın: grep faillock /etc/pam.d/common-auth (boş olmalı) ve ls /usr/share/pam-configs/ | grep faillock (boş olmalı).

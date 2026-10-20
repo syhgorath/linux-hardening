@@ -182,11 +182,13 @@ file_eq "common-auth yedeklendi" "$R/var/lib/hardening-rollback/pam/common-auth"
 file_eq "common-password yedeklendi" "$R/var/lib/hardening-rollback/pam/common-password" "ORIJINAL-common-password"
 file_eq "/var/lib/pam/auth yedeklendi" "$R/var/lib/hardening-rollback/pam-state/auth" "DURUM-auth"
 file_eq "faillock.conf yedeklendi" "$R/var/lib/hardening-rollback/faillock.conf" "ORIJINAL-FAILLOCK-CONF"
-absent "faillock profili ONCEDEN yoktu: had isareti yok" "$R/var/lib/hardening-rollback/had-faillock-profile"
-# degisiklik: bozuk yigin + yeni profil + degismis conf + yeni durum
+absent "faillock profili ONCEDEN yoktu: yedek dizininde profil yok" "$R/var/lib/hardening-rollback/faillock-profiles/hardening-faillock-preauth"
+# degisiklik: bozuk yigin + yeni profiller (IKI tane) + degismis conf + yeni durum
 printf 'auth required pam_deny.so\n' > "$R/etc/pam.d/common-auth"
 printf 'BOZUK\n' > "$R/etc/pam.d/common-account"
-printf 'Name: faillock\n' > "$R/usr/share/pam-configs/hardening-faillock"
+printf 'Name: faillock preauth\n' > "$R/usr/share/pam-configs/hardening-faillock-preauth"
+printf 'Name: faillock authfail\n' > "$R/usr/share/pam-configs/hardening-faillock-authfail"
+printf 'Name: baska paket profili\n' > "$R/usr/share/pam-configs/pwquality"
 printf 'DEGISTI\n' > "$R/etc/security/faillock.conf"
 printf 'YENI-DURUM\n' > "$R/var/lib/pam/auth"
 : > "$HR_LOG"; out=$(hr restore); rc=$?
@@ -194,16 +196,20 @@ expect_eq "restore cikis 0" "0" "$rc"
 file_eq "bozuk common-auth ORIJINALE dondu" "$R/etc/pam.d/common-auth" "ORIJINAL-common-auth"
 file_eq "common-account geri yuklendi" "$R/etc/pam.d/common-account" "ORIJINAL-common-account"
 file_eq "/var/lib/pam/auth geri yuklendi" "$R/var/lib/pam/auth" "DURUM-auth"
-absent "sonradan eklenen faillock profili SILINDI" "$R/usr/share/pam-configs/hardening-faillock"
+absent "sonradan eklenen faillock preauth profili SILINDI" "$R/usr/share/pam-configs/hardening-faillock-preauth"
+absent "sonradan eklenen faillock authfail profili SILINDI" "$R/usr/share/pam-configs/hardening-faillock-authfail"
+file_eq "faillock OLMAYAN baska profile DOKUNULMADI" "$R/usr/share/pam-configs/pwquality" "Name: baska paket profili"
 file_eq "faillock.conf geri yuklendi" "$R/etc/security/faillock.conf" "ORIJINAL-FAILLOCK-CONF"
 absent "kilit sayaclari silindi (kimse kilitli kalmaz)" "$R/run/faillock/lhtest"
 expect_contains "  PAM mesaji" "$out" "PAM dosyalari onceki icerige donduruldu"
 if log_lacks "pam-auth-update"; then ok "pam-auth-update CAGRILMADI (dosyalar oldugu gibi geri yazilir)"; else bad "pam-auth-update cagrildi"; fi
 absent "PAM yedegi temizlendi" "$R/var/lib/hardening-rollback/pam"
 echo "-- 9b) faillock profili ONCEDEN vardi: restore ESKI icerigi yazar (silmez)"
-pam_setup; printf 'ESKI-PROFIL\n' > "$R/usr/share/pam-configs/hardening-faillock"; hr arm >/dev/null
-printf 'YENI-PROFIL\n' > "$R/usr/share/pam-configs/hardening-faillock"; hr restore >/dev/null
-file_eq "eski profil geri yazildi" "$R/usr/share/pam-configs/hardening-faillock" "ESKI-PROFIL"
+pam_setup; printf 'ESKI-PROFIL\n' > "$R/usr/share/pam-configs/hardening-faillock-preauth"; hr arm >/dev/null
+printf 'YENI-PROFIL\n' > "$R/usr/share/pam-configs/hardening-faillock-preauth"
+printf 'EKLENEN\n' > "$R/usr/share/pam-configs/hardening-faillock-authfail"; hr restore >/dev/null
+file_eq "eski profil geri yazildi" "$R/usr/share/pam-configs/hardening-faillock-preauth" "ESKI-PROFIL"
+absent "arm'da olmayan ikinci profil silindi" "$R/usr/share/pam-configs/hardening-faillock-authfail"
 echo "-- 9c) disarm: PAM yedegi de silinir, onayli degisiklik KORUNUR"
 pam_setup; hr arm >/dev/null; printf 'ONAYLI\n' > "$R/etc/pam.d/common-auth"; hr disarm >/dev/null
 absent "pam yedek klasoru silindi" "$R/var/lib/hardening-rollback/pam"

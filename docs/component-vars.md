@@ -37,6 +37,11 @@ standardının §6'sıyla aynıdır; varsayılanlar rollerin `defaults/main.yml`
 | `hardening_password_inactive_days` | `int` (0–365) | hayır | `0` | Parola süresi dolduktan sonra hesabın kilitleneceği gün (`INACTIVE`); `0` = kapalı. **Yeni** hesaplar için varsayılan yapılır; mevcutlara dokunulmaz, farklı olanlar uyarılır. |
 | `hardening_pam_pwhistory_remember` | `int` (0–400) | hayır | `0` | Parola geçmişi (`pam_pwhistory`): `0` = kapalı; `1..400` = bu kadar eski parola yeniden kullanılamaz (CIS 24). Yalnızca parola değiştirmeyi etkiler; parolayı betikle değiştiren otomasyon eski parolayı tekrar atayamaz. `0`'a geri almak profili silmez. |
 | `hardening_pam_pwhistory_enforce_for_root` | `bool` | hayır | `false` | `true`: kural root'un parola değişikliğine de uygulanır (yalnızca `remember > 0` iken). |
+| `hardening_pam_faillock` | `bool` | hayır | `false` | `true`: hesap kilitleme (`pam_faillock`). `deny` yanlış denemeden sonra hesap `unlock_time` boyunca kilitlenir (sudo/su/konsol; SSH anahtarı etkilenmez). Geri alma güvenlik ağı açık olmalı, yoksa rol durur. |
+| `hardening_pam_faillock_deny` | `int` (1–10) | hayır | `5` | Kilitlenme eşiği (CIS ≤ 5). |
+| `hardening_pam_faillock_unlock_time` | `int` (0–604800) | hayır | `900` | Kilit süresi, saniye (CIS 0 ya da ≥ 900); `0` = elle açılana dek. |
+| `hardening_pam_faillock_fail_interval` | `int` (1–900) | hayır | `900` | Başarısız denemelerin sayıldığı pencere, saniye. |
+| `hardening_pam_faillock_even_deny_root` | `bool` | hayır | `false` | `true`: root da kilitlenir (konsolsuz sunucuda tehlikeli). |
 | `hardening_log_file_permissions` | `bool` | hayır | `false` | `true`: `/var/log` dosyalarında grup yazma ve diğer erişim kaldırılır (`wtmp`/`btmp`/`lastlog`/`faillog` ve journal hariç). `adm` dışı okuyucular (izleme/log ajanları) bazı günlükleri okuyamaz. |
 | `hardening_disable_apport` | `bool` | hayır | `true` | `true`: Ubuntu hata raporlayıcı apport kapatılır (`enabled=0`, servis durdurulup maskelenir; CIS 1.5.7). Çökme raporları toplanmaz. |
 | `hardening_disable_update_notifier_motd` | `bool` | hayır | `true` | `true`: `update-notifier-motd` zamanlayıcısı durdurulup maskelenir (CIS 1.6.12). |

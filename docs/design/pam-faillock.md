@@ -25,6 +25,18 @@ Rol: `hardening_auth` (`hardening_pam_pwhistory_remember`, `hardening_pam_pwhist
 - Root'un `chpasswd`'si: `enforce_for_root` KAPALIYKEN yalnızca mesaj, parola değişir; AÇIKKEN `password not changed`. Yani otomasyon (kök olarak çalışan) ancak `enforce_for_root=true` ile kırılır.
 - `PASS_MIN_DAYS=1` (bu paketin ayarı) normal kullanıcının parolayı 1 günden önce değiştirmesini engeller; test hesabında `chage -m 0` gerekti.
 
+## `pam_faillock` YAPILDI (varsayılan kapalı): rol `hardening_pam_faillock`
+Yığın iki `pam-auth-update` profiliyle üretilir (sıra önemli): `hardening-faillock-preauth` (Priority 512: auth `preauth` + account `faillock`, pam_unix'ten ÖNCE) ve `hardening-faillock-authfail` (Priority 128: `[default=die] authfail`, pam_unix'ten SONRA). Gerçek Ubuntu 26.04 çıktısı:
+```
+auth    requisite     pam_faillock.so preauth
+auth    [success=2 default=ignore]  pam_unix.so nullok try_first_pass
+auth    [default=die] pam_faillock.so authfail
+auth    requisite     pam_deny.so   ...
+account required      pam_faillock.so
+account [success=1 new_authtok_reqd=done default=ignore]  pam_unix.so   ...
+```
+`authsucc` KULLANILMAZ: `pam_unix` başarıda bloğun sonuna atladığı için `authsucc` hiç çalışmazdı; sayaç başarılı girişte `account` aşamasındaki `pam_faillock` ile sıfırlanır (ölçüldü). Koruma: rol yalnızca `hardening_rollback` ARMED iken çalışır (kapalı ya da armed değilse DURUR), sıra assert ile doğrulanır, hata olursa rescue `hardening-rollback restore` çağırır. Ölçülen davranış: verification-log 37.
+
 ## Neden riskli
 - **Kilitlenme:** `deny=5` aşılınca hesap kilitlenir; SSH **anahtar** girişi `pam auth` yığınına girmez (kilitlemeden etkilenmez), ama `sudo` parola denemeleri ve konsol/`su` girişi etkilenir. Otomasyon kullanıcısı parola gerektiren bir akışta kilitlenirse `harden` ya da kurtarma durur.
 - **Yanlış PAM yığını erişimi tamamen keser** (SSH `UsePAM yes` iken `account`/`session` aşamaları da PAM'den geçer). Geri alma güvenlik ağı artık PAM dosyalarını da kapsar (arm ile disarm ARASINDA yapılan değişiklikler için; docs/design/rollback-timer.md §4.6, verification-log 36). `faillock` rolü bu pencerenin İÇİNDE çalışmalıdır.

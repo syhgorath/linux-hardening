@@ -35,6 +35,17 @@ if "hardening_rollback" in roles:
           str(tags_of["hardening_rollback"]))
 check("verify_access post_tasks'ta", any("hardening_verify_access" in str(t) for t in pb[0].get("post_tasks", [])))
 
+# ---- PAM (faillock) ayni arm penceresinin ICINDE: arm'dan SONRA, ufw'den ONCE; ayni etiketle arm ve disarm ----
+check("arm etiketleri 'pam' icerir (--tags pam yalniz faillock'u calistirinca da arm edilir)", "pam" in tags_of.get("hardening_rollback", []))
+check("hardening_pam_faillock harden.yml'de var, etiketi pam", "hardening_pam_faillock" in roles and tags_of.get("hardening_pam_faillock") == ["pam"])
+if "hardening_pam_faillock" in roles and "hardening_rollback" in roles:
+    check("faillock, arm'dan SONRA (arm penceresinin icinde)", roles.index("hardening_pam_faillock") > roles.index("hardening_rollback"))
+    check("faillock, ufw'den ONCE", roles.index("hardening_pam_faillock") < roles.index("hardening_ufw"))
+    check("faillock, aide'den SONRA (AIDE ilk veritabani dakikalar surer, zamanlayici erken tetiklenmesin)", roles.index("hardening_pam_faillock") > roles.index("hardening_aide"))
+va = next((t for t in pb[0].get("post_tasks", []) if "hardening_verify_access" in str(t)), {})
+check("verify_access (disarm) 'pam' etiketiyle de calisir (yoksa --tags pam armed birakir ve sure dolunca HER SEYI geri alir)",
+      "pam" in (va.get("tags") or []) and "pam" in str((va.get("ansible.builtin.include_role") or {}).get("apply", {})))
+
 
 # ---- verify rolu ----
 def walk(tasks):
