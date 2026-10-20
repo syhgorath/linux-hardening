@@ -18,6 +18,13 @@ Parola isteyen `sudo` kuralı olan ayrı bir test hesabıyla ölçüldü (verifi
 - **Engel:** sudo-rs ile Ansible'ın parolalı `become`'ı hiç çalışmıyor (istem sarmalanıyor); `ansible_become_exe=/usr/bin/sudo.ws` ile çalışıyor. Bu `faillock` öncesinde çözülmesi gereken bir önkoşul: aksi hâlde parolalı sudo'yla `faillock` denenemez.
 - `/run/faillock` yok (tmpfs; `faillock` açılınca oluşur, yeniden başlatmada temizlenir).
 
+## `pam_pwhistory` YAPILDI (varsayılan kapalı), ölçülen davranış (gerçek VM, 2026-10-20)
+Rol: `hardening_auth` (`hardening_pam_pwhistory_remember`, `hardening_pam_pwhistory_enforce_for_root`). Yalnızca `common-password`'a girer; `auth` yığınına dokunmadığı için kilitlenme riski yoktur. Ölçümler (verification-log 35):
+- `remember=N`: mevcut parola ve önceki **N-1** parola engellenir (opasswd'de N eski hash tutulur ama denetim mevcut + N-1'i kapsar).
+- Normal kullanıcının `passwd`'si: önceki parola reddedilir (`already used`, `password unchanged`); daha eski olan kabul edilir.
+- Root'un `chpasswd`'si: `enforce_for_root` KAPALIYKEN yalnızca mesaj, parola değişir; AÇIKKEN `password not changed`. Yani otomasyon (kök olarak çalışan) ancak `enforce_for_root=true` ile kırılır.
+- `PASS_MIN_DAYS=1` (bu paketin ayarı) normal kullanıcının parolayı 1 günden önce değiştirmesini engeller; test hesabında `chage -m 0` gerekti.
+
 ## Neden riskli
 - **Kilitlenme:** `deny=5` aşılınca hesap kilitlenir; SSH **anahtar** girişi `pam auth` yığınına girmez (kilitlemeden etkilenmez), ama `sudo` parola denemeleri ve konsol/`su` girişi etkilenir. Otomasyon kullanıcısı parola gerektiren bir akışta kilitlenirse `harden` ya da kurtarma durur.
 - **Yanlış PAM yığını erişimi tamamen keser** (SSH `UsePAM yes` iken `account`/`session` aşamaları da PAM'den geçer). Geri alma güvenlik ağı PAM'i **kapsamaz**.
