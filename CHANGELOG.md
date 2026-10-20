@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Belgeler
+- `examples/yedek-pull.md`: çeken (pull) yedek örneği, kısıtlı `rrsync -ro` anahtarıyla (sunucu başına kullanıcı, `authorized_keys` kısıtı, `hardening_ssh_allow_from`, `--link-dest`). **ÖRNEKTİR ve denenmedi** (yedek sunucusu yok); yalnız `rrsync`'in Ubuntu 26.04'te bulunduğu doğrulandı.
 - `examples/README.md`: "Ayarlarım nerede? Güncellemede ne olur?" bölümü (kod / kendi ayarlarınız / sunucu ayrımı, ayarları klasörün dışında tutma, bir ayarı hepsinde açıp bir grupta kapatma, yeni sürüme geçiş adımları).
 
 ### Eklendi
