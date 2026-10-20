@@ -323,6 +323,20 @@
       "description": "Parola süresi dolduktan sonra hesabın kilitleneceği gün (INACTIVE); 0 = kapalı (varsayılan). YENİ hesaplar için varsayılan yapılır, mevcutlara dokunulmaz (farklı olanlar uyarılır)"
     },
     {
+      "name": "hardening_pam_pwhistory_remember",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 400,
+      "description": "Parola geçmişi (pam_pwhistory): 0 = kapalı (varsayılan); 1..400 = bu kadar eski parola hatırlanır ve yeniden kullanılamaz (CIS 24). Yalnızca parola DEĞİŞTİRMEYİ etkiler (giriş/sudo değil); parolayı betikle değiştiren otomasyon eski bir parolayı tekrar atayamaz. 0'a geri almak profili silmez"
+    },
+    {
+      "name": "hardening_pam_pwhistory_enforce_for_root",
+      "type": "bool",
+      "default": false,
+      "description": "true: parola geçmişi kuralı root'un parola değişikliğine de uygulanır (yalnızca hardening_pam_pwhistory_remember > 0 iken etkili). Varsayılan false"
+    },
+    {
       "name": "hardening_log_file_permissions",
       "type": "bool",
       "default": false,

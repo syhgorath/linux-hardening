@@ -174,3 +174,87 @@
       ansible.builtin.debug:
         msg: "UYARI (root ortamı): rapor değerlendirilemedi: {{ hardening_root_env_result.error }}"
       when: hardening_root_env_result.status == 'unknown'
+
+# --- Parola geçmişi (pam_pwhistory), varsayılan KAPALI. Yalnızca PAROLA DEĞİŞTİRME yığınına (common-password) girer; giriş (auth) yığınına dokunmaz, yani kilitlenme riski yoktur.
+# pam-auth-update profili kullanılır (common-* dosyaları elle düzenlenmez; paket güncellemesi ezmesin). Sıra: pwquality (1024) > pwhistory (512) > unix (256). ---
+- name: Password history (pam_pwhistory)
+  when: hardening_pam_pwhistory_remember | int > 0
+  block:
+    - name: Write the pam-auth-update profile for pam_pwhistory
+      ansible.builtin.copy:
+        dest: /usr/share/pam-configs/hardening-pwhistory
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Name: Password history (hardening)
+          Default: yes
+          Priority: 512
+          Password-Type: Primary
+          Password:
+              requisite    pam_pwhistory.so use_authtok
+          Password-Initial:
+              requisite    pam_pwhistory.so use_authtok
+
+    - name: Set the number of remembered passwords
+      ansible.builtin.lineinfile:
+        path: /etc/security/pwhistory.conf
+        regexp: '^\s*#?\s*remember\s*='
+        line: "remember = {{ hardening_pam_pwhistory_remember | int }}"
+        create: false
+
+    - name: Apply the history rule to root as well (optional)
+      ansible.builtin.lineinfile:
+        path: /etc/security/pwhistory.conf
+        regexp: '^\s*#?\s*enforce_for_root\b'
+        line: "enforce_for_root"
+        create: false
+      when: hardening_pam_pwhistory_enforce_for_root | bool
+
+    - name: Do not apply the history rule to root (only an active line is removed, the commented example stays)
+      ansible.builtin.lineinfile:
+        path: /etc/security/pwhistory.conf
+        regexp: '^\s*enforce_for_root\b'
+        state: absent
+        create: false
+      when: not (hardening_pam_pwhistory_enforce_for_root | bool)
+
+    - name: Look for pam_pwhistory in common-password
+      ansible.builtin.command: grep -q 'pam_pwhistory.so' /etc/pam.d/common-password
+      register: hardening_pwhistory_active
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Enable the profile with pam-auth-update
+      ansible.builtin.command: pam-auth-update --package --enable hardening-pwhistory
+      changed_when: true
+      when: hardening_pwhistory_active.rc != 0 and not ansible_check_mode
+
+    - name: Read the generated password stack
+      ansible.builtin.slurp:
+        src: /etc/pam.d/common-password
+      register: hardening_pwhistory_stack
+      check_mode: false
+      when: not ansible_check_mode
+
+    - name: Check that the password stack still has pwquality, pwhistory and unix, in that order
+      ansible.builtin.assert:
+        that:
+          - >-
+            (hardening_pwhistory_stack.content | b64decode).splitlines() | select('match', '^password\s') | map('regex_search', 'pam_(pwquality|pwhistory|unix)[.]so')
+            | select('string') | list == ['pam_pwquality.so', 'pam_pwhistory.so', 'pam_unix.so']
+        quiet: true
+      when: not ansible_check_mode
+
+  rescue:
+    - name: Take the profile out again after a failure
+      ansible.builtin.command: pam-auth-update --package --remove hardening-pwhistory
+      changed_when: true
+      failed_when: false
+
+    - name: Stop after the pam_pwhistory failure
+      ansible.builtin.fail:
+        msg: >-
+          pam_pwhistory etkinleştirilemedi ya da /etc/pam.d/common-password sırası beklenenden farklı (beklenen: pam_pwquality, pam_pwhistory, pam_unix); profil geri alınmaya çalışıldı.
+          Sunucuda doğrulayın: grep password /etc/pam.d/common-password

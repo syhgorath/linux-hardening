@@ -37,15 +37,15 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |  |
 | 5.1 | SSH sunucusu | 24 | 20 | 3 |  |  | 1 |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 3 |  | 1 |  |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 3 |  | 2 | 16 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 6 |  | 2 | 13 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 8 |  | 7 |  |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 1 |  | 9 | 3 |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **105** | **31** | **5** | **100** | **33** |
+| | **Toplam** | **274** | **105** | **34** | **5** | **100** | **30** |
 
-Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %50'si en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %51'i en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
@@ -161,6 +161,9 @@ Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %50'si en azından kısme
 
 | Madde | Durum |
 |---|---|
+| 5.3.3.3.1 | Parola geçmişi `remember`: yalnızca `hardening_pam_pwhistory_remember > 0` ile (varsayılan KAPALI; `pwhistory.conf` + pam-auth-update profili; CIS 24 ister). Ölçüldü: `remember=N` mevcut parola + önceki N-1 parolayı engeller |
+| 5.3.3.3.2 | `enforce_for_root`: `hardening_pam_pwhistory_enforce_for_root=true` ile (varsayılan KAPALI). Kapalıyken root'un `chpasswd`'si yalnızca UYARI alır, engellenmez (ölçüldü) |
+| 5.3.3.3.3 | `use_authtok`: profil satırında var (`pam_pwhistory.so use_authtok`), seçenek açıksa |
 | 1.2.2.1 | Güvenlik güncellemeleri otomatik (unattended-upgrades); 'tüm güncellemeler kurulu' denetlenmez |
 | 1.4.2 | grub.cfg 0600 root:root yapılır; update-grub dosyayı yeniden yazarsa 0444'e dönebilir (sonraki çalıştırmada yeniden sıkılaşır, doğrulanmadı) |
 | 1.5.10 | kod var (hardening_disable_coredump) ama varsayılan KAPALI; çökme dökümünü kapatır |
@@ -245,7 +248,7 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1 |
 | 3.2 | Ağ çekirdek modülleri | 3.2.7 |
 | 5.1 | SSH sunucusu | 5.1.5 |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.3.1, 5.3.3.3.2, 5.3.3.3.3, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.2.2, 5.3.2.4, 5.3.3.1.1, 5.3.3.1.2, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5 |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
 
