@@ -62,7 +62,7 @@ Sunucuda yapılacaklar:
      ```bash
      echo 'KULLANICI ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/90-ansible-test && sudo chmod 440 /etc/sudoers.d/90-ansible-test && sudo visudo -c
      ```
-   - **Üretim (önerilen):** parolasız sudo verme; Ansible'ı `--ask-become-pass` ile çalıştır (bölüm 4).
+   - **Üretim (önerilen):** parolasız sudo verme; Ansible'ı `--ask-become-pass` ile çalıştır (bölüm 4). **Ubuntu 26.04'te (sudo-rs) bu tek başına ÇALIŞMAZ**, ek bir bayrak gerekir: bkz. bölüm 4'teki "Parolalı sudo ve sudo-rs" kutusu.
 5. **Proxmox'ta snapshot al** (örn. `oncesi-hardening`). Bu senin geri dönüş noktan.
 
 ---
@@ -211,6 +211,7 @@ Sertleştirmenin **meşru kullanımları bozabileceği** yerler (Docker, mail su
 | Sunucuya SSH ile giremiyorum (firewall/SSH sonrası) | **Proxmox konsolundan** gir: `sudo ufw disable` veya `/etc/ssh/sshd_config.d/00-hardening.conf` dosyasını düzelt. Olmazsa snapshot'a dön |
 | `Permission denied (publickey)` | `ssh-copy-id` yapılmamış ya da yanlış kullanıcı (`ansible_user`) |
 | `sudo: a password is required` | NOPASSWD ayarı yok → `--ask-become-pass` kullan ya da bölüm 2.4 |
+| `Timeout (12s) waiting for privilege escalation prompt` (parola doğru olduğu hâlde) | Ubuntu 26.04'ün sudo-rs'i parola istemini `[sudo: ...] Password:` diye sarmalar, Ansible kendi istemini satır başında bekler. Çözüm: `-e ansible_become_exe=/usr/bin/sudo.ws` (bölüm 4) |
 | Proxmox snapshot'ına döndükten sonra `apt`/TLS hataları ya da tuhaf zaman damgaları | VM saati geride kalmış olabilir (snapshot saati). `timedatectl` ile bakın (**dikkat:** "synchronized: yes" yanıltıcı olabilir, tarihi `date -u` ile karşılaştırın). `sudo chronyc makestep` saati düzeltir, **ama chrony'nin kaynakları henüz seçilmemişse (`chronyc sources` çıktısında `^?`) sessizce hiçbir şey yapmaz**; o zaman `sudo systemctl restart chrony` kullanın (başlangıçtaki `makestep 1 3` büyük adımı birkaç saniyede yapar). İkisi de denendi (test VM'i, ~8 günlük kayma) |
 | Host key hatası | Önce elle `ssh kullanici@IP` ile bağlanıp kabul et |
 | `ansible: command not found` | `source .venv/bin/activate` yapılmamış |
@@ -283,6 +284,14 @@ Test VM'de parolasız sudo kullandık; **üretimde kullanma.** Onun yerine:
 ```bash
 ansible-playbook playbooks/harden.yml --ask-become-pass
 ```
+
+> **Parolalı sudo ve sudo-rs (Ubuntu 26.04), gerçek VM'de görüldü:** 26.04'ün varsayılan `sudo`'su sudo-rs'tir. Ansible `become` için parolayı verirken kendi istemini (`[sudo via ansible, key=...] password:`) satır başında arar; sudo-rs ise istemi `[sudo: [sudo via ansible, key=...] password:] Password:` diye sarmalar. Sonuç: **doğru parolayla bile** `Timeout (12s) waiting for privilege escalation prompt` (`UNREACHABLE`). Parolasız sudo'da (`NOPASSWD`) sorun yoktur.
+>
+> Çözüm, sunucuda zaten kurulu klasik sudo'yu (`sudo.ws`) Ansible'a göstermek (sistem `sudo`'sunu değiştirmez):
+> ```bash
+> ansible-playbook playbooks/harden.yml --ask-become-pass -e ansible_become_exe=/usr/bin/sudo.ws
+> ```
+> Klasik sudo aynı `/etc/sudoers` ve `/etc/sudoers.d` dosyalarını okur. Denendi: doğru parola `ok=3`, yanlış parola `Incorrect sudo password` (koşu başına 1 başarısız deneme sayılır). sshpocket üzerinden çalıştırıyorsanız bu değişkenin oradan verilip verilemeyeceği sshpocket tarafının konusudur.
 
 - Sudo parolasını çalıştırma başında **bir kez** sorar; sadece o çalıştırma boyunca bellekte durur, diske/repoya/loga yazılmaz.
 - Verdiğin tek parola `--limit`'teki **tüm** sunuculara denenir. Parolalar farklıysa sunucuları ayrı ayrı çalıştır (`--limit sunucu1`) ya da `ansible-vault` kullan.
