@@ -101,6 +101,9 @@ Kalan süre, `armed` dosyasına `arm` sırasında yazılan bitiş zamanından (e
 | `hardening_rollback_enabled` | `true` | `false` = güvenlik ağı kapalı (bilinçli, belgeli kaçış; uyarı verir) |
 | `hardening_rollback_timeout` | `300` | Saniye; uzun koşuda yanlışlıkla tetiklenmesin diye ufw/ssh'tan **hemen önce** kurulur |
 
+### 4.6 PAM kapsamı (v0.4.0 sonrası)
+Betik artık PAM'i de kapsar. `arm` anında yedeklenenler: `/etc/pam.d/common-{auth,account,password,session,session-noninteractive}`, `/var/lib/pam/*` (pam-auth-update durumu), `/usr/share/pam-configs/hardening-faillock` (varsa) ve `/etc/security/faillock.conf`. `restore` bunları **olduğu gibi** geri yazar; `pam-auth-update` ÇALIŞTIRMAZ (yığın bozuksa o da bozuk çalışabilir), sonradan eklenmiş `hardening-faillock` profilini siler, eski varsa eski içeriğini yazar ve `/run/faillock` altındaki kilit sayaçlarını temizler (geri alma kimseyi kilitli bırakmamalı). PAM, ssh/ufw adımlarından **önce** geri alınır: ssh/ufw adımı bir nedenle takılsa bile giriş yığını düzelmiş olur. `disarm` PAM yedeğini de siler, onaylanmış değişiklik korunur. Bu, `faillock` gibi PAM değiştiren rollerin kullanabileceği güvenlik ağıdır (`docs/design/pam-faillock.md`).
+
 ## 5. `--check`, idempotency, güvenlik
 - **`--check`:** arma/disarm atlanır; durum yedeği alınmaz; hiçbir şey değişmez.
 - **Idempotency:** arma/disarm `changed_when: false`; değişiklik yoksa timer hemen disarm edilir. Zaten
