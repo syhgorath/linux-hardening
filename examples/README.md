@@ -70,5 +70,5 @@ Her sunucu için: snapshot → `--check --diff` → uygula → ikinci koşu `cha
 
 ## Dikkat
 - Bu proje Redis/nginx/Docker'ın kendi ayarlarını yönetmez (Redis parolası ve bağlama adresi, vekil yapılandırması sizin işiniz).
-- Kullanıcı ve SSH anahtarı (yedek kullanıcısı dahil) yönetilmez.
+- Kullanıcı ve SSH anahtarı (yedek kullanıcısı dahil) yönetilmez. Yedek örneği (çeken/pull, **denenmedi**): [yedek-pull.md](yedek-pull.md).
 - Davranışı değiştiren seçenekler için README'deki "Dikkat" bölümüne bakın.
