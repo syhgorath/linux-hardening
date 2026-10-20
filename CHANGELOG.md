@@ -6,6 +6,8 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- Tam `harden` + idempotens, gerçek VM (verification-log 32): üçüncü koşu `ok=126 changed=0`; uygulama sonrası Lynis 80 (öncesi 62). İkinci koşu tek seferlik ssh bağlantı kopmasıyla yarım kaldı, sebep belirlenmedi.
+- `hardening_time_makestep` gerçek VM'de denendi (verification-log 31): saat 3 gün geri alınınca `restart` yolu saati düzeltti, saat doğruyken ikinci koşu `changed=0`. `makestep` dalı (kaynak seçiliyken büyük kayma) VM'de üretilemediği için yalnız birim testlidir.
 - `hardening_preflight`: Proxmox VE hostu koruması. `/etc/pve` ya da `/usr/bin/pveversion` varsa rol en başta DURUR; `hardening_allow_unsupported=true` bunu ATLATMAZ, `--check`'te de çalışır ve Proxmox için ayrı bir bayrak yoktur. Proxmox üstündeki Ubuntu VM'leri etkilenmez. Proxmox hostunu sertleştirme hâlâ yok (`docs/design/proxmox-host.md`). Bildirim sshpocket tarafından geldi. `test_proxmox_guard.py`.
 - `hardening_time_makestep` (varsayılan **kapalı**, `warn_if: true`): zaman raporu büyük bir saat kayması bulursa düzeltir (`chronyc makestep`; kaynak seçilmemişse `systemctl restart chrony`, çünkü o durumda `makestep` etkisiz). Saati sıçratır, `--check`'te çalışmaz. `time_report.py` çıktısına `fix` alanı eklendi (`makestep` | `restart` | boş; betik hiçbir şey çalıştırmaz). Fikir sshpocket tarafından geldi. Gerçek (saati kaymış) VM'de denenmedi.
 
