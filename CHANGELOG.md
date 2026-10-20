@@ -5,6 +5,10 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Belgeler
+- `docs/verification-log.md` madde 29: v0.4.0'ın sshpocket üzerinden TAZE kurulumda doğrulanması (`ok=131 changed=38 failed=0`, `warn_if` onayı çıkmadı). v0.4.0 sürüm notundaki "tam kurulum yapılmadı" cümlesi bununla kapandı; apply sonrası audit ve ikinci koşu hâlâ yapılmadı.
+- `component.yml` önizleme uyarısı: `--check`'te `dma` kurulmadığı için apt simülasyonu AIDE'nin posta bağımlılığı olarak `postfix`'i "yeni paket" gösterebilir; gerçek uygulamada `dma` önce kurulur ve `postfix` gelmez.
+
 ## [0.4.0] - 2026-10-19
 
 v0.3.0'dan sonra: Lynis önce/sonra ölçümünden çıkan küçük maddeler, üç salt okunur rapor (root ortamı, `/tmp` ve `/dev/shm`, AIDE zamanlayıcı denetimi), `su` kısıtı, Docker `daemon.json` seçenekleri,

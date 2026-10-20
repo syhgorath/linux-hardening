@@ -57,6 +57,7 @@
         "hardening_ssh_allow_from eksikse bunu önizlemede göremezsin (ufw komutları --check'te çalışmaz): sunucuya bağlanabileceğin TÜM ağları (VPN + LAN + ...) yaz; yalnızca VPN yazarsan ufw LAN'dan SSH'ı keser.",
         "Önizleme ufw (firewall) değişikliğini göstermez: ufw komutları --check modunda çalışmaz.",
         "Önizleme servis durumunu (auditd, fail2ban başlatma) göstermez.",
+        "Önizlemede dma gerçekten kurulmadığı için apt simülasyonu AIDE'nin posta bağımlılığı olarak postfix'i (ve bsd-mailx, libnsl2 vb.) 'yeni paket' gösterebilir. Gerçek uygulamada dma önce kurulur ve postfix gelmez.",
         "Erişim kaybı korumaları (hardening_ssh_allow_from, kaynak IP, root kontrolü) önizlemede de çalışır ve durdurabilir."
       ]
     },

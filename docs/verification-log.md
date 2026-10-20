@@ -162,6 +162,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **28. `/tmp` ve `/dev/shm` raporu, gerçek VM + mini lab (2026-10-19).** `--check --tags files`: gerçek VM `changed=0`, çıktı "NOT (tmp): /tmp: tmpfs nodev,nosuid; /dev/shm: tmpfs nodev,nosuid" + iki `noexec yok` notu. Mini lab konteyneri: `/dev/shm` zaten `noexec` (tek not `/tmp` için). `-e ansible_remote_tmp=/tmp/.ansible` ile "UYARI (tmp): Ansible uzak geçici dizini ... noexec açılırsa Ansible modülleri çalışmaz". Hiçbir şey değişmedi. Yalnızca tek VM ve tek mini lab; `noexec` açma etkisi DENENMEDİ (seçenek yok).
 
+**29. v0.4.0, sshpocket üzerinden TAZE kurulum, gerçek VM (2026-10-20; sshpocket 3.6.4 tarafından bildirildi).** Snapshot'tan geri yüklenmiş Ubuntu 26.04.1 VM'inde, sshpocket akışıyla: `audit` (Lynis `hardening_index` 62, 0 uyarı) → `preview` → `apply`: `ok=131 changed=38 failed=0`; yeni SSH bağlantı doğrulaması geçti, güvenlik ağı `disarm` edildi. Uygulama sonrası bakılanlar: `kernel.sysrq=0`, `fs.protected_fifos=2`, `/etc/sudoers.d` `0750`, `libpam-tmpdir`, `apt-listchanges`, AIDE zamanlayıcısı. **`warn_if` onayı çıkmadı** (#74 gerçek akışta çalışıyor). Bu kayıt v0.4.0 notundaki "tüm yeni varsayılanlarla sıfırdan tam kurulum yapılmadı" cümlesini kapatır. **Henüz yapılmadı:** `apply` SONRASI `audit` (önce/sonra Lynis karşılaştırması) ve v0.3.0 üzerine ikinci koşu (`changed=0`). Kaynak: sshpocket tarafı raporu; ham çıktılar bu repoda yok. Yalnızca tek VM.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|
