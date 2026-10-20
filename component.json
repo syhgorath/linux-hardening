@@ -215,6 +215,20 @@
       "description": "true (varsayılan): root ortamı SALT OKUNUR raporu (CIS 5.4.2: root PATH bütünlüğü ve root umask): PATH'te boş girdi, '.', olmayan ya da yazılabilir dizin ve 027'den gevşek umask uyarılır. Hiçbir şeyi değiştirmez. false: rapor çalışmaz"
     },
     {
+      "name": "hardening_tmp_noexec",
+      "type": "bool",
+      "default": true,
+      "warn_if": false,
+      "description": "true (varsayılan): /tmp'ye nodev,nosuid,noexec uygulanır (tmp.mount drop-in'i + anında remount; yalnızca AYRI ve tmpfs olan /tmp). /tmp'ten doğrudan çalıştırma kapanır: /tmp'ten ikili çalıştıran uygulamalar (PHP/Java/Node işleri, bazı paket betikleri) bozulabilir; sorun olursa false yapın. Ansible etkilenmez (~/.ansible/tmp). false: dokunulmaz"
+    },
+    {
+      "name": "hardening_shm_noexec",
+      "type": "bool",
+      "default": true,
+      "warn_if": false,
+      "description": "true (varsayılan): /dev/shm'ye nodev,nosuid,noexec uygulanır (/etc/fstab satırı + anında remount; fstab'da /dev/shm satırı zaten varsa üstüne yazılmaz). Paylaşımlı bellekten çalıştırma yapan uygulamalar bozulabilir; sorun olursa false yapın. false: dokunulmaz"
+    },
+    {
       "name": "hardening_tmp_report",
       "type": "bool",
       "default": true,

@@ -174,6 +174,108 @@
         follow: false
       loop: "{{ hardening_files_logs.stdout_lines }}"
 
+# --- /tmp ve /dev/shm için nodev,nosuid,noexec (CIS 1.1.2). Davranışı DEĞİŞTİRİR: bu dizinlerden doğrudan çalıştırma kapanır (paket betikleri, derleme araçları, /tmp'ten ikili çalıştıran uygulamalar;
+# Ansible kendisi ~/.ansible/tmp kullanır, etkilenmez). Karar mantığı files/tmp_plan.py: yalnızca AYRI ve tmpfs olan dizin yönetilir; /tmp kalıcılığı tmp.mount drop-in'i, /dev/shm kalıcılığı /etc/fstab satırı
+# (satır zaten varsa ÜSTÜNE YAZILMAZ). Etki anında `mount -o remount` ile uygulanır. Kapatmak için hardening_tmp_noexec / hardening_shm_noexec = false. Tasarım: docs/design/grup3-tmp-su-root.md ---
+- name: Harden the /tmp and /dev/shm mount options
+  when: hardening_tmp_noexec | bool or hardening_shm_noexec | bool
+  block:
+    - name: Read the mounts behind /tmp and /dev/shm for the plan
+      ansible.builtin.shell:
+        cmd: |
+          for t in /tmp /dev/shm; do
+            echo "$t: $(findmnt -n -o TARGET,FSTYPE,OPTIONS --target "$t" 2>/dev/null)"
+          done
+        executable: /bin/sh
+      register: hardening_tmpm_mounts
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    # state/enabled verilmez: ansible.builtin.systemd yalnızca durumu OKUR (status.ActiveState).
+    - name: Read whether tmp.mount manages /tmp
+      ansible.builtin.systemd:
+        name: tmp.mount
+      register: hardening_tmpm_unit
+      failed_when: false
+      check_mode: false
+
+    - name: Read the /dev/shm line of /etc/fstab
+      ansible.builtin.shell:
+        cmd: awk '$2 == "/dev/shm" && $1 !~ /^#/ {print; exit}' /etc/fstab
+        executable: /bin/sh
+      register: hardening_tmpm_fstab
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Plan the mount option changes
+      ansible.builtin.script:
+        cmd: >-
+          tmp_plan.py {{ {'mounts': hardening_tmpm_mounts.stdout_lines | default([]),
+          'tmp_mount_active': (hardening_tmpm_unit.status | default({})).ActiveState | default(''),
+          'shm_fstab': hardening_tmpm_fstab.stdout | default('') | trim,
+          'want_tmp': hardening_tmp_noexec | bool,
+          'want_shm': hardening_shm_noexec | bool} | to_json | quote }}
+        executable: python3
+      register: hardening_tmpm_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the mount plan
+      ansible.builtin.set_fact:
+        hardening_tmpm_plan: "{{ hardening_tmpm_raw.stdout | from_json }}"
+
+    - name: Warn about mounts that cannot be managed
+      ansible.builtin.debug:
+        msg: "UYARI (tmp): {{ hardening_tmpm_plan.warnings | join(' ') }} Bu dizin için noexec/nosuid/nodev uygulanmadı."
+      when: hardening_tmpm_plan.warnings | length > 0
+
+    - name: Create the tmp.mount drop-in directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/tmp.mount.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      when: hardening_tmpm_plan.tmp.persist
+
+    - name: Make /tmp nodev,nosuid,noexec persistent (tmp.mount drop-in)
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tmp.mount.d/50-hardening.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Ansible tarafından yönetilir (hardening_tmp_noexec). Kaldırmak için hardening_tmp_noexec=false yapın ve bu dosyayı silin.
+          [Mount]
+          Options=mode=1777,strictatime,nosuid,nodev,noexec,size=50%,nr_inodes=1m
+      when: hardening_tmpm_plan.tmp.persist
+      register: hardening_tmpm_dropin
+
+    - name: Reload systemd after the tmp.mount drop-in changed
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: hardening_tmpm_dropin is changed and not ansible_check_mode
+
+    - name: Apply nodev,nosuid,noexec to /tmp now
+      ansible.builtin.command: mount -o remount,nodev,nosuid,noexec /tmp  # noqa: command-instead-of-module (ansible.posix kurulu değil)
+      changed_when: true
+      when: hardening_tmpm_plan.tmp.remount and not ansible_check_mode
+
+    - name: Make /dev/shm nodev,nosuid,noexec persistent (/etc/fstab)
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^\s*tmpfs\s+/dev/shm\s'
+        line: "tmpfs /dev/shm tmpfs defaults,nodev,nosuid,noexec 0 0"
+        insertafter: EOF
+      when: hardening_tmpm_plan.shm.persist
+
+    - name: Apply nodev,nosuid,noexec to /dev/shm now
+      ansible.builtin.command: mount -o remount,nodev,nosuid,noexec /dev/shm  # noqa: command-instead-of-module (ansible.posix kurulu değil)
+      changed_when: true
+      when: hardening_tmpm_plan.shm.remount and not ansible_check_mode
+
 # --- /tmp ve /dev/shm bağlama seçenekleri raporu (CIS 1.1.2: ayrı bağlama, nodev, nosuid, noexec). SALT OKUNUR: hiçbir şeyi değiştirmez, `--check`'te de çalışır.
 # Karar mantığı files/tmp_report.py. noexec davranışı değiştirdiği için (paket betikleri, Ansible remote_tmp) yalnızca raporlanır; tasarım: docs/design/grup3-tmp-su-root.md ---
 - name: Temporary directory mount report (read-only)

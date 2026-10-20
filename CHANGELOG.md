@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_tmp_noexec` ve `hardening_shm_noexec` (varsayılan **açık**, `warn_if: false`): `/tmp` ve `/dev/shm`'ye `nodev,nosuid,noexec` uygulanır (CIS 1.1.2.1.4 ve 1.1.2.2.4 🟡 → ✅). `/tmp`: `tmp.mount` drop-in'i + anında remount; `/dev/shm`: `/etc/fstab` satırı + remount. Yalnızca ayrı ve tmpfs olan dizin yönetilir; fstab'da `/dev/shm` satırı varsa üstüne yazılmaz. **Davranışı değiştirir:** `/tmp`'ten doğrudan çalıştırma kapanır (`sh betik` çalışır); sorun olursa `false` yapın (yazılmış yapılandırma elle silinir). Ansible etkilenmez. Karar mantığı `tmp_plan.py`. `test_tmp_plan.py`, `test_tmp_noexec_tasks.py`. Gerçek VM'de PHP/nginx/composer ile denendi (verification-log 33).
+
 ### Belgeler
 - `examples/yedek-pull.md`: çeken (pull) yedek örneği, kısıtlı `rrsync -ro` anahtarıyla (sunucu başına kullanıcı, `authorized_keys` kısıtı, `hardening_ssh_allow_from`, `--link-dest`). **ÖRNEKTİR ve denenmedi** (yedek sunucusu yok); yalnız `rrsync`'in Ubuntu 26.04'te bulunduğu doğrulandı.
 - `examples/README.md`: "Ayarlarım nerede? Güncellemede ne olur?" bölümü (kod / kendi ayarlarınız / sunucu ayrımı, ayarları klasörün dışında tutma, bir ayarı hepsinde açıp bir grupta kapatma, yeni sürüme geçiş adımları).

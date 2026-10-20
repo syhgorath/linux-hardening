@@ -63,3 +63,8 @@ hardening_log_file_permissions: false
 # true (varsayılan): /tmp ve /dev/shm bağlama seçenekleri SALT OKUNUR raporu (CIS 1.1.2: ayrı bağlama, nodev, nosuid, noexec). Hiçbir şeyi DEĞİŞTİRMEZ; noexec yoksa yalnızca not düşer
 # (Ubuntu varsayılanı budur), nodev/nosuid yoksa, ayrı bağlama değilse ya da Ansible remote_tmp /tmp altındaysa uyarır. `--check`'te de çalışır.
 hardening_tmp_report: true
+# true: /tmp'ye `nodev,nosuid,noexec` uygulanır (CIS 1.1.2; tmp.mount drop-in'i + anında remount). Bu dizinden doğrudan ÇALIŞTIRMA kapanır: /tmp'ten ikili çalıştıran uygulamalar
+# (PHP/Java/Node işleri, bazı paket betikleri ve derleme araçları) bozulabilir; sorun olursa bunu false yapın. Ansible etkilenmez (~/.ansible/tmp kullanır). Yalnızca AYRI ve tmpfs olan /tmp yönetilir.
+hardening_tmp_noexec: true
+# true: /dev/shm'ye `nodev,nosuid,noexec` uygulanır (/etc/fstab satırı + anında remount; satır zaten varsa üstüne yazılmaz). Sorun olursa false yapın.
+hardening_shm_noexec: true

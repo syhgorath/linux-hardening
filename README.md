@@ -101,6 +101,8 @@ Bilinen çakışmalar (sertleştirmenin meşru kullanımları bozabileceği yerl
 | `kernel`: `route_localnet=0` | `localhost`'a DNAT yapan düzenler (bazı Kubernetes `NodePort`) bozulur | `--skip-tags kernel` |
 | `ssh`: `DisableForwarding`, `MACs` zayıf liste, `MaxStartups 10:30:60` | Unix soket yönlendirme, çok eski istemciler, çok paralel SSH bağlantısı | `hardening_ssh_allow_tcp_forwarding=local` (yönlendirme), diğerleri için `--skip-tags ssh` |
 | `hardening_kernel_extra_sysctl` (açık) | `kernel.sysrq=0`: VM konsolundan SysRq ile acil yeniden başlatma kullanılamaz; `net.core.bpf_jit_harden=2`: eBPF yoğun iş yüklerinde küçük performans bedeli | `false` |
+| `hardening_tmp_noexec` (açık) | `/tmp`'e `nodev,nosuid,noexec`: bu dizinden doğrudan çalıştırma kapanır; `/tmp`'ten ikili çalıştıran uygulamalar (PHP/Java/Node işleri, bazı paket betikleri) bozulabilir. Ansible etkilenmez | `false` (yazılmış drop-in elle silinir) |
+| `hardening_shm_noexec` (açık) | `/dev/shm`'ye `nodev,nosuid,noexec` (`/etc/fstab` satırı); paylaşımlı bellekten çalıştıran uygulamalar bozulabilir | `false` (yazılmış fstab satırı elle silinir) |
 | `hardening_pam_tmpdir` (açık) | `libpam-tmpdir`: `$TMPDIR` artık `/tmp` değil (`/tmp/user/<uid>`); `/tmp`'i sabit varsayan betikler etkilenebilir | `false` |
 | `hardening_apt_listchanges` (açık) | `apt-listchanges` kurulur; `apt` yükseltmelerinde değişiklik notları (onaysız, e-postasız) yazdırılır; çıktıyı ayrıştıran betikler fazladan metin görebilir | `false` (kurulu paket kaldırılmaz) |
 | `hardening_disable_apport` (açık) | Ubuntu çökme raporları toplanmaz | `false` |
@@ -138,6 +140,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
 | `test_apt_listchanges.py` | `apt-listchanges`: kurulum + bloklamayan yapılandırma (`confirm=false`, `frontend=text`), idempotent, `warn_if` yok |
+| `test_tmp_plan.py`, `test_tmp_noexec_tasks.py` | `/tmp` ve `/dev/shm` noexec UYGULAMA: plan kararları (yalnız ayrı+tmpfs, fstab satırı ezilmez) + gerçek `copy`/`lineinfile` zinciri, idempotens |
 | `test_tmp_report.py`, `test_tmp_tasks.py` | `/tmp` ve `/dev/shm` bağlama seçenekleri raporu (CIS 1.1.2): `nodev`/`nosuid`/`noexec`/ayrı bağlama kararları + gerçek görev zinciri, salt okunur |
 | `test_root_env_report.py`, `test_root_env_tasks.py` | root ortamı raporu (CIS 5.4.2, PATH/umask): `PATH` ve `umask` kararları (betik) + gerçek görev zinciri, salt okunur, kapatılabilir |
 | `test_aide_timer.py` | AIDE günlük zamanlayıcısı (CIS 6.3.2): `dailyaidecheck.timer` açık+başlatılmış, AIDE işi değişmez, `warn_if` yok |
