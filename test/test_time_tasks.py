@@ -33,7 +33,8 @@ def mod(t):
     return next((k for k in t if k.startswith("ansible.builtin.")), None)
 
 
-flat = [t for t in walk(tasks)]
+REPORT = tasks[:1]  # birinci üst düzey blok = salt okunur rapor; ikincisi isteğe bağlı saat düzeltme (aşağıda ayrıca sınanır)
+flat = [t for t in walk(REPORT)]
 leaf = [t for t in flat if mod(t)]
 check("rol var ve görevleri var", len(leaf) >= 6)
 check("yalnızca salt okunur modüller kullanılıyor (command, script, set_fact, debug, systemd-durum-okuma)", all(mod(t) in READ_ONLY for t in leaf), f"modüller={sorted({mod(t) for t in leaf})}")
@@ -50,7 +51,7 @@ check("okumalar başarısız olursa rol durmaz (failed_when: false)", all(t.get(
 
 wrapper = tasks[0]
 check("tüm görevler hardening_time_report ile kapatılabilir", "hardening_time_report" in str(wrapper.get("when")) and "block" in wrapper)
-check("varsayılanlar: rapor açık, eşik 5 sn", defaults == {"hardening_time_report": True, "hardening_time_max_offset_seconds": 5}, f"defaults={defaults}")
+check("varsayılanlar: rapor açık, eşik 5 sn", defaults == {"hardening_time_report": True, "hardening_time_makestep": False, "hardening_time_max_offset_seconds": 5}, f"defaults={defaults}")
 
 cmds = " ".join(str(t.get("ansible.builtin.command", "")) for t in leaf)
 check("saati değiştiren komut yok (makestep, systemctl restart/start/stop, timedatectl set-*)",
@@ -81,5 +82,21 @@ if m:
                                env={**os.environ, "TZ": tz, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
         got = re.search(r"EPOCH=(\d+)", r.stdout)
         check(f"controller_epoch gerçek epoch'a eşit (TZ={tz})", bool(got) and abs(int(got.group(1)) - time.time()) < 30, f"çıktı={got.group(1) if got else r.stdout[-200:]}")
+
+# --- isteğe bağlı saat düzeltme bloğu (hardening_time_makestep): yalnızca açıkça açılırsa, --check'te değil, yalnızca önerilen düzeltmeyi uygular ---
+fix_block = tasks[1]
+check("makestep: ikinci üst düzey blok ve adı doğru", fix_block.get("name") == "Correct a large clock drift (opt-in)")
+w = str(fix_block.get("when"))
+check("makestep: hardening_time_makestep ile kapalıyken HİÇBİR şey çalışmaz", "hardening_time_makestep | bool" in w)
+check("makestep: --check'te çalışmaz (not ansible_check_mode)", "not ansible_check_mode" in w)
+check("makestep: yalnızca raporun önerdiği düzeltme varken (fix boş değil)", "fix" in w and "length > 0" in w)
+fl = list(walk(fix_block["block"]))
+step = next(t for t in fl if "ansible.builtin.command" in t)
+rest = next(t for t in fl if "ansible.builtin.systemd" in t)
+check("makestep: yalnız `chronyc makestep` çalıştırır ve yalnız fix=='makestep' iken", step["ansible.builtin.command"] == "chronyc makestep" and "== 'makestep'" in str(step["when"]))
+check("restart: yalnız chrony'yi yeniden başlatır ve yalnız fix=='restart' iken", rest["ansible.builtin.systemd"] == {"name": "chrony", "state": "restarted"} and "== 'restart'" in str(rest["when"]))
+check("başka saat değiştiren komut yok (date -s, timedatectl set-*, hwclock, ntpdate)", not any(x in str(fl) for x in ("date -s", "set-time", "set-ntp", "hwclock", "ntpdate")))
+cv = next((x for x in yaml.safe_load((ROOT / "component.yml").read_text(encoding="utf-8"))["vars"] if isinstance(x, dict) and x["name"] == "hardening_time_makestep"), None)
+check("component.yml: bool, varsayılan false, warn_if true (saati sıçratır)", bool(cv) and cv["type"] == "bool" and cv["default"] is False and cv.get("warn_if") is True)
 
 sys.exit(1 if fails else 0)

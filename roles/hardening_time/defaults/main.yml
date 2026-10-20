@@ -1,5 +1,8 @@
 # Zaman senkronizasyonu RAPORU (salt okunur; saati ya da yapılandırmayı DEĞİŞTİRMEZ). Tasarım: docs/design/zaman-ntp.md (seçenek A).
 # false = rapor hiç çalışmaz.
 hardening_time_report: true
+# true: rapor büyük bir saat kayması bulursa DÜZELTİR (`chronyc makestep`; kaynak seçilmemişse `systemctl restart chrony`). Saati SIÇRATIR: sertifika geçerliliği, cron/zamanlayıcı
+# sırası ve günlük zaman damgaları etkilenebilir; bu yüzden varsayılan KAPALI ve `warn_if: true`. Yalnızca rapor 'warn' ve düzeltme önerisi varken çalışır; `--check`'te çalışmaz.
+hardening_time_makestep: false
 # Saniye: kaynakların ölçtüğü ofset bunu aşarsa uyarır (varsayılan 5 sn). Snapshot dönüşü gibi büyük kaymalar için anlamlı.
 hardening_time_max_offset_seconds: 5

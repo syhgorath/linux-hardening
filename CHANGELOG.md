@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_time_makestep` (varsayılan **kapalı**, `warn_if: true`): zaman raporu büyük bir saat kayması bulursa düzeltir (`chronyc makestep`; kaynak seçilmemişse `systemctl restart chrony`, çünkü o durumda `makestep` etkisiz). Saati sıçratır, `--check`'te çalışmaz. `time_report.py` çıktısına `fix` alanı eklendi (`makestep` | `restart` | boş; betik hiçbir şey çalıştırmaz). Fikir sshpocket tarafından geldi. Gerçek (saati kaymış) VM'de denenmedi.
+
 ### Belgeler
 - `docs/verification-log.md` madde 29: v0.4.0'ın sshpocket üzerinden TAZE kurulumda doğrulanması (`ok=131 changed=38 failed=0`, `warn_if` onayı çıkmadı). v0.4.0 sürüm notundaki "tam kurulum yapılmadı" cümlesi bununla kapandı; apply sonrası audit ve ikinci koşu hâlâ yapılmadı.
 - `component.yml` önizleme uyarısı: `--check`'te `dma` kurulmadığı için apt simülasyonu AIDE'nin posta bağımlılığı olarak `postfix`'i "yeni paket" gösterebilir; gerçek uygulamada `dma` önce kurulur ve `postfix` gelmez.
