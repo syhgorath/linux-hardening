@@ -23,7 +23,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 9 |  |  | 19 | 1 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 4 | 1 |  | 8 | 2 |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
-| 1.4 | Önyükleyici | 2 |  | 1 |  |  | 1 |
+| 1.4 | Önyükleyici | 2 |  | 1 | 1 |  |  |
 | 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 | 3 |  | 1 |  |
 | 1.6 | Oturum açma uyarı metinleri | 12 | 8 |  |  | 2 | 2 |
 | 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
@@ -43,7 +43,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **105** | **38** | **5** | **100** | **26** |
+| | **Toplam** | **274** | **105** | **38** | **6** | **100** | **25** |
 
 Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %52'si en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
@@ -204,6 +204,7 @@ Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %52'si en azından kısme
 
 | Madde | Neden |
 |---|---|
+| 1.4.1 | Önyükleyici (GRUB) parolası bilerek yok (kullanıcı kararı, 2026-10-22): konsolsuz/uzaktan yönetilen sunucuda, parolalı bir menü girdisi her yeniden başlatmada konsoldan parola bekler ve sunucu açılmaz. CIS'in istediği biçim yalnızca menü düzenlemeyi korur ama yanlış kurulursa açılışı kilitler; Raspberry Pi'de GRUB yok, Proxmox'ta farklı önyükleyici olabilir |
 | 3.3.1.1 | ip_forward'a bilerek dokunulmaz (LXD/konteyner/yönlendirici kullanımı) |
 | 3.3.1.2 | ip_forward'a bilerek dokunulmaz |
 | 3.3.1.3 | ip_forward'a bilerek dokunulmaz |
@@ -245,7 +246,6 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 |---|---|---|
 | 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11 |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.6, 1.2.1.11 |
-| 1.4 | Önyükleyici | 1.4.1 |
 | 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9 |
 | 2.1 | Sunucu servisleri | 2.1.23 |
 | 2.3 | Zaman senkronizasyonu | 2.3.2.1, 2.3.2.2, 2.3.3.1 |
