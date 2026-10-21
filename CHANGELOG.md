@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **Debian 13 (trixie) desteği** (`debian-13` profili, `hardening_supported_os`): `vars/debian-13.yml`; sürüm anahtarı Debian'da ANA sürüm (`ansible_facts['distribution_version']` `13.7` döndürür); `--check` için `python3-apt` yoksa anlaşılır mesajla durur; `ufw` kurulu değilken `--check` düşmez. Colima'da systemd'li Debian 13 konteynerinde `--check` `failed=0`, gerçek koşu `failed=0`, **ikinci koşu `changed=0`** (`auditd` konteynerde çalışmadığı için atlandı; verification-log 39). **Gerçek Debian VM'inde, `auditd` ve Raspberry Pi OS ile DENENMEDİ.** Proxmox hostu hâlâ bilerek reddedilir. `test_debian_support.py`.
+
 ### Belgeler
 - `docs/verification-log.md` madde 38: v0.5.0 (`main` `5d9e024`) gerçek VM'de SIFIRDAN tam kurulum: `--check` `failed=0`, 1. koşu `ok=143 changed=43 failed=0`, **2. koşu `changed=0`**, `noexec` etkin, `faillock` kapalı, Lynis 75 (bekleyen güvenlik güncellemeleri yüzünden 1 uyarı). v0.5.0 notundaki "sıfırdan tam kurulum yapılmadı" cümlesi bununla kapandı.
 

@@ -20,9 +20,15 @@ expect_not_contains "  tanimsiz degisken yok" "$out" "undefined"
 out=$(run_pre '{"distribution":"Ubuntu","distribution_version":"24.04"}')
 expect_eq "Ubuntu 24.04 durur" "failed=1" "$(failed_of "$out")"
 expect_contains "  mesaj sistemi soyler" "$out" "Desteklenmeyen sistem: Ubuntu 24.04"
-out=$(run_pre '{"distribution":"Debian","distribution_version":"12"}')
-expect_eq "Debian durur" "failed=1" "$(failed_of "$out")"
-expect_contains "  mesaj" "$out" "Desteklenmeyen sistem: Debian 12"
+out=$(run_pre '{"distribution":"Debian","distribution_version":"12.9","distribution_major_version":"12"}')
+expect_eq "Debian 12 durur" "failed=1" "$(failed_of "$out")"
+expect_contains "  mesaj ANA surumu soyler" "$out" "Desteklenmeyen sistem: Debian 12"
+out=$(run_pre '{"distribution":"Debian","distribution_version":"13.7","distribution_major_version":"13"}')
+expect_eq "Debian 13.7 (alt surum dahil) gecer" "failed=0" "$(failed_of "$out")"
+out=$(run_pre '{"distribution":"Debian","distribution_version":"13","distribution_major_version":"13"}')
+expect_eq "Debian 13 (alt surumsuz) gecer" "failed=0" "$(failed_of "$out")"
+out=$(run_pre '{"distribution":"Debian","distribution_version":"14.0","distribution_major_version":"14"}')
+expect_eq "Debian 14 durur (bilinmeyen ana surum)" "failed=1" "$(failed_of "$out")"
 
 echo "-- hardening_ssh: getent sonucu ansible_facts altindan okunur"
 cat > "$TMP/ssh_role.yml" <<'Y'

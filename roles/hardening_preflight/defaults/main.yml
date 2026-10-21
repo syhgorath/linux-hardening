@@ -2,6 +2,7 @@
 # buraya ekle, docs/SUPPORT.md'yi guncelle.
 hardening_supported_os:
   Ubuntu: ["26.04"]
+  Debian: ["13"]
 # Desteklenmeyen surumde zorla calistirmak icin (onerilmez): -e hardening_allow_unsupported=true
 hardening_allow_unsupported: false
 # Ek ufw kurallarının geçerli biçimi: hardening_ufw rolündeki hardening_ufw_extra_allow_pattern ile AYNI olmalı (test/test_ufw_extra_allow.py denetler).
