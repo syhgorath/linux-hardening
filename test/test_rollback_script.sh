@@ -228,5 +228,46 @@ exit 0
 F
 chmod +x "$BIN/ufw"; hr restore >/dev/null 2>&1
 file_eq "ufw basarisiz olsa da PAM donmustu" "$R/etc/pam.d/common-auth" "ORIJINAL-common-auth"
+echo "-- 10) Proxmox pve-firewall (cluster.fw): arm yedekler, restore geri yazar/siler, restart; olmazsa stop"
+cat > "$BIN/pve-firewall" <<'F'
+#!/bin/sh
+echo "pve-firewall $*" >> "$HR_LOG"
+[ "$1" = restart ] && [ -e "$HR_PVEFW_FAIL" ] && exit 1
+exit 0
+F
+chmod +x "$BIN/pve-firewall"
+export HR_PVEFW="$BIN/pve-firewall" HR_PVEFW_FAIL="$TMP/pvefw.fail"
+pve_setup() { setup; rm -f "$HR_PVEFW_FAIL"; mkdir -p "$R/etc/pve/firewall"; }
+echo "-- 10a) cluster.fw ONCEDEN vardi: restore eski icerigi yazar ve pve-firewall restart eder"
+pve_setup; printf 'ESKI-CLUSTER\n' > "$R/etc/pve/firewall/cluster.fw"; hr arm >/dev/null
+printf 'YENI-CLUSTER\n' > "$R/etc/pve/firewall/cluster.fw"; out=$(hr restore)
+file_eq "eski cluster.fw geri yazildi" "$R/etc/pve/firewall/cluster.fw" "ESKI-CLUSTER"
+expect_contains "  mesaj" "$out" "pve-firewall cluster.fw onceki icerige donduruldu"
+if log_has "pve-firewall restart"; then ok "pve-firewall restart cagrildi"; else bad "restart cagrilmadi"; fi
+if log_lacks "pve-firewall stop"; then ok "restart basariliyken stop CAGRILMADI"; else bad "gereksiz stop"; fi
+absent "pve yedegi temizlendi" "$R/var/lib/hardening-rollback/pve-firewall"
+echo "-- 10b) cluster.fw ONCEDEN yoktu: restore olusturulan dosyayi SILER"
+pve_setup; hr arm >/dev/null; printf 'ROL-YAZDI\n' > "$R/etc/pve/firewall/cluster.fw"; out=$(hr restore)
+absent "arm'da olmayan cluster.fw silindi" "$R/etc/pve/firewall/cluster.fw"
+expect_contains "  mesaj" "$out" "cluster.fw onceden yoktu: silindi"
+if log_has "pve-firewall restart"; then ok "silindikten sonra restart"; else bad "restart yok"; fi
+echo "-- 10c) restart basarisiz: son care pve-firewall stop"
+pve_setup; hr arm >/dev/null; printf 'ROL-YAZDI\n' > "$R/etc/pve/firewall/cluster.fw"; : > "$HR_PVEFW_FAIL"; out=$(hr restore)
+if log_has "pve-firewall stop"; then ok "stop cagrildi"; else bad "stop cagrilmadi"; fi
+expect_contains "  uyari" "$out" "pve-firewall restart basarisiz"
+absent "yine de cluster.fw silindi" "$R/etc/pve/firewall/cluster.fw"
+echo "-- 10d) Proxmox DEGIL (/etc/pve/firewall yok): pve-firewall HIC cagrilmaz"
+setup; hr arm >/dev/null; hr restore >/dev/null
+if log_lacks "pve-firewall"; then ok "pve-firewall cagrilmadi"; else bad "Proxmox olmayan hostta pve-firewall cagrildi"; fi
+absent "yedek klasoru olusmadi" "$R/var/lib/hardening-rollback/pve-firewall"
+echo "-- 10e) disarm: onayli cluster.fw KORUNUR, yedek silinir, pve-firewall cagrilmaz"
+pve_setup; hr arm >/dev/null; printf 'ONAYLI\n' > "$R/etc/pve/firewall/cluster.fw"; hr disarm >/dev/null
+file_eq "onayli cluster.fw KORUNDU" "$R/etc/pve/firewall/cluster.fw" "ONAYLI"
+absent "pve yedegi silindi" "$R/var/lib/hardening-rollback/pve-firewall"
+if log_lacks "pve-firewall"; then ok "disarm pve-firewall'a dokunmadi"; else bad "disarm pve-firewall cagirdi"; fi
+echo "-- 10f) armed degilken restore hicbir sey yapmaz"
+pve_setup; printf 'DOKUNMA\n' > "$R/etc/pve/firewall/cluster.fw"; hr restore >/dev/null
+file_eq "cluster.fw degismedi" "$R/etc/pve/firewall/cluster.fw" "DOKUNMA"
+if log_lacks "pve-firewall"; then ok "pve-firewall cagrilmadi"; else bad "armed degilken pve-firewall cagrildi"; fi
 out=$(hr foo); rc=$?; expect_eq "gecersiz komut cikis 2" "2" "$rc"; expect_contains "  kullanim" "$out" "kullanim:"
 finish

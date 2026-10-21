@@ -53,6 +53,17 @@
       until: hardening_verify_access_new_connection.rc == 0
       when: not (hardening_ssh_kbdinteractive | default(false))
 
+    # Ek TCP portları (ör. Proxmox web arayüzü 8006): kontrol makinesinden YENİ bağlantı kurulabilmeli. Varsayılan boş = atlanır.
+    - name: Verify extra TCP ports from the controller
+      delegate_to: localhost
+      become: false
+      ansible.builtin.wait_for:
+        host: "{{ hostvars[inventory_hostname]['ansible_host'] | default(inventory_hostname) }}"
+        port: "{{ item }}"
+        connect_timeout: 8
+        timeout: 20
+      loop: "{{ hardening_verify_access_tcp_ports | default([]) }}"
+
     - name: Disarm rollback safety net (erişim doğrulandı)
       ansible.builtin.include_role:
         name: hardening_rollback
@@ -94,8 +105,8 @@
     - name: Stop with a clear message (önceki duruma dönüldü)
       ansible.builtin.fail:
         msg: >-
-          Yeni SSH bağlantısı doğrulanamadı; ÖNCEKİ DURUMA DÖNÜLDÜ: sshd drop-in ve ufw (kurallar ve aktif/pasif
-          durumu) değişiklikten önceki yedekten geri yüklendi. GERİ ALINMADI: kurulan paketler, sysctl, auditd,
+          Yeni SSH bağlantısı doğrulanamadı; ÖNCEKİ DURUMA DÖNÜLDÜ: sshd drop-in, ufw (kurallar ve aktif/pasif
+          durumu) ve Proxmox cluster.fw değişiklikten önceki yedekten geri yüklendi. GERİ ALINMADI: kurulan paketler, sysctl, auditd,
           fail2ban, AIDE ve diğer roller. Erişimi elle doğrulayın; gerekirse Proxmox konsolu/snapshot kullanın.
       when: hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists
 

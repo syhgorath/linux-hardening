@@ -6,10 +6,10 @@
 #   hardening-rollback restore  önceki duruma döner (zamanlayıcı bunu çağırır); armed değilse hiçbir şey yapmaz
 #   hardening-rollback status   durumu TEK satir olarak yazar (kararli anahtarlar; docs/design/rollback-timer.md 4.4)
 #
-# Kapsam: sshd drop-in, ufw dosyaları ve PAM (common-* dosyaları, /var/lib/pam durumu, hardening-faillock profili, faillock.conf). PAM geri alınırken
+# Kapsam: sshd drop-in, ufw dosyaları, Proxmox pve-firewall (cluster.fw) ve PAM (common-* dosyaları, /var/lib/pam durumu, hardening-faillock profili, faillock.conf). PAM geri alınırken
 # kilit sayaçları (/run/faillock) da silinir: geri alma kimseyi kilitli bırakmamalı.
 #
-# Test için ortam değişkenleri: HR_ROOT (yol öneki), HR_UFW, HR_SSHD, HR_SYSTEMCTL, HR_SSH_SERVICE, HR_NOW (epoch saniye).
+# Test için ortam değişkenleri: HR_ROOT (yol öneki), HR_UFW, HR_PVEFW, HR_SSHD, HR_SYSTEMCTL, HR_SSH_SERVICE, HR_NOW (epoch saniye).
 set -eu
 
 ROOT="${HR_ROOT:-}"
@@ -18,6 +18,8 @@ ARMED="$STATE/armed"
 DROPIN="$ROOT/etc/ssh/sshd_config.d/00-hardening.conf"
 UFWDIR="$ROOT/etc/ufw"
 UFW="${HR_UFW:-ufw}"
+PVEFW="${HR_PVEFW:-pve-firewall}"
+PVE_FW_FILE="$ROOT/etc/pve/firewall/cluster.fw"
 SSHD="${HR_SSHD:-/usr/sbin/sshd}"
 SYSTEMCTL="${HR_SYSTEMCTL:-systemctl}"
 DEFAULT_SSH_SERVICE='ssh'
@@ -57,10 +59,46 @@ do_backup() {
     if [ -e "$UFWDIR/$f" ]; then cp -p "$UFWDIR/$f" "$STATE/ufw/$f"; fi
   done
   pam_backup
+  pve_backup
   if "$UFW" status 2>/dev/null | grep -q '^Status: active'; then
     echo yes > "$STATE/ufw-active"
   else
     echo no > "$STATE/ufw-active"
+  fi
+}
+
+# Proxmox pve-firewall (yalnizca /etc/pve/firewall dizini varsa): cluster.fw ve guvenlik duvarinin acik/kapali durumu.
+# pmxcfs (FUSE) chown/chmod desteklemez: cp -p yerine cat ile yalniz ICERIK kopyalanir.
+pve_clear_backup() {
+  rm -rf "$STATE/pve-firewall"
+}
+
+pve_backup() {
+  pve_clear_backup
+  if [ -d "$(dirname "$PVE_FW_FILE")" ]; then
+    mkdir -p "$STATE/pve-firewall"
+    if [ -e "$PVE_FW_FILE" ]; then
+      cat "$PVE_FW_FILE" > "$STATE/pve-firewall/cluster.fw"
+      : > "$STATE/pve-firewall/had-file"
+    fi
+    : > "$STATE/pve-firewall/present"
+  fi
+}
+
+pve_restore() {
+  if [ -e "$STATE/pve-firewall/present" ]; then
+    if [ -e "$STATE/pve-firewall/had-file" ]; then
+      cat "$STATE/pve-firewall/cluster.fw" > "$PVE_FW_FILE" || log "UYARI: cluster.fw geri yazilamadi"
+      log "pve-firewall cluster.fw onceki icerige donduruldu"
+    else
+      rm -f "$PVE_FW_FILE" || log "UYARI: cluster.fw silinemedi"
+      log "pve-firewall cluster.fw onceden yoktu: silindi"
+    fi
+    # kurallar hemen uygulansin; olmazsa son care: guvenlik duvarini durdur (kurallar kalkar)
+    if ! "$PVEFW" restart >/dev/null 2>&1; then
+      log "UYARI: pve-firewall restart basarisiz; pve-firewall stop deneniyor"
+      "$PVEFW" stop >/dev/null 2>&1 || log "UYARI: pve-firewall stop basarisiz"
+    fi
   fi
 }
 
@@ -133,6 +171,7 @@ do_disarm() {
   for f in $UFW_FILES; do rm -f "$STATE/ufw/$f"; done
   rmdir "$STATE/ufw" 2>/dev/null || true
   pam_clear_backup
+  pve_clear_backup
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
   log "disarmed"
 }
@@ -170,8 +209,10 @@ do_restore() {
       log "ufw onceden pasifti: pasif birakildi"
     fi
   fi
+  pve_restore
   rm -f "$ARMED"
   pam_clear_backup
+  pve_clear_backup
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
   log "geri alma tamamlandi"
 }

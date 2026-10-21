@@ -146,6 +146,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
 | `test_pam_faillock.py` | account lockout: guards (safety net off / not armed → stops), stack ORDER (real Ubuntu output and broken variants), `faillock.conf` lines, rescue rollback |
 | `test_pve_report.py`, `test_pve_report_tasks.py` | Proxmox VE host status report (`playbooks/pve-report.yml`): decision logic with real Proxmox 9.2 values + the task chain, read-only, not wired into harden.yml |
+| `test_pve_firewall_plan.py`, `test_pve_firewall_tasks.py` | Proxmox firewall (`playbooks/pve-firewall.yml`): decision script (cluster, allow_from, controller address, user file refusal), task order (enable 0 → compile → enable 1), apply gate, preview chain; `test_rollback_script.sh` section 10: cluster.fw backup/restore |
 | `test_pwhistory.py` | password history (`pam_pwhistory`): pam-auth-update profile (order), `pwhistory.conf` lines on a real file, rescue rollback, off by default |
 | `test_tmp_plan.py`, `test_tmp_noexec_tasks.py` | `/tmp` and `/dev/shm` noexec APPLY: plan decisions (separate tmpfs only, an existing fstab line is never overwritten) + the real `copy`/`lineinfile` chain, idempotence |
 | `test_tmp_report.py`, `test_tmp_tasks.py` | `/tmp` and `/dev/shm` mount options report (CIS 1.1.2): `nodev`/`nosuid`/`noexec`/separate-mount decisions + the real task chain, read-only |

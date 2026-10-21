@@ -1,0 +1,37 @@
+# Proxmox VE (TEK düğüm) güvenlik duvarı: datacenter cluster.fw'yi hardening_ssh_allow_from ağlarına göre yönetir (ufw yerine). harden.yml'den AYRIDIR.
+#   ansible-playbook -i envanter.yml playbooks/pve-firewall.yml -e '{"hardening_ssh_allow_from": ["192.0.2.0/24"]}'          # ÖNİZLEME (hiçbir şey yazılmaz)
+#   ansible-playbook -i envanter.yml playbooks/pve-firewall.yml -e '{"hardening_ssh_allow_from": [...], "hardening_pve_apply": true}'   # GERÇEK
+# Gerçek koşu: önce zamanlı geri alma ağı arm edilir, kural yazılır, kontrol makinesinden YENİ SSH + 8006 bağlantısı doğrulanır; başarısızsa önceki duruma dönülür.
+# Önce VM/host snapshot'ı alın. Tasarım: docs/design/proxmox-firewall.md
+- name: Proxmox VE firewall
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
+  gather_facts: false
+  pre_tasks:
+    - name: Look for the Proxmox VE markers
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: [/etc/pve, /usr/bin/pveversion]
+      register: hardening_pve_fw_markers
+      check_mode: false
+
+    - name: Stop when the target is not a Proxmox VE host
+      ansible.builtin.fail:
+        msg: "Bu playbook yalnızca Proxmox VE hostları içindir (/etc/pve ya da pveversion yok)."
+      when: hardening_pve_fw_markers.results | map(attribute='stat.exists') | min is false
+
+    - name: The rollback safety net is required for the real run
+      ansible.builtin.assert:
+        that:
+          - hardening_rollback_enabled | default(true) | bool
+        fail_msg: "Gerçek koşu geri alma güvenlik ağı olmadan yapılmaz (hardening_rollback_enabled=false). Güvenlik duvarı hatası sunucuyu ve VM'leri erişilemez bırakabilir."
+      when: hardening_pve_apply | default(false) | bool
+  roles:
+    - { role: hardening_rollback, when: "hardening_pve_apply | default(false) | bool" }
+    - hardening_pve_firewall
+  post_tasks:
+    - name: Verify access (new SSH connection and the web UI port) and disarm the rollback
+      ansible.builtin.include_role:
+        name: hardening_verify_access
+      vars:
+        hardening_verify_access_tcp_ports: [8006]
+      when: hardening_pve_apply | default(false) | bool
