@@ -51,6 +51,9 @@ Normal kullanıcı (`claude`) + SSH anahtarıyla, hiçbir şey değiştirilmeden
 - **PATH:** `/usr/sbin` normal kullanıcının PATH'inde değil (`sysctl`, `pve-firewall`, `sshd`): araçlar mutlak yolla ya da root olarak çağrılmalı.
 - **Koruma:** Debian 13 profili eklendikten sonra bile `harden.yml --check` bu hostta `Bu sunucu bir Proxmox VE hostu` diyerek durdu; `-e hardening_allow_unsupported=true` ile de durdu.
 
+### Aşama 2 YAPILDI: salt okunur rapor (`playbooks/pve-report.yml`)
+`hardening_pve_report` rolü (harden.yml'e bağlı DEĞİL) Proxmox'un durumunu okur ve iki liste üretir: **uyarı** (bugünkü gerçek açık: firewall devre dışı, root+parola SSH, çalışmayan servis, dışa açık MTA, ufw ile çakışma) ve **not** (sertleştirme tasarımı için). Ortak rollerin `--check`'te Proxmox'ta ne yapmak İSTEDİĞİ de görüldü (koruma yalnızca önizleme için `hardening_proxmox_markers=[]` ile atlatıldı, hiçbir şey değiştirilmedi): `base` (postfix → dma, unattended-upgrades, usb-storage), `auth`, `kernel` (sysctl, modül kara listesi), `files` (**`/tmp` ve `/dev/shm` noexec**), `auditd`, `fail2ban`, `aide` (VM disklerini taramamalı), `ufw` (**Proxmox'ta çalışmamalı**), `ssh` (`PermitRootLogin no`, küme için `prohibit-password` gerekir), `sudo`. Aşama 3 bunları platform değişkenine bağlı geçersiz kılmalarla çözecek.
+
 ## Açık sorular (cevaplanmadan kod yazılmaz)
 1. **Root ve SSH. KISMEN CEVAPLANDI (2026-10-21):** kullanıcı root ile yönetmiyor (normal kullanıcı + sudo), tek düğüm; Proxmox'un `PermitRootLogin yes` varsayılanı ve ileride küme düğümleri arası root SSH'ı hâlâ açık konu. Ubuntu rollerimiz `root` ile bağlanmayı reddeder ve root girişini kapatır. Proxmox yönetimi ve (varsa) küme
    düğümleri arası işlemler `root` ile yapılıyor olabilir. *Doğrulanmadı.* Hangi hesapla yönetilecek, küme var mı?

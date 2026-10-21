@@ -1,0 +1,97 @@
+# Proxmox VE host durumu raporu (SALT OKUNUR; hiçbir şeyi değiştirmez, `--check`'te de çalışır). Karar mantığı files/pve_report.py. Tasarım: docs/design/proxmox-host.md.
+# Bu rol harden.yml'e BAĞLI DEĞİL: playbooks/pve-report.yml ile ayrı çalışır (hardening_preflight Proxmox hostunu sertleştirmeye karşı korur).
+- name: Read the Proxmox VE version
+  ansible.builtin.command: pveversion
+  register: hardening_pve_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Read the cluster, firewall, guests and subscription state (read-only)
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      printf 'CLUSTERED=%s\n' "$([ -f /etc/pve/corosync.conf ] && echo yes || echo no)"
+      printf 'FIREWALL=%s\n' "$(pve-firewall status 2>/dev/null | head -n 1)"
+      printf 'QEMU=%s\n' "$(qm list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')"
+      printf 'LXC=%s\n' "$(pct list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')"
+      printf 'SUBSCRIPTION=%s\n' "$(pvesubscription get 2>/dev/null | sed -n 's/^status: //p')"
+      printf 'PVE_NEEDS_MTA=%s\n' "$(dpkg-query -W -f='${Depends}' pve-manager 2>/dev/null | grep -q 'mail-transport-agent' && echo yes || echo no)"
+      printf 'POSTFIX=%s\n' "$(dpkg-query -W -f='${Status}' postfix 2>/dev/null | grep -q 'install ok installed' && echo yes || echo no)"
+      printf 'UFW=%s\n' "$(dpkg-query -W -f='${Status}' ufw 2>/dev/null | grep -q 'install ok installed' && echo yes || echo no)"
+    executable: /bin/bash
+  register: hardening_pve_state
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+# state/enabled verilmez: ansible.builtin.systemd yalnızca durumu OKUR (status.ActiveState).
+- name: Read the Proxmox services (read-only)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+  loop: [pve-cluster, pvedaemon, pveproxy, pvestatd, pve-firewall]
+  register: hardening_pve_services
+  failed_when: false
+  check_mode: false
+
+- name: Read the listening sockets and the effective sshd settings (read-only)
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      ss -H -ltn | awk '{print "LISTEN=" $4}'
+      sshd -T 2>/dev/null | awk '$1 == "permitrootlogin" || $1 == "passwordauthentication" {print "SSHD_" toupper($1) "=" $2}'
+      grep -L 'Enabled: false' /etc/apt/sources.list.d/pve-enterprise.sources 2>/dev/null | sed 's|.*|ENTERPRISE_ENABLED=yes|'
+      grep -l 'pve-no-subscription' /etc/apt/sources.list.d/*.sources 2>/dev/null | head -n 1 | sed 's|.*|NO_SUBSCRIPTION=yes|' || true
+    executable: /bin/bash
+  register: hardening_pve_net
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Evaluate the Proxmox host
+  ansible.builtin.script:
+    cmd: >-
+      pve_report.py {{ {
+      'pveversion': (hardening_pve_version.stdout | default('')).split('\n')[0],
+      'clustered': 'CLUSTERED=yes' in hardening_pve_state.stdout_lines,
+      'firewall': (hardening_pve_state.stdout_lines | select('match', '^FIREWALL=') | map('regex_replace', '^FIREWALL=', '') | list | first | default('')),
+      'qemu_count': (hardening_pve_state.stdout_lines | select('match', '^QEMU=') | map('regex_replace', '^QEMU=', '') | list | first | default('0')),
+      'lxc_count': (hardening_pve_state.stdout_lines | select('match', '^LXC=') | map('regex_replace', '^LXC=', '') | list | first | default('0')),
+      'subscription': (hardening_pve_state.stdout_lines | select('match', '^SUBSCRIPTION=') | map('regex_replace', '^SUBSCRIPTION=', '') | list | first | default('')),
+      'pve_needs_mta': 'PVE_NEEDS_MTA=yes' in hardening_pve_state.stdout_lines,
+      'postfix': 'POSTFIX=yes' in hardening_pve_state.stdout_lines,
+      'ufw_installed': 'UFW=yes' in hardening_pve_state.stdout_lines,
+      'services': dict(hardening_pve_services.results | map(attribute='item') | zip(hardening_pve_services.results | map(attribute='status.ActiveState', default='unknown'))),
+      'listening': (hardening_pve_net.stdout_lines | select('match', '^LISTEN=') | map('regex_replace', '^LISTEN=', '') | list),
+      'sshd': {'permitrootlogin': (hardening_pve_net.stdout_lines | select('match', '^SSHD_PERMITROOTLOGIN=') | map('regex_replace', '^SSHD_PERMITROOTLOGIN=', '') | list | first | default('')),
+               'passwordauthentication': (hardening_pve_net.stdout_lines | select('match', '^SSHD_PASSWORDAUTHENTICATION=') | map('regex_replace', '^SSHD_PASSWORDAUTHENTICATION=', '') | list | first | default(''))},
+      'enterprise_repo_enabled': 'ENTERPRISE_ENABLED=yes' in hardening_pve_net.stdout_lines,
+      'no_subscription_repo': 'NO_SUBSCRIPTION=yes' in hardening_pve_net.stdout_lines} | to_json | quote }}
+    executable: python3
+  register: hardening_pve_raw
+  changed_when: false
+  check_mode: false
+
+- name: Parse the Proxmox report
+  ansible.builtin.set_fact:
+    hardening_pve_result: "{{ hardening_pve_raw.stdout | from_json }}"
+
+- name: Show the Proxmox summary
+  ansible.builtin.debug:
+    msg: "PROXMOX: {{ hardening_pve_result.summary }}"
+  when: hardening_pve_result.status != 'unknown'
+
+- name: Warn about the Proxmox host
+  ansible.builtin.debug:
+    msg: "UYARI (proxmox): {{ hardening_pve_result.warnings | join(' ') }}"
+  when: hardening_pve_result.warnings | length > 0
+
+- name: Notes about the Proxmox host
+  ansible.builtin.debug:
+    msg: "NOT (proxmox): {{ hardening_pve_result.notes | join(' ') }}"
+  when: hardening_pve_result.notes | length > 0
+
+- name: Note that the Proxmox report could not be evaluated
+  ansible.builtin.debug:
+    msg: "UYARI (proxmox): rapor değerlendirilemedi: {{ hardening_pve_result.error }}"
+  when: hardening_pve_result.status == 'unknown'

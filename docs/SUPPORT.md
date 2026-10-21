@@ -7,7 +7,7 @@
 | Debian | 13 (trixie) | Desteklenir, **konteynerde test edildi** | `--check` `failed=0`, gerçek koşu `failed=0`, ikinci koşu `changed=0` (Colima'da systemd'li konteyner, `auditd` atlanarak); gerçek bir Debian 13 VM'inde ve `auditd` ile henüz DENENMEDİ; Raspberry Pi OS (Debian tabanlı) ayrıca denenmedi; Proxmox hostu bilerek reddedilir |
 | Raspberry Pi OS / Proxmox VE | – | Planlandı, **henüz yok** | Firewall, ip_forward, SD kart farkları var |
 | Ubuntu Server 26.04 (Raspberry Pi üzerinde) | 26.04 LTS | `ubuntu-26.04` profiliyle kapıdan GEÇER, **denenmedi** | SD kart yazma aşınması, `/tmp` ve `journald` farkları, ARM mimarisi hiç sınanmadı; çalışacağına dair iddia yok |
-| Proxmox VE hostu | 9 (Debian 13) | **Çalışmaz, bilerek reddedilir** | `/etc/pve` varsa rol durur, `hardening_allow_unsupported` bile atlatmaz; üstündeki Ubuntu VM'leri etkilenmez |
+| Proxmox VE hostu | 9 (Debian 13) | **Çalışmaz, bilerek reddedilir** | `/etc/pve` varsa rol durur, `hardening_allow_unsupported` bile atlatmaz; üstündeki Ubuntu VM'leri etkilenmez. Yalnızca SALT OKUNUR durum raporu vardır: `playbooks/pve-report.yml` (iç içe Proxmox 9.2'de denendi) |
 
 ## Yeni sürüm / dağıtım ekleme
 1. `vars/<dagitim>-<surum>.yml` oluştur (örn. `vars/ubuntu-24.04.yml`), `vars/ubuntu-26.04.yml`'den kopyala.

@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- **Proxmox VE durum raporu** (`playbooks/pve-report.yml`, rol `hardening_pve_report`, harden.yml'e BAĞLI DEĞİL, SALT OKUNUR): sürüm, küme, `pve-firewall` durumu, servisler, dinleyiciler, SSH, postfix/MTA bağımlılığı, VM/CT sayısı, abonelik; uyarı ve not üretir. Hedef Proxmox değilse durur. Gerçek bulgu: `postfix`'i kaldırmak `pve-manager` ve `proxmox-ve`'yi kaldırır. İç içe Proxmox 9.2'de denendi (verification-log 41). `test_pve_report.py`, `test_pve_report_tasks.py`. Proxmox hostu hâlâ SERTLEŞTİRİLMEZ.
 - **Debian 13 (trixie) desteği** (`debian-13` profili, `hardening_supported_os`): `vars/debian-13.yml`; sürüm anahtarı Debian'da ANA sürüm (`ansible_facts['distribution_version']` `13.7` döndürür); `--check` için `python3-apt` yoksa anlaşılır mesajla durur; `ufw` kurulu değilken `--check` düşmez. Colima'da systemd'li Debian 13 konteynerinde `--check` `failed=0`, gerçek koşu `failed=0`, **ikinci koşu `changed=0`** (`auditd` konteynerde çalışmadığı için atlandı; verification-log 39). **Gerçek Debian VM'inde, `auditd` ve Raspberry Pi OS ile DENENMEDİ.** Proxmox hostu hâlâ bilerek reddedilir. `test_debian_support.py`.
 
 ### Belgeler
