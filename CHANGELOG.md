@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Belgeler
+- `docs/verification-log.md` madde 38: v0.5.0 (`main` `5d9e024`) gerçek VM'de SIFIRDAN tam kurulum: `--check` `failed=0`, 1. koşu `ok=143 changed=43 failed=0`, **2. koşu `changed=0`**, `noexec` etkin, `faillock` kapalı, Lynis 75 (bekleyen güvenlik güncellemeleri yüzünden 1 uyarı). v0.5.0 notundaki "sıfırdan tam kurulum yapılmadı" cümlesi bununla kapandı.
+
 ## [0.5.0] - 2026-10-21
 
 v0.4.0'dan sonra: `/tmp` ve `/dev/shm` için `noexec` (varsayılan **açık**), hesap kilitleme (`pam_faillock`) ve parola geçmişi (`pam_pwhistory`) seçenekleri (varsayılan **kapalı**), geri alma güvenlik ağının PAM'i kapsaması,
