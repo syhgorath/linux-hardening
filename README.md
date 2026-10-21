@@ -141,6 +141,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
 | `test_apt_listchanges.py` | `apt-listchanges`: kurulum + bloklamayan yapılandırma (`confirm=false`, `frontend=text`), idempotent, `warn_if` yok |
 | `test_pam_faillock.py` | hesap kilitleme: korumalar (güvenlik ağı kapalı/armed değil → durur), yığın SIRASI (gerçek Ubuntu çıktısı ve bozuk varyantlar), `faillock.conf` satırları, rescue geri alma |
+| `test_pve_report.py`, `test_pve_report_tasks.py` | Proxmox VE host durum raporu (`playbooks/pve-report.yml`): gerçek Proxmox 9.2 değerleriyle karar mantığı + görev zinciri, salt okunur, harden.yml'e bağlı değil |
 | `test_pwhistory.py` | parola geçmişi (`pam_pwhistory`): pam-auth-update profili (sıra), `pwhistory.conf` satırları gerçek dosyada, rescue ile geri alma, varsayılan kapalı |
 | `test_tmp_plan.py`, `test_tmp_noexec_tasks.py` | `/tmp` ve `/dev/shm` noexec UYGULAMA: plan kararları (yalnız ayrı+tmpfs, fstab satırı ezilmez) + gerçek `copy`/`lineinfile` zinciri, idempotens |
 | `test_tmp_report.py`, `test_tmp_tasks.py` | `/tmp` ve `/dev/shm` bağlama seçenekleri raporu (CIS 1.1.2): `nodev`/`nosuid`/`noexec`/ayrı bağlama kararları + gerçek görev zinciri, salt okunur |

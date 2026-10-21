@@ -1,0 +1,21 @@
+# Proxmox VE host durumu raporu (SALT OKUNUR). harden.yml'den AYRIDIR: bu paket Proxmox hostunu henüz SERTLEŞTİRMEZ, yalnızca durumunu okur.
+#   ansible-playbook -i envanter.yml playbooks/pve-report.yml
+# Hedef bir Proxmox VE hostu DEĞİLSE (/etc/pve yok) DURUR. Hiçbir şeyi değiştirmez; `--check`'te de aynı çıktıyı verir.
+- name: Proxmox VE host report (read-only)
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
+  gather_facts: false
+  tasks:
+    - name: Look for the Proxmox VE marker
+      ansible.builtin.stat:
+        path: /etc/pve
+      register: hardening_pve_marker
+      check_mode: false
+
+    - name: Stop when the target is not a Proxmox VE host
+      ansible.builtin.fail:
+        msg: "Bu playbook yalnızca Proxmox VE hostları içindir (/etc/pve yok). Başka sunucular için playbooks/audit.yml ya da harden.yml."
+      when: not hardening_pve_marker.stat.exists
+
+    - name: Proxmox VE report
+      ansible.builtin.include_role:
+        name: hardening_pve_report
