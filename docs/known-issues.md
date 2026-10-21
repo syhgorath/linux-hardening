@@ -101,6 +101,6 @@ sudo ls /etc/ssh/sshd_config.d/ && sudo sshd -T | grep -iE 'allowtcpforwarding|a
   sonucunu etkilemez. Deneme sonunda Docker ve iptables kalıntıları temizlendi.
 
 ## Bu tablo neyi kapsamıyor
-- Proxmox hostu ve Raspberry Pi profilleri: bkz. [ROADMAP.md](ROADMAP.md) (henüz yok).
+- Proxmox hostu ve Raspberry Pi profilleri: bkz. [ROADMAP.md](ROADMAP.md) (henüz yok). Proxmox hostunda rol bilerek DURUR; Ubuntu Server'ın Raspberry Pi üzerinde çalışması **denenmedi** (docs/SUPPORT.md). Platform kararı: paket değişkeni (docs/design/proxmox-host.md, soru 5).
 - Uygulama düzeyinde (nginx, MySQL vb.) sertleştirme bu projenin kapsamında değil.
 - ⚠️ işaretli etkiler genel Linux bilgisine dayanır (yukarıdaki "denenemeyenler"); sizin ortamınızda doğrulanmadan kesin kabul etmeyin. "LAB'da denendi" olanlar da tek bir ortamda gözlemlendi.

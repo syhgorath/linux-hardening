@@ -5,6 +5,8 @@
 | Ubuntu | 26.04 LTS | Desteklenir, test edildi (Proxmox VM) | Lynis 58 -> 77, idempotent |
 | Ubuntu | 24.04 LTS | Planlanmadı | Eklenebilir (aşağıya bak) |
 | Raspberry Pi OS / Proxmox VE | – | Planlandı, **henüz yok** | Firewall, ip_forward, SD kart farkları var |
+| Ubuntu Server 26.04 (Raspberry Pi üzerinde) | 26.04 LTS | `ubuntu-26.04` profiliyle kapıdan GEÇER, **denenmedi** | SD kart yazma aşınması, `/tmp` ve `journald` farkları, ARM mimarisi hiç sınanmadı; çalışacağına dair iddia yok |
+| Proxmox VE hostu | 9 (Debian 13) | **Çalışmaz, bilerek reddedilir** | `/etc/pve` varsa rol durur, `hardening_allow_unsupported` bile atlatmaz; üstündeki Ubuntu VM'leri etkilenmez |
 
 ## Yeni sürüm / dağıtım ekleme
 1. `vars/<dagitim>-<surum>.yml` oluştur (örn. `vars/ubuntu-24.04.yml`), `vars/ubuntu-26.04.yml`'den kopyala.
