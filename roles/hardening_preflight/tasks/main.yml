@@ -42,6 +42,34 @@
       Gerçek koşu REDDEDİLDİ; hiçbir şey değiştirilmedi.
   when: hardening_platform == 'proxmox-host' and not ansible_check_mode
 
+# Raspberry Pi (docs/design/raspberry-pi.md): Pi algılanması BİLGİ amaçlıdır (generic platform reddedilmez, Pi'de Ubuntu/Debian sıradan çalışır); `raspberry-pi` platformu yalnızca GERÇEK Pi'de kabul edilir.
+- name: Look for Raspberry Pi markers
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ hardening_rpi_markers }}"
+  register: hardening_rpi_stat
+  check_mode: false
+
+- name: Remember whether this is a Raspberry Pi
+  ansible.builtin.set_fact:
+    hardening_is_rpi: "{{ hardening_rpi_stat.results | selectattr('stat.exists') | list | length > 0 }}"
+    # Yalnızca usb-storage engelini gevşetir (Pi USB'den açılabilir); sysctl/noexec gevşetilmez.
+    hardening_rpi_relaxed: "{{ hardening_platform == 'raspberry-pi' and not (hardening_rpi_strict | bool) }}"
+
+- name: Refuse the raspberry-pi platform on a host that is not a Raspberry Pi
+  ansible.builtin.fail:
+    msg: >-
+      hardening_platform=raspberry-pi seçildi ama bu sunucu bir Raspberry Pi değil ({{ hardening_rpi_markers | join(', ') }} yok).
+      Pi olmayan sunucu için platformu `generic` bırakın; bu denetim hardening_allow_unsupported ile atlanamaz.
+  when: hardening_platform == 'raspberry-pi' and not (hardening_is_rpi | bool)
+
+- name: Note a Raspberry Pi that is hardened with the generic platform
+  ansible.builtin.debug:
+    msg: >-
+      NOT (raspberry-pi): bu sunucu bir Raspberry Pi gibi görünüyor ama platform generic. usb-storage engeli USB diskten/SSD'den açılan ya da USB depolama kullanan Pi'de
+      erişimi keser; bu durumda hardening_platform=raspberry-pi verin (docs/design/raspberry-pi.md). Hiçbir şey durdurulmadı.
+  when: hardening_is_rpi | bool and hardening_platform == 'generic'
+
 # Proxmox KÜMESİ: düğümler arası işlemler (pvecm, migration, replikasyon) kökten SSH ister. PermitRootLogin no kümeyi bozar: kullanıcı bilerek prohibit-password seçmeli.
 - name: Look for the Proxmox cluster marker
   ansible.builtin.stat:

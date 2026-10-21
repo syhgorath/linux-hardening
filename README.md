@@ -141,6 +141,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
 | `test_apt_listchanges.py` | `apt-listchanges`: kurulum + bloklamayan yapılandırma (`confirm=false`, `frontend=text`), idempotent, `warn_if` yok |
 | `test_pam_faillock.py` | hesap kilitleme: korumalar (güvenlik ağı kapalı/armed değil → durur), yığın SIRASI (gerçek Ubuntu çıktısı ve bozuk varyantlar), `faillock.conf` satırları, rescue geri alma |
+| `test_rpi_platform.py` | Raspberry Pi platformu: algılama, `raspberry-pi` reddi (Pi değilse), `generic` + Pi notu, `usb-storage` gevşetmesi, Proxmox gevşetmesinin Pi'yi kapsamaması |
 | `test_pve_report.py`, `test_pve_report_tasks.py` | Proxmox VE host durum raporu (`playbooks/pve-report.yml`): gerçek Proxmox 9.2 değerleriyle karar mantığı + görev zinciri, salt okunur, harden.yml'e bağlı değil |
 | `test_pve_firewall_plan.py`, `test_pve_firewall_tasks.py` | Proxmox güvenlik duvarı (`playbooks/pve-firewall.yml`): karar betiği (küme, allow_from, kontrol makinesi, kullanıcı dosyası reddi), görev sırası (enable 0 → compile → enable 1), apply kapısı, ön izleme zinciri; `test_rollback_script.sh` bölüm 10: cluster.fw yedek/geri alma |
 | `test_pwhistory.py` | parola geçmişi (`pam_pwhistory`): pam-auth-update profili (sıra), `pwhistory.conf` satırları gerçek dosyada, rescue ile geri alma, varsayılan kapalı |

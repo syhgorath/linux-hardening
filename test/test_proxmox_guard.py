@@ -36,7 +36,7 @@ check("sira: platform/Proxmox korumasi, OS/surum denetiminden ONCE", last < task
 check("korumalar allow_unsupported'a BAGLI DEGIL (atlatilamaz)", all("allow_unsupported" not in str(t.get("when", "")) for t in guard))
 check("Proxmox isareti taramasi --check'te de calisir (check_mode: false)", next(t for t in guard if "ansible.builtin.stat" in t).get("check_mode") is False)
 check("varsayilanlar: platform generic, bilinen [generic, proxmox-host], strict false, isaretler /etc/pve ve /usr/bin/pveversion",
-      (defaults["hardening_platform"], defaults["hardening_platforms_known"], defaults["hardening_pve_strict"], defaults["hardening_proxmox_markers"]) == ("generic", ["generic", "proxmox-host"], False, ["/etc/pve", "/usr/bin/pveversion"]))
+      (defaults["hardening_platform"], defaults["hardening_platforms_known"], defaults["hardening_pve_strict"], defaults["hardening_proxmox_markers"]) == ("generic", ["generic", "proxmox-host", "raspberry-pi"], False, ["/etc/pve", "/usr/bin/pveversion"]))
 check("OS denetimi hala allow_unsupported ile atlanir (Proxmox disinda davranis degismedi)", "hardening_allow_unsupported" in str(os_t.get("when")))
 
 
@@ -84,8 +84,8 @@ with tempfile.TemporaryDirectory() as t:
         check(f"proxmox-host + GERCEK KOSU (allow_unsupported={allow}): DURUR (yalniz --check destekli)", rc != 0 and "YALNIZCA önizleme (--check)" in out and "DEVAM-EDILDI" not in out)
     rc, out = play("proxmox-host", no, check_mode=True)
     check("proxmox-host ama Proxmox DEGIL: DURUR ('Proxmox VE değil')", rc != 0 and "Proxmox VE değil" in out)
-    rc, out = play("raspberry-pi", no)
-    check("gecersiz/henuz desteklenmeyen platform (raspberry-pi): DURUR ve gecerli degerleri soyler", rc != 0 and "hardening_platform geçersiz" in out and "generic, proxmox-host" in out)
+    rc, out = play("baska-platform", no)
+    check("gecersiz platform (baska-platform): DURUR ve gecerli degerleri soyler", rc != 0 and "hardening_platform geçersiz" in out and "generic, proxmox-host, raspberry-pi" in out)
     rc, out = play("", no)
     check("bos platform: DURUR", rc != 0 and "hardening_platform geçersiz" in out)
 
