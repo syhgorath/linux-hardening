@@ -283,6 +283,15 @@ vars:
     type: list[string]
     default: [/etc/pve, /var/lib/pve-cluster, /var/lib/rrdcached, /var/lib/lxcfs, /var/lib/vz, /var/lib/ceph]
     description: "Proxmox VE hostunda AIDE'nin taramayacağı yollar (pmxcfs, küme veritabanı, rrd, lxcfs, VM/ISO/yedek deposu, ceph). Yalnızca hardening_platform=proxmox-host iken uygulanır; DENENMEDİ"
+  - name: hardening_pve_apply
+    type: bool
+    default: false
+    warn_if: true                      # true = Proxmox güvenlik duvarı GERÇEKTEN yazılıp etkinleştirilir (yanlış kural web arayüzünü ve SSH'ı keser)
+    description: "true: playbooks/pve-firewall.yml Proxmox VE (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. Önce snapshot alın. DENENMEDİ"
+  - name: hardening_pve_firewall_extra_ports
+    type: list[string]
+    default: []
+    description: "Proxmox güvenlik duvarında yönetim ağlarına ek açılacak portlar: \"443/tcp\", \"8000:8010/udp\". Varsayılan boş: rpcbind (111) güvenlik duvarı açılınca kapanır; Proxmox 8006, VNC (5900-5999), SPICE (3128), 22 ve taşıma portlarını yönetim ağlarına kendisi açar. Yalnızca hardening_pve_apply=true iken etkili"
   - name: hardening_ssh_permit_root_login
     type: string
     default: "no"

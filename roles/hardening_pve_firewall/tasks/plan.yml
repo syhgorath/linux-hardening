@@ -1,0 +1,62 @@
+# PLAN AŞAMASI (salt okunur; --check'te de çalışır): ne yazılacağına karar verir (hardening_pve_fw_plan), reddeder ya da önizler.
+# Geri alma ağı bu aşamadan SONRA, yalnızca yazılacak bir şey varsa arm edilir (reddedilen/noop koşu ağı armed bırakmasın). Sıra: playbooks/pve-firewall.yml
+- name: Look for the cluster marker
+  ansible.builtin.stat:
+    path: "{{ hardening_pve_cluster_marker }}"
+  register: hardening_pve_fw_cluster
+  check_mode: false
+
+- name: Look for the datacenter firewall file
+  ansible.builtin.stat:
+    path: "{{ hardening_pve_firewall_file }}"
+  register: hardening_pve_fw_stat
+  check_mode: false
+
+- name: Read the datacenter firewall file
+  ansible.builtin.slurp:
+    src: "{{ hardening_pve_firewall_file }}"
+  register: hardening_pve_fw_slurp
+  when: hardening_pve_fw_stat.stat.exists
+  check_mode: false
+
+- name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
+  ansible.builtin.command: printenv SSH_CONNECTION
+  become: false
+  register: hardening_pve_fw_conn
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Plan the Proxmox firewall
+  ansible.builtin.script:
+    cmd: "pve_firewall_plan.py {{ hardening_pve_fw_input | to_json | quote }}"
+    executable: python3
+  vars:
+    hardening_pve_fw_input:
+      clustered: "{{ hardening_pve_fw_cluster.stat.exists }}"
+      allow_from: "{{ hardening_ssh_allow_from | default([]) }}"
+      client_ip: "{{ (hardening_pve_fw_conn.stdout.split() | first | default('')) if hardening_pve_fw_conn.rc == 0 else '' }}"
+      existing: "{{ (hardening_pve_fw_slurp.content | b64decode) if hardening_pve_fw_stat.stat.exists else none }}"
+      extra_ports: "{{ hardening_pve_firewall_extra_ports | default([]) }}"
+  register: hardening_pve_fw_raw
+  changed_when: false
+  check_mode: false
+
+- name: Parse the Proxmox firewall plan
+  ansible.builtin.set_fact:
+    hardening_pve_fw_plan: "{{ hardening_pve_fw_raw.stdout | from_json }}"
+
+- name: Stop because the Proxmox firewall cannot be managed safely
+  ansible.builtin.fail:
+    msg: "pve-firewall yönetilmedi, hiçbir şey yazılmadı: {{ hardening_pve_fw_plan.reasons | join(' ') }}{{ hardening_pve_fw_plan.error }}"
+  when: hardening_pve_fw_plan.status == 'refuse'
+
+- name: Say that the Proxmox firewall is already as wanted
+  ansible.builtin.debug:
+    msg: "pve-firewall: {{ hardening_pve_fw_plan.reasons | join(' ') }}"
+  when: hardening_pve_fw_plan.status == 'noop'
+
+- name: Show what would be written (hardening_pve_apply=false or --check)
+  ansible.builtin.debug:
+    msg: "pve-firewall ÖNİZLEME (yazılmadı), {{ hardening_pve_firewall_file }}:\n{{ hardening_pve_fw_plan.content }}"
+  when: hardening_pve_fw_plan.status == 'apply' and (not (hardening_pve_apply | bool) or ansible_check_mode)

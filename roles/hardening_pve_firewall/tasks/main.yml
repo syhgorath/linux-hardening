@@ -1,7 +1,58 @@
-# ISKELET (islevsiz). harden.yml bu role BAGLI DEGIL. Tasarim ve acik sorular: docs/design/proxmox-host.md
-# Yanlislikla baglanirsa sessizce "bir sey yapmis gibi" davranmasin diye durur.
-- name: Stop because the Proxmox firewall role is not implemented yet
-  ansible.builtin.fail:
-    msg: >-
-      hardening_pve_firewall henüz uygulanmadı (iskelet). docs/design/proxmox-host.md içindeki açık soruları kapatmadan
-      kullanmayın.
+# UYGULAMA AŞAMASI: yalnızca plan 'apply' ve hardening_pve_apply=true ve --check değil. Önce plan.yml ve geri alma ağı arm'ı çalışmış olmalı.
+- name: Apply the Proxmox firewall
+  when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | bool and not ansible_check_mode
+  block:
+    # Güvenlik ağı olmadan ASLA yazılmaz: geri alma ağı armed değilse (rol tek başına çağrıldıysa) dur.
+    - name: Require an armed rollback safety net
+      ansible.builtin.stat:
+        path: "{{ hardening_pve_rollback_armed_file }}"
+      register: hardening_pve_fw_armed
+      check_mode: false
+
+    - name: Refuse to write without the rollback safety net
+      ansible.builtin.fail:
+        msg: "Geri alma güvenlik ağı armed değil: pve-firewall yazılmadı. playbooks/pve-firewall.yml kullanın (hardening_rollback önce arm edilir)."
+      when: not hardening_pve_fw_armed.stat.exists
+
+    # pmxcfs (FUSE): copy modulu burada 'Operation not permitted' ile BASARISIZ OLUR (rename/chmod); duz yazma (tee) calisir. Sahip/izin verilmez.
+    - name: Write the file DISABLED first (enable 0)
+      ansible.builtin.command:
+        argv: [tee, "{{ hardening_pve_firewall_file }}"]
+        stdin: "{{ hardening_pve_fw_plan.content_disabled }}"
+        stdin_add_newline: false
+      changed_when: true
+
+    # compile kuralları YALNIZCA üretip yazdırır, uygulamaz; sözdizimi hatası burada yakalanır.
+    - name: Validate the rules without applying them (pve-firewall compile)
+      ansible.builtin.command: pve-firewall compile
+      register: hardening_pve_fw_compile
+      changed_when: false
+
+    - name: Write the file ENABLED (enable 1)
+      ansible.builtin.command:
+        argv: [tee, "{{ hardening_pve_firewall_file }}"]
+        stdin: "{{ hardening_pve_fw_plan.content }}"
+        stdin_add_newline: false
+      changed_when: true
+
+    - name: Apply now (pve-firewall restart)
+      ansible.builtin.systemd:
+        name: pve-firewall
+        state: restarted
+
+    - name: Verify the firewall is enabled and running
+      ansible.builtin.command: pve-firewall status
+      register: hardening_pve_fw_status
+      changed_when: false
+      failed_when: "'enabled/running' not in hardening_pve_fw_status.stdout"
+
+  rescue:
+    # Yazma/doğrulama başarısız: geri alma betiği cluster.fw'yi arm anındaki haline döndürür (yoksa siler), pve-firewall'u yeniden başlatır ve kendini disarm eder. Sonra DUR.
+    - name: Restore the previous firewall state now (hardening_rollback)
+      ansible.builtin.include_role:
+        name: hardening_rollback
+        tasks_from: restore
+
+    - name: Stop because the Proxmox firewall could not be applied
+      ansible.builtin.fail:
+        msg: "pve-firewall uygulanamadı; önceki duruma dönüldü. Ayrıntı: {{ hardening_pve_fw_compile.stderr | default('') }}{{ hardening_pve_fw_compile.stdout | default('') | truncate(400) }}{{ hardening_pve_fw_status.stdout | default('') }}"
