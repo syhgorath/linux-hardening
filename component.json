@@ -405,6 +405,12 @@
       "description": "Proxmox VE hostunda AIDE'nin taramayacağı yollar (pmxcfs, küme veritabanı, rrd, lxcfs, VM/ISO/yedek deposu, ceph). Yalnızca hardening_platform=proxmox-host iken uygulanır; DENENMEDİ"
     },
     {
+      "name": "hardening_ssh_permit_root_login",
+      "type": "string",
+      "default": "no",
+      "description": "sshd PermitRootLogin değeri: no (varsayılan, kök girişi tamamen kapalı) | prohibit-password (yalnızca anahtarla). Proxmox VE KÜMESİNDE düğümler arası işlemler kökten SSH ister: orada prohibit-password gerekir (preflight kümede no ile durur). Parola ile kök girişi hiçbir ayarla açılmaz"
+    },
+    {
       "name": "hardening_log_file_permissions",
       "type": "bool",
       "default": false,

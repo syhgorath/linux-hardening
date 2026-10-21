@@ -17,3 +17,5 @@ hardening_platform: generic
 hardening_platforms_known: [generic, proxmox-host]
 # true: Proxmox hostunda da genel politika varsayılanları uygulanır (/tmp ve /dev/shm noexec, usb-storage engeli). Varsayılan false: Proxmox iş akışlarını (yedek diski, şablon/ISO çalıştırma) bozmasın.
 hardening_pve_strict: false
+# Proxmox kümesi işareti (kümede /etc/pve/corosync.conf vardır). Yalnızca TEST için değiştirilir.
+hardening_pve_cluster_marker: /etc/pve/corosync.conf

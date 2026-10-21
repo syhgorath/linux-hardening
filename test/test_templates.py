@@ -42,7 +42,9 @@ CASES = [
      {"hardening_ssh_allow_tcp_forwarding": "local"}),
     ("sshd-hardening.pw-yes.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2",
      {"hardening_ssh_disable_password": False}),
+    ("sshd-hardening.rootkey.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2", {"hardening_ssh_permit_root_login": "prohibit-password"}),
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
+    ("sysctl.pve.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_platform_relaxed": True}),
     ("sysctl.extra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_extra_sysctl": False}),
     ("sysctl.ra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_disable_ipv6_ra": True}),
     ("hardening.rules", "roles/hardening_auditd/templates/hardening.rules.j2", {}),
@@ -122,6 +124,14 @@ if not UPDATE:
     assert_has("varsayilan: AuthenticationMethods YOK", d_, "AuthenticationMethods", want=False)
     assert_has("varsayilan: AllowTcpForwarding no", d_, "AllowTcpForwarding no")
     assert_has("varsayilan: PermitRootLogin no", d_, "PermitRootLogin no")
+    rk = read("sshd-hardening.rootkey.conf")
+    assert_has("prohibit-password: PermitRootLogin prohibit-password (parola ile kok girisi ASLA acilmaz)", rk, "PermitRootLogin prohibit-password")
+    assert_has("   'PermitRootLogin yes' hicbir varyantta yok", rk + d_, "PermitRootLogin yes", want=False)
+    sc, sp = read("sysctl.conf"), read("sysctl.pve.conf")
+    assert_has("sysctl varsayilan: rp_filter katı (1)", sc, "net.ipv4.conf.all.rp_filter = 1")
+    assert_has("sysctl Proxmox (relaxed): rp_filter GEVSEK (2) ve katı (1) YOK", sp, "net.ipv4.conf.all.rp_filter = 2")
+    assert_has("   Proxmox'ta default rp_filter da 2", sp, "net.ipv4.conf.default.rp_filter = 2")
+    assert_has("   Proxmox'ta katı rp_filter satırı yok", sp, "rp_filter = 1", want=False)
     assert_has("varsayilan: DisableForwarding yes (AllowTcpForwarding no iken)", d_, "DisableForwarding yes")
     for opt in ("GSSAPIAuthentication no", "HostbasedAuthentication no", "IgnoreRhosts yes", "PermitUserEnvironment no", "UsePAM yes", "MaxStartups 10:30:60"):
         assert_has(f"varsayilan: {opt}", d_, opt)
