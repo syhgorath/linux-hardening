@@ -60,7 +60,9 @@ Normal kullanıcı (`claude`) + SSH anahtarıyla, hiçbir şey değiştirilmeden
 - **Politika** (varsayılan Proxmox'ta KAPALI, `hardening_pve_strict=true` ile açılır): `/tmp` ve `/dev/shm` `noexec`, `usb-storage` engeli.
 - **AIDE**: `hardening_aide_pve_excludes` (`!yol` satırları, veritabanı ilk üretilmeden önce). Denenmedi.
 - Neden varsayılan DEĞER değiştirmek yerine `when` + tek anahtar: `component.yml` varsayılanı rol varsayılanıyla birebir aynı olmalı ve sshpocket şemasına yeni anahtar eklemek istemedik.
-- Sonraki: `ssh` (`PermitRootLogin`, küme), `kernel` sysctl/modül gözden geçirmesi, aşama 4 (`pve-firewall` + geri alma ağı kapsamı), sonra gerçek koşu.
+- **`ssh`:** `hardening_ssh_permit_root_login` (`no` | `prohibit-password`); Proxmox KÜMESİNDE (`/etc/pve/corosync.conf` var) `no` ile preflight DURUR (düğümler arası kök SSH). Kümeli host denenmedi (yalnızca birim testi).
+- **`kernel`:** Proxmox'ta (`hardening_pve_strict=false`) `rp_filter` GEVŞEK (2): katı (1) çok arayüzlü / asimetrik yönlendirmede trafiği düşürür, Proxmox'un varsayılanı zaten 2. Diğer sysctl'ler ve modül kara listesi (`atm`, `can`, `dccp`, `rds`, `sctp`, `tipc`, CIS dosya sistemi modülleri) gözden geçirildi: Proxmox'u etkilemez (kuramsal; VM ağı üzerinde gerçek koşuyla denenmedi).
+- Sonraki: aşama 4 (`pve-firewall` + geri alma ağı kapsamı), sonra gerçek koşu.
 
 ## Açık sorular (cevaplanmadan kod yazılmaz)
 1. **Root ve SSH. KISMEN CEVAPLANDI (2026-10-21):** kullanıcı root ile yönetmiyor (normal kullanıcı + sudo), tek düğüm; Proxmox'un `PermitRootLogin yes` varsayılanı ve ileride küme düğümleri arası root SSH'ı hâlâ açık konu. Ubuntu rollerimiz `root` ile bağlanmayı reddeder ve root girişini kapatır. Proxmox yönetimi ve (varsa) küme

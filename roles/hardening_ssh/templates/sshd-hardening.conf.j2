@@ -1,5 +1,5 @@
 # Ansible tarafından yönetilir
-PermitRootLogin no
+PermitRootLogin {{ hardening_ssh_permit_root_login }}
 PasswordAuthentication {{ 'no' if hardening_ssh_disable_password else 'yes' }}
 PermitEmptyPasswords no
 KbdInteractiveAuthentication {{ 'yes' if hardening_ssh_kbdinteractive else 'no' }}

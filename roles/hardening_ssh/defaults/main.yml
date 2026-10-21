@@ -10,3 +10,6 @@ hardening_ssh_kbdinteractive: false
 # ProxyJump/tünel kullananlar için: no | local | remote | yes. Varsayılan no (davranış değişmez).
 # ProxyJump için jump host'ta en az "local" gerekir; "yes" gereksiz geniştir.
 hardening_ssh_allow_tcp_forwarding: "no"
+# PermitRootLogin değeri: "no" (varsayılan) | "prohibit-password" (yalnızca anahtarla). `no` kök girişini tamamen kapatır. Proxmox VE KÜMESİNDE düğümler arası işlemler kökten SSH ister:
+# orada "prohibit-password" gerekir (preflight kümede "no" ile durur). Parola ile kök girişi hiçbir ayarla açılmaz. YAML'da no tırnaksız bool olur: "no" yazın.
+hardening_ssh_permit_root_login: "no"

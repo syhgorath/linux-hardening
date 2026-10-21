@@ -1,6 +1,8 @@
 # Ansible tarafından yönetilir. ip_forward'a bilerek dokunulmaz (LXD/konteyner/router kullanımı).
-net.ipv4.conf.all.rp_filter = 1
-net.ipv4.conf.default.rp_filter = 1
+{# Proxmox VE (hardening_platform=proxmox-host, hardening_pve_strict=false): GEVŞEK (2). Katı (1), çok arayüzlü / asimetrik yönlendirmeli kurulumlarda (köprü + ayrı küme/Ceph ağı) trafiği düşürür; Proxmox'un kendi varsayılanı 2'dir. #}
+{% set rp_filter = 2 if (hardening_platform_relaxed | default(false) | bool) else 1 %}
+net.ipv4.conf.all.rp_filter = {{ rp_filter }}
+net.ipv4.conf.default.rp_filter = {{ rp_filter }}
 net.ipv4.conf.all.accept_redirects = 0
 net.ipv4.conf.default.accept_redirects = 0
 net.ipv6.conf.all.accept_redirects = 0

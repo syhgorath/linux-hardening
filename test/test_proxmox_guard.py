@@ -40,6 +40,14 @@ check("varsayilanlar: platform generic, bilinen [generic, proxmox-host], strict 
 check("OS denetimi hala allow_unsupported ile atlanir (Proxmox disinda davranis degismedi)", "hardening_allow_unsupported" in str(os_t.get("when")))
 
 
+c0 = names.index("Look for the Proxmox cluster marker")
+c1 = names.index("Refuse PermitRootLogin no on a Proxmox VE cluster node")
+cluster = tasks[c0:c1 + 1]
+check("kume denetimi: platform proxmox-host ile sinirli, --check'te de calisir, allow_unsupported'a bagli degil",
+      cluster[0].get("check_mode") is False and "proxmox-host" in cluster[0]["when"] and all("allow_unsupported" not in str(t.get("when", "")) for t in cluster))
+check("kume denetimi OS denetiminden ONCE", c1 < tasks.index(os_t))
+
+
 def play(platform, markers, allow=False, check_mode=False, strict=False):
     with tempfile.TemporaryDirectory() as t:
         pb = Path(t) / "p.yml"
@@ -80,4 +88,32 @@ with tempfile.TemporaryDirectory() as t:
     check("gecersiz/henuz desteklenmeyen platform (raspberry-pi): DURUR ve gecerli degerleri soyler", rc != 0 and "hardening_platform geçersiz" in out and "generic, proxmox-host" in out)
     rc, out = play("", no)
     check("bos platform: DURUR", rc != 0 and "hardening_platform geçersiz" in out)
+
+
+def play_cluster(platform, clustered, root_login=None, check_mode=True):
+    with tempfile.TemporaryDirectory() as t:
+        marker = Path(t) / "corosync.conf"
+        if clustered:
+            marker.write_text("totem {}")
+        vars_ = {"hardening_platform": platform, "hardening_pve_cluster_marker": str(marker)}
+        if root_login is not None:
+            vars_["hardening_ssh_permit_root_login"] = root_login
+        pb = Path(t) / "p.yml"
+        pb.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "vars": vars_,
+                                       "tasks": cluster + [{"ansible.builtin.debug": {"msg": "DEVAM-EDILDI"}}]}]), encoding="utf-8")
+        cmd = ["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pb)] + (["--check"] if check_mode else [])
+        r = subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL, env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
+        return r.returncode, r.stdout + r.stderr
+
+
+rc, out = play_cluster("proxmox-host", True)
+check("KUME + PermitRootLogin no (varsayilan): DURUR ve prohibit-password onerir", rc != 0 and "kümenin parçası" in out and "prohibit-password" in out and "DEVAM-EDILDI" not in out)
+rc, out = play_cluster("proxmox-host", True, root_login="no")
+check("KUME + acikca 'no': DURUR", rc != 0 and "kümenin parçası" in out)
+rc, out = play_cluster("proxmox-host", True, root_login="prohibit-password")
+check("KUME + prohibit-password: devam eder", rc == 0 and "DEVAM-EDILDI" in out)
+rc, out = play_cluster("proxmox-host", False)
+check("tek dugum + no: devam eder", rc == 0 and "DEVAM-EDILDI" in out)
+rc, out = play_cluster("generic", True)
+check("generic platformda kume denetimi hic calismaz (baska ortamlar etkilenmez)", rc == 0 and "DEVAM-EDILDI" in out)
 sys.exit(1 if fails else 0)

@@ -3,9 +3,11 @@
     that:
       - hardening_ssh_kbdinteractive in [true, false]
       - hardening_ssh_allow_tcp_forwarding in ['no', 'local', 'remote', 'yes']
+      - hardening_ssh_permit_root_login in ['no', 'prohibit-password']
     fail_msg: >-
       Geçersiz SSH değişkeni. hardening_ssh_kbdinteractive true/false (bool) olmalı;
-      hardening_ssh_allow_tcp_forwarding no|local|remote|yes (string) olmalı
+      hardening_ssh_allow_tcp_forwarding no|local|remote|yes (string) olmalı;
+      hardening_ssh_permit_root_login no|prohibit-password (string) olmalı
       (YAML'da 'no' tırnaksız bool'a dönüşür: "no" yazın).
 
 - name: Login user (become olmadan)

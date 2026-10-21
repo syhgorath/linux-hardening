@@ -42,6 +42,24 @@
       Gerçek koşu REDDEDİLDİ; hiçbir şey değiştirilmedi.
   when: hardening_platform == 'proxmox-host' and not ansible_check_mode
 
+# Proxmox KÜMESİ: düğümler arası işlemler (pvecm, migration, replikasyon) kökten SSH ister. PermitRootLogin no kümeyi bozar: kullanıcı bilerek prohibit-password seçmeli.
+- name: Look for the Proxmox cluster marker
+  ansible.builtin.stat:
+    path: "{{ hardening_pve_cluster_marker }}"
+  register: hardening_pve_cluster_stat
+  check_mode: false
+  when: hardening_platform == 'proxmox-host'
+
+- name: Refuse PermitRootLogin no on a Proxmox VE cluster node
+  ansible.builtin.fail:
+    msg: >-
+      Bu Proxmox VE düğümü bir kümenin parçası ({{ hardening_pve_cluster_marker }} var). Kümede düğümler arası işlemler kökten SSH ister; PermitRootLogin no kümeyi bozar.
+      hardening_ssh_permit_root_login: "prohibit-password" verin (yalnızca anahtarla kök girişi) ve düğümler arası anahtarların çalıştığını doğrulayın.
+  when:
+    - hardening_platform == 'proxmox-host'
+    - hardening_pve_cluster_stat.stat.exists | default(false)
+    - hardening_ssh_permit_root_login | default('no') == 'no'
+
 # Debian'da ansible_facts['distribution_version'] alt sürümü de içerir ("13.7"), Ubuntu'da değil ("26.04"): Debian için ANA sürüm ("13") kullanılır.
 - name: Work out the version key used for the support check and OS variables
   ansible.builtin.set_fact:
