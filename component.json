@@ -379,6 +379,32 @@
       "description": "true: root hesabı da kilitlenir (CIS ister). Konsol erişimi olmayan sunucuda tehlikeli; Ubuntu'da root parolası zaten kilitlidir. Yalnızca hardening_pam_faillock=true iken etkili. Varsayılan kapalı"
     },
     {
+      "name": "hardening_platform",
+      "type": "string",
+      "default": "generic",
+      "description": "Platform: generic (varsayılan) | proxmox-host. Proxmox VE hostu generic ile sertleştirilemez (rol durur). proxmox-host yalnızca GERÇEKTEN Proxmox olan hostta ve şimdilik yalnızca --check önizlemesi içindir (gerçek koşu reddedilir). Proxmox'ta MTA değişimi ve ufw hiçbir zaman çalışmaz"
+    },
+    {
+      "name": "hardening_pve_strict",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: Proxmox hostunda (hardening_platform=proxmox-host) da genel politika varsayılanları uygulanır (/tmp ve /dev/shm noexec, usb-storage engeli); yedek diski ve şablon/ISO çalıştırma iş akışlarını bozabilir. Varsayılan kapalı"
+    },
+    {
+      "name": "hardening_aide_pve_excludes",
+      "type": "list[string]",
+      "default": [
+        "/etc/pve",
+        "/var/lib/pve-cluster",
+        "/var/lib/rrdcached",
+        "/var/lib/lxcfs",
+        "/var/lib/vz",
+        "/var/lib/ceph"
+      ],
+      "description": "Proxmox VE hostunda AIDE'nin taramayacağı yollar (pmxcfs, küme veritabanı, rrd, lxcfs, VM/ISO/yedek deposu, ceph). Yalnızca hardening_platform=proxmox-host iken uygulanır; DENENMEDİ"
+    },
+    {
       "name": "hardening_log_file_permissions",
       "type": "bool",
       "default": false,

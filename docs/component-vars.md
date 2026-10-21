@@ -42,6 +42,9 @@ standardının §6'sıyla aynıdır; varsayılanlar rollerin `defaults/main.yml`
 | `hardening_pam_faillock_unlock_time` | `int` (0–604800) | hayır | `900` | Kilit süresi, saniye (CIS 0 ya da ≥ 900); `0` = elle açılana dek. |
 | `hardening_pam_faillock_fail_interval` | `int` (1–900) | hayır | `900` | Başarısız denemelerin sayıldığı pencere, saniye. |
 | `hardening_pam_faillock_even_deny_root` | `bool` | hayır | `false` | `true`: root da kilitlenir (konsolsuz sunucuda tehlikeli). |
+| `hardening_platform` | `string` | hayır | `generic` | Platform: `generic` \| `proxmox-host`. Proxmox VE hostu `generic` ile sertleştirilemez (rol durur). `proxmox-host` yalnızca gerçekten Proxmox olan hostta ve şimdilik yalnızca `--check` önizlemesi içindir; MTA değişimi ve `ufw` Proxmox'ta hiç çalışmaz. |
+| `hardening_pve_strict` | `bool` | hayır | `false` | `true`: Proxmox'ta da `/tmp` ve `/dev/shm` `noexec` ile `usb-storage` engeli uygulanır. |
+| `hardening_aide_pve_excludes` | `list[string]` | hayır | `/etc/pve`, `/var/lib/pve-cluster`, `/var/lib/rrdcached`, `/var/lib/lxcfs`, `/var/lib/vz`, `/var/lib/ceph` | Proxmox'ta AIDE'nin taramayacağı yollar (yalnızca `proxmox-host`; denenmedi). |
 | `hardening_log_file_permissions` | `bool` | hayır | `false` | `true`: `/var/log` dosyalarında grup yazma ve diğer erişim kaldırılır (`wtmp`/`btmp`/`lastlog`/`faillog` ve journal hariç). `adm` dışı okuyucular (izleme/log ajanları) bazı günlükleri okuyamaz. |
 | `hardening_disable_apport` | `bool` | hayır | `true` | `true`: Ubuntu hata raporlayıcı apport kapatılır (`enabled=0`, servis durdurulup maskelenir; CIS 1.5.7). Çökme raporları toplanmaz. |
 | `hardening_disable_update_notifier_motd` | `bool` | hayır | `true` | `true`: `update-notifier-motd` zamanlayıcısı durdurulup maskelenir (CIS 1.6.12). |

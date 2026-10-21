@@ -4,6 +4,30 @@
     state: present
   register: hardening_aide_install
 
+# Proxmox VE: /etc/pve (pmxcfs, FUSE, sürekli değişir), VM/ISO/yedek deposu ve küme veritabanı AIDE'ye alınmaz (yoksa ilk veritabanı saatler sürer ve her gün gürültü çıkar).
+# Veritabanı İLK kez üretilmeden ÖNCE yazılmalıdır. Liste `hardening_aide_pve_excludes`; DENENMEDİ: gerçek AIDE veritabanı süresi Proxmox'ta doğrulanmadı.
+- name: Make sure the AIDE config drop-in directory exists (Proxmox VE)
+  ansible.builtin.file:
+    path: /etc/aide/aide.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: hardening_platform | default('generic') == 'proxmox-host'
+
+- name: Exclude Proxmox VE state and guest storage from AIDE
+  ansible.builtin.copy:
+    dest: /etc/aide/aide.conf.d/99_hardening_pve_excludes
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir (Proxmox VE): hipervizöre özgü, sürekli değişen ya da büyük yollar taranmaz.
+      {% for p in hardening_aide_pve_excludes %}
+      !{{ p }}
+      {% endfor %}
+  when: hardening_platform | default('generic') == 'proxmox-host'
+
 - name: Initialize AIDE database (ilk seferde dakikalar sürebilir)
   ansible.builtin.command: aideinit -y -f
   args:

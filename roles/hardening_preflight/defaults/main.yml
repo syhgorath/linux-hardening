@@ -12,3 +12,8 @@ hardening_preflight_extra_allow_pattern: '^([0-9]{1,5}(:[0-9]{1,5})?(/(tcp|udp))
 hardening_proxmox_markers:
   - /etc/pve
   - /usr/bin/pveversion
+# Platform: generic (varsayılan) | proxmox-host. Proxmox VE hostu `generic` ile sertleştirilemez (rol durur); `proxmox-host` şimdilik YALNIZCA --check önizlemesi içindir.
+hardening_platform: generic
+hardening_platforms_known: [generic, proxmox-host]
+# true: Proxmox hostunda da genel politika varsayılanları uygulanır (/tmp ve /dev/shm noexec, usb-storage engeli). Varsayılan false: Proxmox iş akışlarını (yedek diski, şablon/ISO çalıştırma) bozmasın.
+hardening_pve_strict: false
