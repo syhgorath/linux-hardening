@@ -12,10 +12,17 @@ hardening_preflight_extra_allow_pattern: '^([0-9]{1,5}(:[0-9]{1,5})?(/(tcp|udp))
 hardening_proxmox_markers:
   - /etc/pve
   - /usr/bin/pveversion
-# Platform: generic (varsayılan) | proxmox-host. Proxmox VE hostu `generic` ile sertleştirilemez (rol durur); `proxmox-host` şimdilik YALNIZCA --check önizlemesi içindir.
+# Platform: generic (varsayılan) | proxmox-host | raspberry-pi. Proxmox VE hostu `generic` ile sertleştirilemez (rol durur); `proxmox-host` şimdilik YALNIZCA --check önizlemesi içindir.
 hardening_platform: generic
-hardening_platforms_known: [generic, proxmox-host]
+hardening_platforms_known: [generic, proxmox-host, raspberry-pi]
 # true: Proxmox hostunda da genel politika varsayılanları uygulanır (/tmp ve /dev/shm noexec, usb-storage engeli). Varsayılan false: Proxmox iş akışlarını (yedek diski, şablon/ISO çalıştırma) bozmasın.
 hardening_pve_strict: false
 # Proxmox kümesi işareti (kümede /etc/pve/corosync.conf vardır). Yalnızca TEST için değiştirilir.
 hardening_pve_cluster_marker: /etc/pve/corosync.conf
+# Raspberry Pi işaretleri (Raspberry Pi OS: /etc/rpi-issue; Pi üzerinde Ubuntu Server dahil: /boot/firmware/config.txt). Yalnızca TEST için değiştirilir.
+# Pi algılanır ama platform generic ise rol DURMAZ, yalnızca not düşer; `hardening_platform=raspberry-pi` yalnızca GERÇEKTEN Pi olan hostta kabul edilir.
+hardening_rpi_markers:
+  - /etc/rpi-issue
+  - /boot/firmware/config.txt
+# true: Raspberry Pi'de de usb-storage engeli uygulanır (varsayılan false: Pi USB diskten/SSD'den açılır ya da USB depolama kullanır, engel erişimi keser).
+hardening_rpi_strict: false

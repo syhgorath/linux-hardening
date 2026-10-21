@@ -40,7 +40,7 @@
       # Ansible tarafından yönetilir
       install usb-storage /bin/false
       blacklist usb-storage
-  when: hardening_disable_usb_storage | bool and not (hardening_platform_relaxed | default(false) | bool)
+  when: hardening_disable_usb_storage | bool and not (hardening_platform_relaxed | default(false) | bool) and not (hardening_rpi_relaxed | default(false) | bool)
 
 - name: Allow usb-storage (remove this role's rule file)
   ansible.builtin.file:

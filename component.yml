@@ -273,7 +273,12 @@ vars:
   - name: hardening_platform
     type: string
     default: generic
-    description: "Platform: generic (varsayılan) | proxmox-host. Proxmox VE hostu generic ile sertleştirilemez (rol durur). proxmox-host yalnızca GERÇEKTEN Proxmox olan hostta ve şimdilik yalnızca --check önizlemesi içindir (gerçek koşu reddedilir). Proxmox'ta MTA değişimi ve ufw hiçbir zaman çalışmaz"
+    description: "Platform: generic (varsayılan) | proxmox-host | raspberry-pi. raspberry-pi yalnızca GERÇEKTEN Raspberry Pi olan hostta kabul edilir ve yalnızca usb-storage engelini gevşetir (Pi USB diskten açılabilir); denendi: Pi donanımında DEĞİL, arm64 Debian konteynerinde. Proxmox VE hostu generic ile sertleştirilemez (rol durur). proxmox-host yalnızca GERÇEKTEN Proxmox olan hostta ve şimdilik yalnızca --check önizlemesi içindir (gerçek koşu reddedilir). Proxmox'ta MTA değişimi ve ufw hiçbir zaman çalışmaz"
+  - name: hardening_rpi_strict
+    type: bool
+    default: false
+    warn_if: true                      # true = Raspberry Pi'de de usb-storage engeli uygulanır (USB diskten açılan/USB depolama kullanan Pi'de erişimi keser)
+    description: "true: Raspberry Pi'de (hardening_platform=raspberry-pi) de usb-storage engeli uygulanır. USB diskten/SSD'den açılan ya da USB depolama kullanan Pi'de sistem diskine erişimi keser. Varsayılan kapalı"
   - name: hardening_pve_strict
     type: bool
     default: false

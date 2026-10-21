@@ -145,6 +145,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
 | `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
 | `test_pam_faillock.py` | account lockout: guards (safety net off / not armed → stops), stack ORDER (real Ubuntu output and broken variants), `faillock.conf` lines, rescue rollback |
+| `test_rpi_platform.py` | Raspberry Pi platform: detection, `raspberry-pi` refusal on non-Pi, `generic` + Pi note, `usb-storage` relaxation, Proxmox relaxation not covering Pi |
 | `test_pve_report.py`, `test_pve_report_tasks.py` | Proxmox VE host status report (`playbooks/pve-report.yml`): decision logic with real Proxmox 9.2 values + the task chain, read-only, not wired into harden.yml |
 | `test_pve_firewall_plan.py`, `test_pve_firewall_tasks.py` | Proxmox firewall (`playbooks/pve-firewall.yml`): decision script (cluster, allow_from, controller address, user file refusal), task order (enable 0 → compile → enable 1), apply gate, preview chain; `test_rollback_script.sh` section 10: cluster.fw backup/restore |
 | `test_pwhistory.py` | password history (`pam_pwhistory`): pam-auth-update profile (order), `pwhistory.conf` lines on a real file, rescue rollback, off by default |
