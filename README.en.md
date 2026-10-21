@@ -64,7 +64,7 @@ A working example for hardening different servers differently (web, Docker, Redi
 
 ## What it does not do (scope limits)
 
-This project **does not claim full CIS Benchmark compliance**: the goal is a "Level 1 Server *approach*". The item-by-item mapping (Level 1 Server) is in [docs/cis-esleme.md](docs/cis-esleme.md) (Turkish); the table below is by **area**, not by item, and lists only limits verified in
+This project **does not claim full CIS Benchmark compliance**: the goal is a "Level 1 Server *approach*". The item-by-item mapping (Level 1 Server) is in [docs/cis-esleme.md](docs/cis-esleme.md) (Debian 13 and Proxmox notes, Turkish: [docs/cis-esleme-debian.md](docs/cis-esleme-debian.md)) (Turkish); the table below is by **area**, not by item, and lists only limits verified in
 the code. Rows marked "Deliberately" are documented decisions; the others are **not done yet**, which does not mean they were skipped on purpose. If you find a missing area, please open an issue.
 
 | Area | Status | Note |

@@ -60,7 +60,7 @@ Web, Docker, Redis gibi farklı sunucuları farklı ayarlarla sertleştirmek iç
 
 ## Ne yapmaz (kapsam sınırları)
 
-Bu proje **tam CIS Benchmark uyumu iddia etmez**: hedef "Level 1 Server *yaklaşımı*". Madde numaralı eşleme (Level 1 Server) [docs/cis-esleme.md](docs/cis-esleme.md) dosyasında; aşağıdaki tablo ise madde değil **alan** bazlıdır ve yalnızca kodda
+Bu proje **tam CIS Benchmark uyumu iddia etmez**: hedef "Level 1 Server *yaklaşımı*". Madde numaralı eşleme (Level 1 Server) [docs/cis-esleme.md](docs/cis-esleme.md) dosyasında (Debian 13 ve Proxmox notları: [docs/cis-esleme-debian.md](docs/cis-esleme-debian.md)); aşağıdaki tablo ise madde değil **alan** bazlıdır ve yalnızca kodda
 doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır; diğerleri **henüz yapılmadı**, atlandığı anlamına gelmez. Eksik bir alan görürseniz issue açın.
 
 | Alan | Durum | Not |
