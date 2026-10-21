@@ -54,6 +54,14 @@ Normal kullanıcı (`claude`) + SSH anahtarıyla, hiçbir şey değiştirilmeden
 ### Aşama 2 YAPILDI: salt okunur rapor (`playbooks/pve-report.yml`)
 `hardening_pve_report` rolü (harden.yml'e bağlı DEĞİL) Proxmox'un durumunu okur ve iki liste üretir: **uyarı** (bugünkü gerçek açık: firewall devre dışı, root+parola SSH, çalışmayan servis, dışa açık MTA, ufw ile çakışma) ve **not** (sertleştirme tasarımı için). Ortak rollerin `--check`'te Proxmox'ta ne yapmak İSTEDİĞİ de görüldü (koruma yalnızca önizleme için `hardening_proxmox_markers=[]` ile atlatıldı, hiçbir şey değiştirilmedi): `base` (postfix → dma, unattended-upgrades, usb-storage), `auth`, `kernel` (sysctl, modül kara listesi), `files` (**`/tmp` ve `/dev/shm` noexec**), `auditd`, `fail2ban`, `aide` (VM disklerini taramamalı), `ufw` (**Proxmox'ta çalışmamalı**), `ssh` (`PermitRootLogin no`, küme için `prohibit-password` gerekir), `sudo`. Aşama 3 bunları platform değişkenine bağlı geçersiz kılmalarla çözecek.
 
+### Aşama 3 YAPILDI (yalnızca `--check`): `hardening_platform` ve platform bağlantıları
+- `hardening_platform` (`generic` \| `proxmox-host`) paket değişkeni; preflight gerçek platformu doğrular: Proxmox + `generic` → DURUR; `proxmox-host` + Proxmox değil → DURUR; `proxmox-host` + gerçek koşu → DURUR (yalnız `--check`); geçersiz değer → DURUR. `hardening_allow_unsupported` hiçbirini atlatmaz.
+- **Kesin yasaklar** (Proxmox'ta hiçbir ayarla çalışmaz): `hardening_base` MTA değişimi, `hardening_ufw` rolü (harden.yml `when`).
+- **Politika** (varsayılan Proxmox'ta KAPALI, `hardening_pve_strict=true` ile açılır): `/tmp` ve `/dev/shm` `noexec`, `usb-storage` engeli.
+- **AIDE**: `hardening_aide_pve_excludes` (`!yol` satırları, veritabanı ilk üretilmeden önce). Denenmedi.
+- Neden varsayılan DEĞER değiştirmek yerine `when` + tek anahtar: `component.yml` varsayılanı rol varsayılanıyla birebir aynı olmalı ve sshpocket şemasına yeni anahtar eklemek istemedik.
+- Sonraki: `ssh` (`PermitRootLogin`, küme), `kernel` sysctl/modül gözden geçirmesi, aşama 4 (`pve-firewall` + geri alma ağı kapsamı), sonra gerçek koşu.
+
 ## Açık sorular (cevaplanmadan kod yazılmaz)
 1. **Root ve SSH. KISMEN CEVAPLANDI (2026-10-21):** kullanıcı root ile yönetmiyor (normal kullanıcı + sudo), tek düğüm; Proxmox'un `PermitRootLogin yes` varsayılanı ve ileride küme düğümleri arası root SSH'ı hâlâ açık konu. Ubuntu rollerimiz `root` ile bağlanmayı reddeder ve root girişini kapatır. Proxmox yönetimi ve (varsa) küme
    düğümleri arası işlemler `root` ile yapılıyor olabilir. *Doğrulanmadı.* Hangi hesapla yönetilecek, küme var mı?

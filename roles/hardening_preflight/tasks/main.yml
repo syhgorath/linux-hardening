@@ -1,5 +1,12 @@
-# Proxmox VE hostu (hipervizör) bu paketle sertleştirilmez: Ubuntu kuralları (root girişi, ufw, ip_forward, SSH) küme ve VM ağını bozabilir (docs/design/proxmox-host.md).
-# Bu denetim `hardening_allow_unsupported` ile ATLANAMAZ ve `--check`'te de çalışır; Proxmox için ayrı bir bayrak YOKTUR (Proxmox desteği tasarım kararlarını bekliyor).
+# Platform (docs/design/proxmox-host.md soru 5): `hardening_platform` generic | proxmox-host. Bu denetimler `hardening_allow_unsupported` ile ATLANAMAZ ve `--check`'te de çalışır.
+#   - Proxmox VE hostu (/etc/pve ya da /usr/bin/pveversion) `generic` platformla ASLA sertleştirilmez: Ubuntu kuralları (root girişi, ufw, MTA değişimi, ip_forward) hostu ve VM ağını bozar.
+#   - `proxmox-host` platformu yalnızca GERÇEKTEN Proxmox olan hostta kabul edilir ve şimdilik yalnızca `--check` önizlemesi için (gerçek değişiklik aşama 4: pve-firewall + geri alma kapsamı bekliyor).
+- name: Check the platform setting
+  ansible.builtin.assert:
+    that: hardening_platform in hardening_platforms_known
+    fail_msg: "hardening_platform geçersiz: {{ hardening_platform }}. Geçerli değerler: {{ hardening_platforms_known | join(', ') }}."
+    quiet: true
+
 - name: Look for Proxmox VE markers
   ansible.builtin.stat:
     path: "{{ item }}"
@@ -7,13 +14,33 @@
   register: hardening_proxmox_stat
   check_mode: false
 
+- name: Remember whether this is a Proxmox VE host
+  ansible.builtin.set_fact:
+    hardening_is_proxmox: "{{ hardening_proxmox_stat.results | selectattr('stat.exists') | list | length > 0 }}"
+    # preflight'ın varsayılanları yalnızca bu role görünür: platformu diğer rollere de görünür (kalıcı) yapmak için burada yeniden yayınlanır.
+    hardening_platform: "{{ hardening_platform }}"
+    hardening_platform_relaxed: "{{ hardening_platform == 'proxmox-host' and not (hardening_pve_strict | bool) }}"
+
 - name: Refuse to run on a Proxmox VE host
   ansible.builtin.fail:
     msg: >-
-      Bu sunucu bir Proxmox VE hostu ({{ hardening_proxmox_stat.results | selectattr('stat.exists') | map(attribute='item') | join(', ') }} var). Bu paket Proxmox hostunu
-      sertleştirmez; hiçbir bayrak (hardening_allow_unsupported dahil) bu denetimi atlatmaz. Proxmox üstündeki sıradan Ubuntu VM'leri etkilenmez.
-      docs/design/proxmox-host.md'ye bak.
-  when: hardening_proxmox_stat.results | selectattr('stat.exists') | list | length > 0
+      Bu sunucu bir Proxmox VE hostu ({{ hardening_proxmox_stat.results | selectattr('stat.exists') | map(attribute='item') | join(', ') }} var). `generic` platformla
+      sertleştirilmez; hiçbir bayrak (hardening_allow_unsupported dahil) bu denetimi atlatmaz. Proxmox üstündeki sıradan Ubuntu VM'leri etkilenmez.
+      Yalnızca önizleme için: --check -e hardening_platform=proxmox-host. docs/design/proxmox-host.md'ye bak.
+  when: hardening_is_proxmox | bool and hardening_platform != 'proxmox-host'
+
+- name: Refuse the proxmox-host platform on a host that is not Proxmox VE
+  ansible.builtin.fail:
+    msg: >-
+      hardening_platform=proxmox-host seçildi ama bu sunucu Proxmox VE değil ({{ hardening_proxmox_markers | join(', ') }} yok). Platformu `generic` bırakın ya da doğru sunucuyu seçin.
+  when: hardening_platform == 'proxmox-host' and not (hardening_is_proxmox | bool)
+
+- name: Refuse real changes on a Proxmox VE host (only the --check preview is supported so far)
+  ansible.builtin.fail:
+    msg: >-
+      Proxmox VE hostunda şimdilik YALNIZCA önizleme (--check) desteklenir: pve-firewall yönetimi ve geri alma ağının pve-firewall kapsamı henüz yazılmadı (docs/design/proxmox-host.md, aşama 4).
+      Gerçek koşu REDDEDİLDİ; hiçbir şey değiştirilmedi.
+  when: hardening_platform == 'proxmox-host' and not ansible_check_mode
 
 # Debian'da ansible_facts['distribution_version'] alt sürümü de içerir ("13.7"), Ubuntu'da değil ("26.04"): Debian için ANA sürüm ("13") kullanılır.
 - name: Work out the version key used for the support check and OS variables

@@ -1,9 +1,11 @@
 # Sistemde bir mail-transport-agent bagimliligi var; postfix'i sadece kaldirmak apt'e
 # courier-mta (25/tcp dinler) kurdurdu. Dinlemeyen bir MTA (dma) ile karsilaniyor.
+# Proxmox VE'de MTA DEĞİŞTİRİLMEZ: pve-manager bir MTA'ya bağımlıdır ve postfix'i tek başına kaldırmak pve-manager ile proxmox-ve'yi de kaldırır (verification-log 41).
 - name: Install dma (sadece giden mail, port dinlemez)
   ansible.builtin.apt:
     name: dma
     state: present
+  when: hardening_platform | default('generic') != 'proxmox-host'
 
 - name: Purge listening MTAs (postfix, courier)
   ansible.builtin.apt:
@@ -11,6 +13,7 @@
     state: absent
     purge: true
     autoremove: true
+  when: hardening_platform | default('generic') != 'proxmox-host'
 
 - name: Install unattended-upgrades
   ansible.builtin.apt:
@@ -37,7 +40,7 @@
       # Ansible tarafından yönetilir
       install usb-storage /bin/false
       blacklist usb-storage
-  when: hardening_disable_usb_storage | bool
+  when: hardening_disable_usb_storage | bool and not (hardening_platform_relaxed | default(false) | bool)
 
 - name: Allow usb-storage (remove this role's rule file)
   ansible.builtin.file:

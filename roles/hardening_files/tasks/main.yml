@@ -178,7 +178,7 @@
 # Ansible kendisi ~/.ansible/tmp kullanır, etkilenmez). Karar mantığı files/tmp_plan.py: yalnızca AYRI ve tmpfs olan dizin yönetilir; /tmp kalıcılığı tmp.mount drop-in'i, /dev/shm kalıcılığı /etc/fstab satırı
 # (satır zaten varsa ÜSTÜNE YAZILMAZ). Etki anında `mount -o remount` ile uygulanır. Kapatmak için hardening_tmp_noexec / hardening_shm_noexec = false. Tasarım: docs/design/grup3-tmp-su-root.md ---
 - name: Harden the /tmp and /dev/shm mount options
-  when: hardening_tmp_noexec | bool or hardening_shm_noexec | bool
+  when: (hardening_tmp_noexec | bool or hardening_shm_noexec | bool) and not (hardening_platform_relaxed | default(false) | bool)
   block:
     - name: Read the mounts behind /tmp and /dev/shm for the plan
       ansible.builtin.shell:

@@ -40,7 +40,8 @@
     - { role: hardening_rollback, tags: [ufw, ssh, pam] }
     # PAM'i değiştiren rol, arm penceresinin İÇİNDE (arm'dan sonra, doğrulama/disarm'dan önce) çalışır; varsayılan KAPALI. Bozulursa süre dolunca PAM özgün hâline döner.
     - { role: hardening_pam_faillock, tags: [pam] }
-    - { role: hardening_ufw, tags: [ufw] }
+    # Proxmox'ta ufw ÇALIŞMAZ (güvenlik duvarı pve-firewall'dur); aşama 4'te pve-firewall rolü gelecek.
+    - { role: hardening_ufw, tags: [ufw], when: "hardening_platform | default('generic') != 'proxmox-host'" }
     - { role: hardening_ssh, tags: [ssh] }
     # sudo en sonda: yazdıktan hemen sonra become ile denenir, başarısızsa dosya silinmeye çalışılır ve play durur.
     - { role: hardening_sudo, tags: [sudo] }

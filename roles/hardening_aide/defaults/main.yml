@@ -2,3 +2,12 @@
 # açık kurar, bu yüzden normalde değişiklik yapmaz (changed=0); biri kapattıysa geri açar. Zamanlayıcının yaptığı iş değişmez (COMMAND=update,
 # veritabanı kendiliğinden güncellenmez). Sonuç /var/log/aide/ altındadır; e-posta teslim edilmez (docs/known-issues.md).
 hardening_aide_scheduled_check: true
+# Proxmox VE hostunda (hardening_platform=proxmox-host) AIDE'nin TARAMAYACAĞI yollar (`!yol`): pmxcfs, küme veritabanı, rrd, lxcfs, yerel depolama (VM/ISO/yedek), ceph.
+# Yalnızca platform proxmox-host iken uygulanır. DENENMEDİ (gerçek AIDE koşusu Proxmox'ta yapılmadı).
+hardening_aide_pve_excludes:
+  - /etc/pve
+  - /var/lib/pve-cluster
+  - /var/lib/rrdcached
+  - /var/lib/lxcfs
+  - /var/lib/vz
+  - /var/lib/ceph

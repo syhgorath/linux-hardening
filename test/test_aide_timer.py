@@ -30,7 +30,8 @@ check("dailyaidecheck.timer: enabled + started", ("dailyaidecheck.timer", True, 
 check("kendi degiskeniyle kapanir", True, "hardening_aide_scheduled_check" in str(t["when"]))
 check("varsayilan ACIK (paket zaten acik kurar, changed=0)", True, load("roles/hardening_aide/defaults/main.yml")["hardening_aide_scheduled_check"])
 src = (ROOT / "roles/hardening_aide/tasks/main.yml").read_text(encoding="utf-8")
-check("AIDE isi degismez: /etc/default/aide ve aide.conf'a dokunulmaz", False, "/etc/default/aide" in src or "lineinfile" in src or "aide.conf" in src)
+import re
+check("AIDE isi degismez: /etc/default/aide ve ANA aide.conf'a dokunulmaz (Proxmox'a ozgu ayri aide.conf.d parcasi serbest)", False, "/etc/default/aide" in src or "lineinfile" in src or bool(re.search(r"/etc/aide/aide\.conf(?!\.d)", src)))
 v = next((x for x in load("component.yml")["vars"] if isinstance(x, dict) and x["name"] == "hardening_aide_scheduled_check"), None)
 check("component.yml: bool, varsayilan true, warn_if YOK (#74)", True, bool(v) and v["type"] == "bool" and v["default"] is True and "warn_if" not in v)
 check("--check + paket kurulacaksa (birim yok) zamanlayici gorevi ATLANIR", True, "ansible_check_mode" in str(t["when"]) and "hardening_aide_install" in str(t["when"]))

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""hardening_preflight: Proxmox VE hostu korumasi. /etc/pve (ya da /usr/bin/pveversion) varsa rol HER DURUMDA durur: `hardening_allow_unsupported=true` bile atlatamaz,
-`--check`'te de calisir. Proxmox icin ayri bir bayrak YOKTUR. Gercek `stat` + `fail` gorevleri yerel Ansible ile calistirilir."""
+"""hardening_preflight: platform ve Proxmox VE koruması. Gerçek `stat` + `set_fact` + `fail`/`assert` görevleri yerel Ansible ile çalıştırılır.
+
+Kurallar: (1) Proxmox VE hostu (/etc/pve ya da /usr/bin/pveversion) `generic` platformla HER DURUMDA reddedilir; `hardening_allow_unsupported` atlatamaz, `--check`'te de çalışır.
+(2) `hardening_platform=proxmox-host` yalnızca GERÇEKTEN Proxmox olan hostta kabul edilir ve şimdilik yalnızca `--check` önizlemesi için. (3) Geçersiz platform reddedilir."""
 import os
 import subprocess
 import sys
@@ -25,39 +27,57 @@ def check(name, ok):
 tasks = yaml.safe_load((ROOT / "roles/hardening_preflight/tasks/main.yml").read_text(encoding="utf-8"))
 defaults = yaml.safe_load((ROOT / "roles/hardening_preflight/defaults/main.yml").read_text(encoding="utf-8"))
 names = [t.get("name") for t in tasks]
-stat_t = next(t for t in tasks if t.get("name") == "Look for Proxmox VE markers")
-fail_t = next(t for t in tasks if t.get("name") == "Refuse to run on a Proxmox VE host")
-os_t = next(t for t in tasks if "ansible.builtin.assert" in t)
+first = names.index("Check the platform setting")
+last = names.index("Refuse real changes on a Proxmox VE host (only the --check preview is supported so far)")
+guard = tasks[first:last + 1]
+os_t = next(t for t in tasks if "ansible.builtin.assert" in t and t.get("name") == "Check distribution and version are supported")
 
-check("sira: Proxmox denetimi, OS/surum denetiminden ONCE", names.index("Refuse to run on a Proxmox VE host") < tasks.index(os_t))
-check("Proxmox denetimi allow_unsupported'a BAGLI DEGIL (atlatilamaz)", "allow_unsupported" not in str(fail_t.get("when")) and "allow_unsupported" not in str(stat_t.get("when", "")))
-check("denetim --check'te de calisir (check_mode: false)", stat_t.get("check_mode") is False)
-check("varsayilan isaretler: /etc/pve ve /usr/bin/pveversion", defaults["hardening_proxmox_markers"] == ["/etc/pve", "/usr/bin/pveversion"])
-check("Proxmox icin ayri bayrak YOK (hardening_allow_proxmox benzeri)", not any("proxmox" in k.lower() and k != "hardening_proxmox_markers" for k in defaults))
+check("sira: platform/Proxmox korumasi, OS/surum denetiminden ONCE", last < tasks.index(os_t))
+check("korumalar allow_unsupported'a BAGLI DEGIL (atlatilamaz)", all("allow_unsupported" not in str(t.get("when", "")) for t in guard))
+check("Proxmox isareti taramasi --check'te de calisir (check_mode: false)", next(t for t in guard if "ansible.builtin.stat" in t).get("check_mode") is False)
+check("varsayilanlar: platform generic, bilinen [generic, proxmox-host], strict false, isaretler /etc/pve ve /usr/bin/pveversion",
+      (defaults["hardening_platform"], defaults["hardening_platforms_known"], defaults["hardening_pve_strict"], defaults["hardening_proxmox_markers"]) == ("generic", ["generic", "proxmox-host"], False, ["/etc/pve", "/usr/bin/pveversion"]))
 check("OS denetimi hala allow_unsupported ile atlanir (Proxmox disinda davranis degismedi)", "hardening_allow_unsupported" in str(os_t.get("when")))
 
 
-def play(markers, allow):
-    with tempfile.TemporaryDirectory() as d:
-        pb = Path(d) / "p.yml"
-        pb.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "vars": {"hardening_proxmox_markers": markers, "hardening_allow_unsupported": allow},
-                                       "tasks": [stat_t, fail_t, {"ansible.builtin.debug": {"msg": "DEVAM-EDILDI"}}]}]), encoding="utf-8")
-        r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pb)], capture_output=True, text=True, stdin=subprocess.DEVNULL,
-                           env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
+def play(platform, markers, allow=False, check_mode=False, strict=False):
+    with tempfile.TemporaryDirectory() as t:
+        pb = Path(t) / "p.yml"
+        vars_ = {"hardening_proxmox_markers": markers, "hardening_allow_unsupported": allow, "hardening_platform": platform,
+                 "hardening_platforms_known": defaults["hardening_platforms_known"], "hardening_pve_strict": strict}
+        pb.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "vars": vars_,
+                                       "tasks": guard + [{"ansible.builtin.debug": {"msg": "DEVAM-EDILDI relaxed={{ hardening_platform_relaxed }} proxmox={{ hardening_is_proxmox }} platform={{ hardening_platform }}"}}]}]), encoding="utf-8")
+        cmd = ["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pb)] + (["--check"] if check_mode else [])
+        r = subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL, env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
         return r.returncode, r.stdout + r.stderr
 
 
 with tempfile.TemporaryDirectory() as t:
     pve = Path(t) / "pve"
     pve.mkdir()
-    rc, out = play([str(Path(t) / "yok"), str(Path(t) / "yok2")], False)
-    check("Proxmox isareti YOK: devam eder", rc == 0 and "DEVAM-EDILDI" in out)
-    rc, out = play([str(pve)], False)
-    check("isaret VAR: rol DURUR ve hangi isaretin bulundugunu soyler", rc != 0 and "Proxmox VE hostu" in out and str(pve) in out and "DEVAM-EDILDI" not in out)
-    rc, out = play([str(pve)], True)
-    check("hardening_allow_unsupported=true ILE BILE DURUR", rc != 0 and "Proxmox VE hostu" in out and "DEVAM-EDILDI" not in out)
+    no = [str(Path(t) / "yok"), str(Path(t) / "yok2")]
+    rc, out = play("generic", no)
+    check("generic + Proxmox isareti YOK: devam eder (relaxed=False, proxmox=False)", rc == 0 and "DEVAM-EDILDI relaxed=False proxmox=False platform=generic" in out)
+    for allow in (False, True):
+        rc, out = play("generic", [str(pve)], allow=allow)
+        check(f"generic + isaret VAR (allow_unsupported={allow}): DURUR, hangi isaret oldugunu soyler, --check onerisini verir", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out and str(pve) in out and "-e hardening_platform=proxmox-host" in out and "DEVAM-EDILDI" not in out)
+    rc, out = play("generic", [str(pve)], check_mode=True)
+    check("generic + isaret VAR, --check'te de DURUR", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out)
     f = Path(t) / "pveversion"
     f.write_text("x")
-    rc, out = play([str(Path(t) / "yok"), str(f)], False)
-    check("ikinci isaret (pveversion dosyasi) de yeterli", rc != 0 and "Proxmox VE hostu" in out)
+    rc, out = play("generic", [no[0], str(f)])
+    check("ikinci isaret (pveversion dosyasi) de yeterli", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out)
+    rc, out = play("proxmox-host", [str(pve)], check_mode=True)
+    check("proxmox-host + isaret VAR + --check: KABUL, relaxed=True (strict degil)", rc == 0 and "DEVAM-EDILDI relaxed=True proxmox=True platform=proxmox-host" in out)
+    rc, out = play("proxmox-host", [str(pve)], check_mode=True, strict=True)
+    check("   hardening_pve_strict=true: relaxed=False", rc == 0 and "relaxed=False proxmox=True platform=proxmox-host" in out)
+    for allow in (False, True):
+        rc, out = play("proxmox-host", [str(pve)], allow=allow)
+        check(f"proxmox-host + GERCEK KOSU (allow_unsupported={allow}): DURUR (yalniz --check destekli)", rc != 0 and "YALNIZCA önizleme (--check)" in out and "DEVAM-EDILDI" not in out)
+    rc, out = play("proxmox-host", no, check_mode=True)
+    check("proxmox-host ama Proxmox DEGIL: DURUR ('Proxmox VE değil')", rc != 0 and "Proxmox VE değil" in out)
+    rc, out = play("raspberry-pi", no)
+    check("gecersiz/henuz desteklenmeyen platform (raspberry-pi): DURUR ve gecerli degerleri soyler", rc != 0 and "hardening_platform geçersiz" in out and "generic, proxmox-host" in out)
+    rc, out = play("", no)
+    check("bos platform: DURUR", rc != 0 and "hardening_platform geçersiz" in out)
 sys.exit(1 if fails else 0)
