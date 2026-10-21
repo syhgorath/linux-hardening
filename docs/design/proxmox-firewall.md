@@ -1,6 +1,6 @@
 # Tasarım notu: Proxmox VE güvenlik duvarı (`pve-firewall`) yönetimi ve geri alma kapsamı (aşama 4)
 
-**Durum:** UYGULANDI (birim testleri + nested ÖNİZLEME); GERÇEK koşu henüz yapılmadı. Karar: tek düğüm, kullanıcı dosyasına dokunma, ek portlar kapalı, `hardening_pve_apply` kapısı (öneriler benimsendi). Kod: `playbooks/pve-firewall.yml`, `roles/hardening_pve_firewall`. Proxmox'ta bu paketin yazacağı ilk DEĞİŞİKLİK YAPAN iş budur; yanlış bir kural hem yönetim arayüzünü (8006) hem SSH'ı hem VM'leri keser. Bu yüzden kod yazılmadan önce kullanıcı onayı alınır.
+**Durum:** UYGULANDI (birim testleri + nested); GERÇEK koşu iç içe Proxmox'ta yapıldı (verification-log 43); tasarımdan farklar: yazma `tee` ile (copy pmxcfs'te çalışmaz), `[ALIASES] local_network` eklendi (Proxmox yerel ağı `management`'a kendisi ekliyor), SPICE (3128) yönetim ağlarına açık kalır, plan geri alma ağından önce çalışır. Karar: tek düğüm, kullanıcı dosyasına dokunma, ek portlar kapalı, `hardening_pve_apply` kapısı (öneriler benimsendi). Kod: `playbooks/pve-firewall.yml`, `roles/hardening_pve_firewall`. Proxmox'ta bu paketin yazacağı ilk DEĞİŞİKLİK YAPAN iş budur; yanlış bir kural hem yönetim arayüzünü (8006) hem SSH'ı hem VM'leri keser. Bu yüzden kod yazılmadan önce kullanıcı onayı alınır.
 Kapsam: **tek düğümlü** Proxmox VE 9 (küme desteklenmez, reddedilir). Gerçek veriler iç içe Proxmox 9.2.21'den alındı (salt okunur, 2026-10-22).
 
 ## 1. Gerçekler (nested Proxmox 9.2.21'de görüldü)

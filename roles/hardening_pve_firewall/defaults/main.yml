@@ -1,10 +1,11 @@
 # Proxmox VE hostunda ufw yerine pve-firewall (datacenter cluster.fw). Tasarım: docs/design/proxmox-firewall.md
 # Yönetim ağları hardening_ssh_allow_from'dan gelir (ufw rolüyle aynı değişken; tek sahibi hardening_ufw).
 hardening_ssh_allow_from: []
-# Ek açılacak portlar, yalnızca yönetim ağlarından: "3128/tcp" (SPICE), "8000:8010/udp". Varsayılan boş: 111 (rpcbind) ve 3128 (SPICE) kapanır.
+# Ek açılacak portlar, yalnızca yönetim ağlarından: "443/tcp", "8000:8010/udp". Varsayılan boş: rpcbind (111) kapanır. Proxmox yönetim ağlarına 8006, 5900-5999 (VNC), 3128 (SPICE), 22 ve 60000-60050 (taşıma) portlarını KENDİSİ açar; bunlar için gerekmez.
 hardening_pve_firewall_extra_ports: []
 # Gerçek koşu kapısı: false iken playbooks/pve-firewall.yml yalnızca ne yapacağını GÖSTERİR, hiçbir şey yazmaz. true = güvenlik duvarını gerçekten yaz ve etkinleştir.
 hardening_pve_apply: false
 # İç ayarlar (testlerde değiştirilir).
 hardening_pve_firewall_file: /etc/pve/firewall/cluster.fw
 hardening_pve_cluster_marker: /etc/pve/corosync.conf
+hardening_pve_rollback_armed_file: /var/lib/hardening-rollback/armed

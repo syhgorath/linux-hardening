@@ -40,6 +40,7 @@ c, d = r["content"], r["content_disabled"]
 check("icerik: enable 1, policy_in DROP, policy_out ACCEPT", "enable: 1\n" in c and "policy_in: DROP" in c and "policy_out: ACCEPT" in c)
 check("on dogrulama icerigi enable: 0 ve aksi halde AYNI", "enable: 0\n" in d and d.replace("enable: 0", "enable: 1") == c)
 check("management IP kumesi allow_from'dan (tekil adres /32)", "[IPSET management]\n192.0.2.0/24\n198.51.100.7/32\n" in c, c)
+check("local_network alias YONETIM agi (Proxmox yoksa yerel agi management kumesine kendisi ekler); IPv4 one alinir", "[ALIASES]\nlocal_network 192.0.2.0/24\n" in c and "[ALIASES]\nlocal_network 192.0.2.0/24\n" in run(with_(allow_from=["2001:db8::/64", "192.0.2.0/24"], client_ip="192.0.2.10"))["content"] and "local_network 2001:db8::/64" in run(with_(allow_from=["2001:db8::/64"], client_ip="2001:db8::5"))["content"])
 check("SSH, 8006 ve icmp yalniz +management kaynagindan", all(x in c for x in ("IN ACCEPT -p tcp -dport 22 -source +management", "IN ACCEPT -p tcp -dport 8006 -source +management", "IN ACCEPT -p icmp -source +management")))
 check("kaynaksiz (herkese acik) ACCEPT kurali YOK", all("-source +management" in l for l in c.splitlines() if l.startswith("IN ")))
 check("isaret satiri var", c.startswith("# hardening-managed:"))
@@ -73,6 +74,7 @@ managed = run(OK)["content"]
 check("kendi isaretimiz olan dosya guncellenebilir (farkli icerik -> apply)", run(with_(existing=managed.replace("enable: 1", "enable: 0")))["status"] == "apply")
 check("ayni icerik -> noop (ikinci kosu changed=0)", run(with_(existing=managed))["status"] == "noop")
 check("isaretli dosyaya kullanici kurali eklenmis olsa da isaret varsa guncellenir (isaret = bu rolun)", run(with_(existing=managed + "IN ACCEPT -p tcp -dport 80\n"))["status"] == "apply")
+check("sondaki ek bos satir farki noop sayilir (pmxcfs/tee yeni satir ekleyebilir)", run(with_(existing=managed + "\n"))["status"] == "noop")
 check("bozuk girdi -> refuse, cokmez", run("{bozuk")["status"] == "refuse" and run("[1]")["status"] == "refuse")
 check("birden cok neden birikir", len(run(with_(clustered=True, allow_from=[]))["reasons"]) >= 2)
 

@@ -269,5 +269,9 @@ echo "-- 10f) armed degilken restore hicbir sey yapmaz"
 pve_setup; printf 'DOKUNMA\n' > "$R/etc/pve/firewall/cluster.fw"; hr restore >/dev/null
 file_eq "cluster.fw degismedi" "$R/etc/pve/firewall/cluster.fw" "DOKUNMA"
 if log_lacks "pve-firewall"; then ok "pve-firewall cagrilmadi"; else bad "armed degilken pve-firewall cagrildi"; fi
+echo "-- 10g) ufw KURULU DEGIL (Proxmox): restore ufw uyarisi uretmez, yine de bitirir"
+pve_setup; HR_UFW="$TMP/yok-ufw" hr arm >/dev/null; out=$(HR_UFW="$TMP/yok-ufw" hr restore)
+expect_not_contains "  ufw uyarisi yok" "$out" "ufw"
+expect_contains "  tamamlandi" "$out" "geri alma tamamlandi"
 out=$(hr foo); rc=$?; expect_eq "gecersiz komut cikis 2" "2" "$rc"; expect_contains "  kullanim" "$out" "kullanim:"
 finish

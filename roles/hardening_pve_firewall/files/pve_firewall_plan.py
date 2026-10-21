@@ -21,7 +21,10 @@ def valid_port(p):
 
 
 def build(allow_nets, extra, ssh_port, web_port, enable):
-    lines = [MARKER, "[OPTIONS]", "enable: %d" % enable, "policy_in: DROP", "policy_out: ACCEPT", "", "[IPSET management]"]
+    # Proxmox, `management` kümesine düğümün otomatik algıladığı yerel ağı (alias local_network) HER ZAMAN ekler; alias'ı biz tanımlarsak yalnızca bizim ağımız kalır
+    # (iç içe Proxmox 9.2'de görüldü). Alias tek bir CIDR alır: IPv4 ağlar öne alınır.
+    alias_net = sorted(allow_nets, key=lambda n: (n.version, str(n)))[0]
+    lines = [MARKER, "[OPTIONS]", "enable: %d" % enable, "policy_in: DROP", "policy_out: ACCEPT", "", "[ALIASES]", "local_network %s" % alias_net, "", "[IPSET management]"]
     lines += [str(n) for n in allow_nets]
     lines += ["", "[RULES]",
               "IN ACCEPT -p tcp -dport %d -source +management" % ssh_port,
@@ -86,7 +89,7 @@ def decide(cfg):
         return res
     res["content"] = build(nets, extra, ssh_port, web_port, 1)
     res["content_disabled"] = build(nets, extra, ssh_port, web_port, 0)
-    if existing is not None and existing == res["content"]:
+    if existing is not None and existing.rstrip("\n") == res["content"].rstrip("\n"):
         res["status"] = "noop"
         res["reasons"].append("cluster.fw zaten istenen içerikte.")
     return res

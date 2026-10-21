@@ -25,13 +25,25 @@
           - hardening_rollback_enabled | default(true) | bool
         fail_msg: "Gerçek koşu geri alma güvenlik ağı olmadan yapılmaz (hardening_rollback_enabled=false). Güvenlik duvarı hatası sunucuyu ve VM'leri erişilemez bırakabilir."
       when: hardening_pve_apply | default(false) | bool
-  roles:
-    - { role: hardening_rollback, when: "hardening_pve_apply | default(false) | bool" }
-    - hardening_pve_firewall
-  post_tasks:
+  tasks:
+    - name: Plan the Proxmox firewall (read-only)
+      ansible.builtin.include_role:
+        name: hardening_pve_firewall
+        tasks_from: plan
+
+    # Geri alma ağı yalnızca gerçekten yazılacaksa arm edilir (reddedilen ya da zaten istenen durumdaki koşu ağı armed bırakmasın).
+    - name: Arm the rollback safety net
+      ansible.builtin.include_role:
+        name: hardening_rollback
+      when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | default(false) | bool
+
+    - name: Apply the Proxmox firewall
+      ansible.builtin.include_role:
+        name: hardening_pve_firewall
+
     - name: Verify access (new SSH connection and the web UI port) and disarm the rollback
       ansible.builtin.include_role:
         name: hardening_verify_access
       vars:
         hardening_verify_access_tcp_ports: [8006]
-      when: hardening_pve_apply | default(false) | bool
+      when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | default(false) | bool and not ansible_check_mode

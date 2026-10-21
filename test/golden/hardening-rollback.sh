@@ -197,7 +197,7 @@ do_restore() {
     log "UYARI: sshd -t basarisiz; sshd reload edilmedi"
   fi
   # ufw: yedekteki dosyalari geri yaz, aktif/pasif durumunu eski haline getir
-  if [ -e "$STATE/ufw-active" ]; then
+  if [ -e "$STATE/ufw-active" ] && command -v "$UFW" >/dev/null 2>&1; then
     for f in $UFW_FILES; do
       if [ -e "$STATE/ufw/$f" ]; then cp -p "$STATE/ufw/$f" "$UFWDIR/$f"; fi
     done

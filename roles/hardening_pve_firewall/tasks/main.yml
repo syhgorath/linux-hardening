@@ -1,78 +1,26 @@
-# Proxmox VE (TEK düğüm) datacenter güvenlik duvarı. Karar mantığı files/pve_firewall_plan.py. Tasarım: docs/design/proxmox-firewall.md
-# playbooks/pve-firewall.yml çağırır; harden.yml'e BAĞLI DEĞİL. Sıra: geri alma ağı arm -> bu rol -> hardening_verify_access (disarm).
-# Okuma görevleri --check'te de çalışır; yazma yalnızca hardening_pve_apply=true ve --check değilken.
-- name: Look for the cluster marker
-  ansible.builtin.stat:
-    path: "{{ hardening_pve_cluster_marker }}"
-  register: hardening_pve_fw_cluster
-  check_mode: false
-
-- name: Look for the datacenter firewall file
-  ansible.builtin.stat:
-    path: "{{ hardening_pve_firewall_file }}"
-  register: hardening_pve_fw_stat
-  check_mode: false
-
-- name: Read the datacenter firewall file
-  ansible.builtin.slurp:
-    src: "{{ hardening_pve_firewall_file }}"
-  register: hardening_pve_fw_slurp
-  when: hardening_pve_fw_stat.stat.exists
-  check_mode: false
-
-- name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
-  ansible.builtin.command: printenv SSH_CONNECTION
-  become: false
-  register: hardening_pve_fw_conn
-  changed_when: false
-  failed_when: false
-  check_mode: false
-
-- name: Plan the Proxmox firewall
-  ansible.builtin.script:
-    cmd: "pve_firewall_plan.py {{ hardening_pve_fw_input | to_json | quote }}"
-    executable: python3
-  vars:
-    hardening_pve_fw_input:
-      clustered: "{{ hardening_pve_fw_cluster.stat.exists }}"
-      allow_from: "{{ hardening_ssh_allow_from | default([]) }}"
-      client_ip: "{{ (hardening_pve_fw_conn.stdout.split() | first | default('')) if hardening_pve_fw_conn.rc == 0 else '' }}"
-      existing: "{{ (hardening_pve_fw_slurp.content | b64decode) if hardening_pve_fw_stat.stat.exists else none }}"
-      extra_ports: "{{ hardening_pve_firewall_extra_ports | default([]) }}"
-  register: hardening_pve_fw_raw
-  changed_when: false
-  check_mode: false
-
-- name: Parse the Proxmox firewall plan
-  ansible.builtin.set_fact:
-    hardening_pve_fw_plan: "{{ hardening_pve_fw_raw.stdout | from_json }}"
-
-- name: Stop because the Proxmox firewall cannot be managed safely
-  ansible.builtin.fail:
-    msg: "pve-firewall yönetilmedi, hiçbir şey yazılmadı: {{ hardening_pve_fw_plan.reasons | join(' ') }}{{ hardening_pve_fw_plan.error }}"
-  when: hardening_pve_fw_plan.status == 'refuse'
-
-- name: Say that the Proxmox firewall is already as wanted
-  ansible.builtin.debug:
-    msg: "pve-firewall: {{ hardening_pve_fw_plan.reasons | join(' ') }}"
-  when: hardening_pve_fw_plan.status == 'noop'
-
-- name: Show what would be written (hardening_pve_apply=false or --check)
-  ansible.builtin.debug:
-    msg: "pve-firewall ÖNİZLEME (yazılmadı), {{ hardening_pve_firewall_file }}:\n{{ hardening_pve_fw_plan.content }}"
-  when: hardening_pve_fw_plan.status == 'apply' and (not (hardening_pve_apply | bool) or ansible_check_mode)
-
+# UYGULAMA AŞAMASI: yalnızca plan 'apply' ve hardening_pve_apply=true ve --check değil. Önce plan.yml ve geri alma ağı arm'ı çalışmış olmalı.
 - name: Apply the Proxmox firewall
   when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | bool and not ansible_check_mode
   block:
-    # noqa risky-file-permissions: pmxcfs chown/chmod desteklemez, sahip/izin bilerek verilmez.
-    # unsafe_writes: pmxcfs (FUSE) atomik rename/chown/chmod desteklemeyebilir; dosya sahibi/izni verilmez.
+    # Güvenlik ağı olmadan ASLA yazılmaz: geri alma ağı armed değilse (rol tek başına çağrıldıysa) dur.
+    - name: Require an armed rollback safety net
+      ansible.builtin.stat:
+        path: "{{ hardening_pve_rollback_armed_file }}"
+      register: hardening_pve_fw_armed
+      check_mode: false
+
+    - name: Refuse to write without the rollback safety net
+      ansible.builtin.fail:
+        msg: "Geri alma güvenlik ağı armed değil: pve-firewall yazılmadı. playbooks/pve-firewall.yml kullanın (hardening_rollback önce arm edilir)."
+      when: not hardening_pve_fw_armed.stat.exists
+
+    # pmxcfs (FUSE): copy modulu burada 'Operation not permitted' ile BASARISIZ OLUR (rename/chmod); duz yazma (tee) calisir. Sahip/izin verilmez.
     - name: Write the file DISABLED first (enable 0)
-      ansible.builtin.copy:  # noqa: risky-file-permissions
-        content: "{{ hardening_pve_fw_plan.content_disabled }}"
-        dest: "{{ hardening_pve_firewall_file }}"
-        unsafe_writes: true
-      register: hardening_pve_fw_write_disabled
+      ansible.builtin.command:
+        argv: [tee, "{{ hardening_pve_firewall_file }}"]
+        stdin: "{{ hardening_pve_fw_plan.content_disabled }}"
+        stdin_add_newline: false
+      changed_when: true
 
     # compile kuralları YALNIZCA üretip yazdırır, uygulamaz; sözdizimi hatası burada yakalanır.
     - name: Validate the rules without applying them (pve-firewall compile)
@@ -81,10 +29,11 @@
       changed_when: false
 
     - name: Write the file ENABLED (enable 1)
-      ansible.builtin.copy:  # noqa: risky-file-permissions
-        content: "{{ hardening_pve_fw_plan.content }}"
-        dest: "{{ hardening_pve_firewall_file }}"
-        unsafe_writes: true
+      ansible.builtin.command:
+        argv: [tee, "{{ hardening_pve_firewall_file }}"]
+        stdin: "{{ hardening_pve_fw_plan.content }}"
+        stdin_add_newline: false
+      changed_when: true
 
     - name: Apply now (pve-firewall restart)
       ansible.builtin.systemd:
@@ -98,20 +47,12 @@
       failed_when: "'enabled/running' not in hardening_pve_fw_status.stdout"
 
   rescue:
-    # Yazma/doğrulama başarısız: dosyayı ÖNCEKİ haline döndür (yoksa sil) ve DUR. Zamanlı geri alma ağı ayrıca korur.
-    - name: Restore the previous firewall file content
-      ansible.builtin.copy:  # noqa: risky-file-permissions
-        content: "{{ hardening_pve_fw_slurp.content | b64decode }}"
-        dest: "{{ hardening_pve_firewall_file }}"
-        unsafe_writes: true
-      when: hardening_pve_fw_stat.stat.exists
-
-    - name: Remove the firewall file that did not exist before
-      ansible.builtin.file:
-        path: "{{ hardening_pve_firewall_file }}"
-        state: absent
-      when: not hardening_pve_fw_stat.stat.exists
+    # Yazma/doğrulama başarısız: geri alma betiği cluster.fw'yi arm anındaki haline döndürür (yoksa siler), pve-firewall'u yeniden başlatır ve kendini disarm eder. Sonra DUR.
+    - name: Restore the previous firewall state now (hardening_rollback)
+      ansible.builtin.include_role:
+        name: hardening_rollback
+        tasks_from: restore
 
     - name: Stop because the Proxmox firewall could not be applied
       ansible.builtin.fail:
-        msg: "pve-firewall uygulanamadı; cluster.fw önceki haline döndürüldü. Ayrıntı: {{ hardening_pve_fw_compile.stderr | default('') }}{{ hardening_pve_fw_status.stdout | default('') }}"
+        msg: "pve-firewall uygulanamadı; önceki duruma dönüldü. Ayrıntı: {{ hardening_pve_fw_compile.stderr | default('') }}{{ hardening_pve_fw_compile.stdout | default('') | truncate(400) }}{{ hardening_pve_fw_status.stdout | default('') }}"
