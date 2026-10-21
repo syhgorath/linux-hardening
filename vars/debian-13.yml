@@ -1,0 +1,2 @@
+# Debian 13 (trixie) icin ozel degerler. Ubuntu 26.04 ile ayni: sshd servis adi `ssh`.
+hardening_ssh_service: ssh

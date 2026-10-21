@@ -20,8 +20,8 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-DISTRO_MAP = {"ubuntu": "Ubuntu"}                       # id öneki -> ansible_distribution
-SUPPORT_NAMES = {"ubuntu": "Ubuntu", "rpi": "Raspberry Pi", "proxmox": "Proxmox"}  # SUPPORT.md'de aranan ad
+DISTRO_MAP = {"ubuntu": "Ubuntu", "debian": "Debian"}                       # id öneki -> ansible_distribution
+SUPPORT_NAMES = {"ubuntu": "Ubuntu", "debian": "Debian", "rpi": "Raspberry Pi", "proxmox": "Proxmox"}  # SUPPORT.md'de aranan ad
 
 errors = []
 

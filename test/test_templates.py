@@ -28,6 +28,7 @@ DEFAULTS = [
     "roles/hardening_rollback/defaults/main.yml",
     "roles/hardening_preflight/defaults/main.yml",
     "vars/ubuntu-26.04.yml",
+    "vars/debian-13.yml",
 ]
 # (golden adi, sablon, ek degiskenler)
 CASES = [

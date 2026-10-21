@@ -78,10 +78,12 @@
   failed_when: false
   check_mode: false
 
+# ufw bu noktada kurulu olmayabilir: --check'te "Install ufw" gerçekten kurmaz (Debian'da ufw varsayılan gelmez). O durumda komut yok, hata sayılmaz.
 - name: Read ufw rules added so far
   ansible.builtin.command: ufw show added
   register: hardening_ufw_added
   changed_when: false
+  failed_when: hardening_ufw_added.rc != 0 and not ansible_check_mode
   check_mode: false
 
 - name: Find SSH rules that are not in hardening_ssh_allow_from

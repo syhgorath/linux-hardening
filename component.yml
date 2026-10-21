@@ -20,6 +20,7 @@ inventory_group: hardening
 
 profiles:                 # status: supported | planned
   - { id: ubuntu-26.04, status: supported }
+  - { id: debian-13, status: supported }
   - { id: rpi, status: planned }
   - { id: proxmox, status: planned }
 

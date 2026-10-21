@@ -15,22 +15,47 @@
       docs/design/proxmox-host.md'ye bak.
   when: hardening_proxmox_stat.results | selectattr('stat.exists') | list | length > 0
 
+# Debian'da ansible_facts['distribution_version'] alt sürümü de içerir ("13.7"), Ubuntu'da değil ("26.04"): Debian için ANA sürüm ("13") kullanılır.
+- name: Work out the version key used for the support check and OS variables
+  ansible.builtin.set_fact:
+    hardening_os_version: >-
+      {{ ansible_facts['distribution_major_version'] if ansible_facts['distribution'] == 'Debian' else ansible_facts['distribution_version'] }}
+
 - name: Check distribution and version are supported
   ansible.builtin.assert:
     that:
       - ansible_facts['distribution'] in hardening_supported_os
-      - ansible_facts['distribution_version'] in hardening_supported_os[ansible_facts['distribution']]
+      - hardening_os_version in hardening_supported_os[ansible_facts['distribution']]
     fail_msg: >-
-      Desteklenmeyen sistem: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}.
+      Desteklenmeyen sistem: {{ ansible_facts['distribution'] }} {{ hardening_os_version }}.
       Desteklenenler: {{ hardening_supported_os }}. docs/SUPPORT.md'ye bak.
   when: not hardening_allow_unsupported
+
+# apt modülü `--check` modunda python3-apt ister (gerçek koşuda kendisi kurar). Ubuntu imajlarında hazır gelir, minimal Debian'da olmayabilir: anlaşılır hata ver.
+- name: Check that the apt module can run in check mode (python3-apt)
+  ansible.builtin.command: /usr/bin/python3 -c 'import apt_pkg'
+  register: hardening_preflight_python_apt
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: ansible_check_mode and ansible_facts['os_family'] == 'Debian'
+
+- name: Stop the preview when python3-apt is missing
+  ansible.builtin.fail:
+    msg: >-
+      Önizleme (--check) için hedefte python3-apt gerekir ve kurulu değil (apt modülü bunsuz --check'te çalışmaz). Kurun:
+      `sudo apt-get install -y python3-apt` ya da önce bir kez --check OLMADAN çalıştırın (gerçek koşu bunu kendisi kurar).
+  when:
+    - ansible_check_mode
+    - ansible_facts['os_family'] == 'Debian'
+    - hardening_preflight_python_apt.rc | default(0) != 0
 
 - name: Load OS/version specific variables
   ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
   vars:
     params:
       files:
-        - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_version'] }}.yml"
+        - "{{ ansible_facts['distribution'] | lower }}-{{ hardening_os_version }}.yml"
         - "{{ ansible_facts['distribution'] | lower }}.yml"
       paths:
         - "{{ playbook_dir }}/../vars"
