@@ -12,7 +12,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | Eski `ubuntu` grubunu kaldır | Uyarı artık çıkmıyor (#35, olmayan grup seçilmiyor); kaldırmak yalnızca bir temizlik ve BREAKING olarak işaretlenir |
 | Tarama klasörü zaman damgası | Klasör adı yerel saatle, `summary.json` UTC; tek biçime getirilebilir |
 | v0.3.0 yayını | Yayımlandı (CIS Ubuntu 26.04 Level 1 Server eşlemesi, `hardening_files`/`hardening_sudo`/`hardening_docker` rolleri, zaman raporu, `examples/`, README "Dikkat") |
-| v0.4.0 yayını | Hazırlandı (küçük Lynis maddeleri, `apt-listchanges`, AIDE zamanlayıcı, `su` kısıtı, Docker `daemon.json` seçenekleri, root ortamı ve `/tmp` raporları, Grup 3 tasarım notu). Etiket, imza ve Release bakımcıda; sonra sshpocket `components.lock` |
+| v0.4.0 yayını | Yayımlandı (küçük Lynis maddeleri, `apt-listchanges`, AIDE zamanlayıcı, `su` kısıtı, Docker `daemon.json` seçenekleri, root ortamı ve `/tmp` raporları, Grup 3 tasarım notu) |
+| v0.5.0 yayını | Hazırlandı (`/tmp` ve `/dev/shm` noexec varsayılan açık, `pam_faillock`, `pam_pwhistory`, geri alma PAM kapsamı, Proxmox koruması, `hardening_time_makestep`, sudo-rs + Ansible bulgusu). Etiket, imza ve Release bakımcıda; sonra sshpocket `components.lock` |
 
 ## Orta
 | İş | Not |
