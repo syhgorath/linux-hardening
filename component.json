@@ -319,6 +319,77 @@
       "description": "Etkileşimli kabuk boşta kalma süresi (saniye, TMOUT); 0 = kapalı (varsayılan). Açılınca boşta kalan kabuk oturumları kapanır"
     },
     {
+      "name": "hardening_pwquality_difok",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 32,
+      "description": "Parola kalitesi (CIS 5.3.3.2.1): yeni parolada eskisinde bulunmaması gereken en az karakter sayısı (pwquality difok); 0 = yazılmaz (varsayılan), CIS 2 ya da daha fazla. Yalnızca parola DEĞİŞTİRİRKEN uygulanır, girişi etkilemez"
+    },
+    {
+      "name": "hardening_pwquality_maxsequence",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 10,
+      "description": "Parola kalitesi (CIS 5.3.3.2.5): ardışık karakter dizisinin (12345, fedcb) izinli en uzun uzunluğu (pwquality maxsequence); 0 = yazılmaz (varsayılan), CIS 3 ya da daha az. Yalnızca parola DEĞİŞTİRİRKEN uygulanır"
+    },
+    {
+      "name": "hardening_pwquality_enforce_for_root",
+      "type": "bool",
+      "default": false,
+      "description": "true: parola kalitesi kuralları root'un parola değişikliğine de uygulanır (CIS 5.3.3.2.8, pwquality enforce_for_root). Parolayı betikle ayarlayan otomasyonun zayıf parolası reddedilir. Varsayılan false"
+    },
+    {
+      "name": "hardening_journald_rotation",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: journald döndürme/boyut sınırları yazılır (CIS 6.1.1.1.5: SystemMaxUse, RuntimeMaxUse, MaxFileSec). Sınırı aşan eski günlükler silinir, saklama süresi kısalır. Varsayılan kapalı"
+    },
+    {
+      "name": "hardening_journald_system_max_use",
+      "type": "string",
+      "default": "1G",
+      "description": "journald SystemMaxUse (sayı + K|M|G|T, örn. 1G). Yalnızca hardening_journald_rotation=true iken etkili"
+    },
+    {
+      "name": "hardening_journald_runtime_max_use",
+      "type": "string",
+      "default": "200M",
+      "description": "journald RuntimeMaxUse (sayı + K|M|G|T, örn. 200M). Yalnızca hardening_journald_rotation=true iken etkili"
+    },
+    {
+      "name": "hardening_journald_max_file_sec",
+      "type": "string",
+      "default": "1month",
+      "description": "journald MaxFileSec (sayı + s|min|h|day|week|month|year, örn. 1month). Yalnızca hardening_journald_rotation=true iken etkili"
+    },
+    {
+      "name": "hardening_ssh_allow_users",
+      "type": "list[string]",
+      "default": [],
+      "description": "SSH erişim kısıtı (CIS 5.1.5, sshd AllowUsers): yalnızca bu kullanıcılar SSH ile girebilir; boş = kısıt yok (varsayılan). Ansible'ın bağlandığı kullanıcı listede değilse rol hiçbir şey yazmadan durur. Yalnızca basit adlar; joker, @ ve ! desteklenmez. hardening_ssh_allow_groups ile birlikte kullanılırsa VE ile birleşir"
+    },
+    {
+      "name": "hardening_ssh_allow_groups",
+      "type": "list[string]",
+      "default": [],
+      "description": "SSH erişim kısıtı (CIS 5.1.5, sshd AllowGroups): yalnızca bu gruplardaki kullanıcılar SSH ile girebilir; boş = kısıt yok (varsayılan). Ansible'ın bağlandığı kullanıcı bu gruplarda değilse rol hiçbir şey yazmadan durur"
+    },
+    {
+      "name": "hardening_report",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): SALT OKUNUR sistem raporu (CIS 3.1.1 IPv6 durumu, 2.1.23 dinleyen servisler, 7.2.11 kullanıcı nokta dizinleri, 5.3.3.4.1 nullok ve boş parolalı hesaplar). Hiçbir şeyi değiştirmez; yalnızca not ve uyarı yazar"
+    },
+    {
+      "name": "hardening_approved_listeners",
+      "type": "list[string]",
+      "default": [],
+      "description": "Onaylı dinleyen portlar (\"22/tcp\", \"123/udp\"). Boş (varsayılan): rapor yalnızca yerel olmayan adreste dinleyen portları not eder. Dolu: listede olmayanlar UYARI olur (CIS 2.1.23); hiçbir servis kapatılmaz. Yalnızca hardening_report=true iken etkili"
+    },
+    {
       "name": "hardening_password_inactive_days",
       "type": "int",
       "default": 0,

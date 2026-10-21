@@ -28,3 +28,9 @@ TCPKeepAlive no
 ClientAliveInterval 300
 ClientAliveCountMax 2
 Banner /etc/issue.net
+{% if hardening_ssh_allow_users | length > 0 %}
+AllowUsers {{ hardening_ssh_allow_users | join(' ') }}
+{% endif %}
+{% if hardening_ssh_allow_groups | length > 0 %}
+AllowGroups {{ hardening_ssh_allow_groups | join(' ') }}
+{% endif %}

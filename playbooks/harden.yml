@@ -1,5 +1,5 @@
 # Önce: ansible-playbook playbooks/harden.yml --check --diff
-# Tek rol:  --tags base,auth,kernel,files,docker,auditd,fail2ban,aide,time,ufw,ssh,sudo
+# Tek rol:  --tags base,auth,kernel,files,docker,auditd,fail2ban,aide,time,report,ufw,ssh,sudo
 # SSH ve ufw en sonda; firewall SSH iznini enable'dan önce ekler.
 - name: Harden
   # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
@@ -35,6 +35,8 @@
     - { role: hardening_fail2ban, tags: [fail2ban] }
     - { role: hardening_aide, tags: [aide] }
     - { role: hardening_time, tags: [time] }
+    # SALT OKUNUR sistem raporu (IPv6, dinleyiciler, nokta dizinleri, nullok); hiçbir şeyi değiştirmez.
+    - { role: hardening_report, tags: [report] }
     # Geri alma güvenlik ağı: ufw/ssh değişmeden HEMEN ÖNCE arm edilir; hardening_verify_access doğrulayınca disarm eder.
     # Arada herhangi bir hata/kopma olursa sunucu N sn sonra kendini önceki duruma döndürür (docs/design/rollback-timer.md).
     - { role: hardening_rollback, tags: [ufw, ssh, pam] }

@@ -17,6 +17,14 @@
     - { key: SHA_CRYPT_MIN_ROUNDS, value: "65536" }
     - { key: SHA_CRYPT_MAX_ROUNDS, value: "65536" }
 
+- name: Validate the pwquality options
+  ansible.builtin.assert:
+    that:
+      - (hardening_pwquality_difok | string) is match('^[0-9]+$') and hardening_pwquality_difok | int <= 32
+      - (hardening_pwquality_maxsequence | string) is match('^[0-9]+$') and hardening_pwquality_maxsequence | int <= 10
+      - hardening_pwquality_enforce_for_root in [true, false]
+    fail_msg: "hardening_pwquality_difok 0..32, hardening_pwquality_maxsequence 0..10 (tamsayı) ve hardening_pwquality_enforce_for_root true/false (bool) olmalı."
+
 - name: Ensure pwquality.conf.d exists
   ansible.builtin.file:
     path: /etc/security/pwquality.conf.d

@@ -20,37 +20,39 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 
 | Bölüm | Konu | Level 1 madde | ✅ | 🟡 | ⏸️ | ⚪ | ❌ |
 |---|---|---:|---:|---:|---:|---:|---:|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 9 |  |  | 19 | 1 |
-| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 4 | 1 |  | 8 | 2 |
+| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 9 |  | 1 | 19 |  |
+| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 5 | 1 | 1 | 8 |  |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
 | 1.4 | Önyükleyici | 2 |  | 1 | 1 |  |  |
 | 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 | 3 |  | 1 |  |
-| 1.6 | Oturum açma uyarı metinleri | 12 | 8 |  |  | 2 | 2 |
+| 1.6 | Oturum açma uyarı metinleri | 12 | 9 |  |  | 2 | 1 |
 | 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
-| 2.1 | Sunucu servisleri | 22 |  | 1 |  | 20 | 1 |
+| 2.1 | Sunucu servisleri | 22 |  | 2 |  | 20 |  |
 | 2.2 | İstemci paketleri | 6 |  | 2 |  | 4 |  |
-| 2.3 | Zaman senkronizasyonu | 6 |  |  |  | 3 | 3 |
+| 2.3 | Zaman senkronizasyonu | 6 |  |  | 3 | 3 |  |
 | 2.4 | Zamanlanmış işler (cron, at) | 10 | 7 | 2 |  | 1 |  |
-| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3 |  |  |  | 2 | 1 |
-| 3.2 | Ağ çekirdek modülleri | 7 | 6 |  |  |  | 1 |
+| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3 |  | 1 |  | 2 |  |
+| 3.2 | Ağ çekirdek modülleri | 7 | 6 |  | 1 |  |  |
 | 3.3 | Ağ çekirdek parametreleri | 27 | 20 | 2 | 5 |  |  |
 | 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |  |
-| 5.1 | SSH sunucusu | 24 | 20 | 3 |  |  | 1 |
+| 5.1 | SSH sunucusu | 24 | 20 | 4 |  |  |  |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 3 |  | 1 |  |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 10 |  | 2 | 9 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 14 | 3 | 2 | 2 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 8 |  | 7 |  |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 1 |  | 9 | 3 |
+| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 2 | 2 | 9 |  |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
-| 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  |  |  | 10 | 1 |
-| | **Toplam** | **274** | **105** | **38** | **6** | **100** | **25** |
+| 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  | 1 |  | 10 |  |
+| | **Toplam** | **274** | **107** | **47** | **17** | **100** | **3** |
 
-Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %52'si en azından kısmen karşılanıyor. Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
+Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısmen karşılanıyor (🟡'lerin çoğu varsayılan KAPALI seçenek ya da salt okunur rapor). Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
 ## Karşılananlar (✅)
 
 | Madde | Ne | Nerede |
 |---|---|---|
+| 1.2.1.6 | `/etc/apt/auth.conf.d/*.conf` root:root ve 0640 ya da daha kısıtlı | `roles/hardening_files/tasks/main.yml` |
+| 1.6.9 | `pam_motd` dosyası (`/etc/pam.d` içindeki `motd=` yolu) root:root ve 0644 ya da daha kısıtlı | `roles/hardening_files/tasks/main.yml` |
 | 1.1.1.1 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
 | 1.1.1.2 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
 | 1.1.1.3 | cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core modülleri kapalı (zaten yüklüyse kaldırılmaz) | `roles/hardening_kernel/tasks/main.yml` |
@@ -161,6 +163,15 @@ Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %52'si en azından kısme
 
 | Madde | Durum |
 |---|---|
+| 2.1.23 | Yalnızca SALT OKUNUR rapor: yerel olmayan adreste dinleyen portlar not; `hardening_approved_listeners` doluysa listede olmayanlar uyarı. Hiçbir servis kapatılmaz (`hardening_report`) |
+| 3.1.1 | Yalnızca SALT OKUNUR rapor: IPv6 etkin/devre dışı notu; IPv6 kapatılmaz (`hardening_report`) |
+| 5.1.5 | `hardening_ssh_allow_users` / `hardening_ssh_allow_groups` (varsayılan BOŞ = kısıt yok); bağlanan kullanıcı listede değilse rol durur |
+| 5.3.3.2.1 | `difok`: `hardening_pwquality_difok` (varsayılan 0 = yazılmaz; CIS 2 ya da daha fazla) |
+| 5.3.3.2.5 | `maxsequence`: `hardening_pwquality_maxsequence` (varsayılan 0 = yazılmaz; CIS 3 ya da daha az) |
+| 5.3.3.2.8 | `enforce_for_root`: `hardening_pwquality_enforce_for_root` (varsayılan false) |
+| 5.3.3.4.1 | Yalnızca SALT OKUNUR rapor: `pam_unix`'te `nullok` ve boş parolalı hesaplar; `nullok` KALDIRILMAZ (`hardening_report`) |
+| 6.1.1.1.5 | journald `SystemMaxUse`, `RuntimeMaxUse`, `MaxFileSec`: `hardening_journald_rotation` (varsayılan KAPALI; eski günlükler silinir) |
+| 7.2.11 | Yalnızca SALT OKUNUR rapor: kullanıcı nokta dizinleri 0750'den açıksa, `.ssh` 0700'den açıksa uyarı; izinler DEĞİŞTİRİLMEZ (`hardening_report`) |
 | 5.3.2.2 | `pam_faillock` etkin: yalnızca `hardening_pam_faillock=true` ile (varsayılan KAPALI; `pam-auth-update` profilleri, sıra assert ile doğrulanır, geri alma ağı şart) |
 | 5.3.2.4 | `pam_pwhistory` etkin: yalnızca `hardening_pam_pwhistory_remember > 0` ile (varsayılan KAPALI) |
 | 5.3.3.1.1 | `deny` = 5: `hardening_pam_faillock_deny` (faillock açıksa) |
@@ -204,6 +215,17 @@ Yani Level 1 Server maddelerinin yaklaşık %38'i ✅, %52'si en azından kısme
 
 | Madde | Neden |
 |---|---|
+| 1.1.1.11 | "Kullanılmayan dosya sistemi modülleri" listesini ben seçemem: hangisinin gereksiz olduğu sunucuya göre değişir (kullanıcı kararı) |
+| 1.2.1.11 | APT depolarını https'e çevirmek yapılmaz: paketler imzalı, http güvenli; https vekil ve kurum ağlarında kırar |
+| 2.3.2.1 | `systemd-timesyncd` kullanılmıyor, zaman servisi chrony (tek zaman servisi kuralı zaten sağlanıyor); uygulanmaz |
+| 2.3.2.2 | `systemd-timesyncd` kullanılmıyor (chrony); uygulanmaz |
+| 2.3.3.1 | chrony'ye yetkili sunucu yazmak kurum içi NTP kullanan sunucuyu kırabilir; yapılmaz. Zaman durumu SALT OKUNUR raporlanır (`hardening_time`) |
+| 3.2.7 | "Gereksiz ağ protokol modülleri" listesi sunucuya göre değişir; yapılmaz |
+| 5.3.1.1 | PAM paketlerinin en güncel olması paket yönetimi işidir (`unattended-upgrades` zaten günceller); yapılmaz |
+| 5.3.1.2 | `libpam-modules` güncelliği: aynı gerekçe |
+| 5.3.1.4 | `cracklib-runtime` güncelliği: aynı gerekçe |
+| 6.1.2.4 | rsyslog kullanılmıyor (günlükler journald'de); yapılmaz |
+| 6.1.2.5 | Uzak log sunucusu adresi sunucuya özgüdür; yapılmaz |
 | 1.4.1 | Önyükleyici (GRUB) parolası bilerek yok (kullanıcı kararı, 2026-10-22): konsolsuz/uzaktan yönetilen sunucuda, parolalı bir menü girdisi her yeniden başlatmada konsoldan parola bekler ve sunucu açılmaz. CIS'in istediği biçim yalnızca menü düzenlemeyi korur ama yanlış kurulursa açılışı kilitler; Raspberry Pi'de GRUB yok, Proxmox'ta farklı önyükleyici olabilir |
 | 3.3.1.1 | ip_forward'a bilerek dokunulmaz (LXD/konteyner/yönlendirici kullanımı) |
 | 3.3.1.2 | ip_forward'a bilerek dokunulmaz |
@@ -244,17 +266,8 @@ Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numara
 
 | Bölüm | Konu | Madde numaraları |
 |---|---|---|
-| 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 1.1.1.11 |
-| 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 1.2.1.6, 1.2.1.11 |
-| 1.6 | Oturum açma uyarı metinleri | 1.6.4, 1.6.9 |
-| 2.1 | Sunucu servisleri | 2.1.23 |
-| 2.3 | Zaman senkronizasyonu | 2.3.2.1, 2.3.2.2, 2.3.3.1 |
-| 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.1 |
-| 3.2 | Ağ çekirdek modülleri | 3.2.7 |
-| 5.1 | SSH sunucusu | 5.1.5 |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.1.1, 5.3.1.2, 5.3.1.4, 5.3.3.2.1, 5.3.3.2.5, 5.3.3.2.8, 5.3.3.4.1, 5.3.3.4.2, 5.3.3.4.4 |
-| 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.5, 6.1.2.4, 6.1.2.5 |
-| 7.2 | Yerel kullanıcı ve grup ayarları | 7.2.11 |
+| 1.6 | Oturum açma uyarı metinleri | 1.6.4 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.3.4.2, 5.3.3.4.4 |
 
 ## Level 1 dışında yaptıklarımız
 

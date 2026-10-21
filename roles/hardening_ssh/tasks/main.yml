@@ -10,6 +10,38 @@
       hardening_ssh_permit_root_login no|prohibit-password (string) olmalı
       (YAML'da 'no' tırnaksız bool'a dönüşür: "no" yazın).
 
+- name: Validate the SSH access lists (CIS 5.1.5)
+  ansible.builtin.assert:
+    that:
+      - hardening_ssh_allow_users is sequence and hardening_ssh_allow_users is not string
+      - hardening_ssh_allow_groups is sequence and hardening_ssh_allow_groups is not string
+      - (hardening_ssh_allow_users + hardening_ssh_allow_groups) | reject('match', '^[a-z_][a-z0-9_-]*[$]?$') | list | length == 0
+    fail_msg: >-
+      hardening_ssh_allow_users / hardening_ssh_allow_groups geçersiz: liste olmalı, girdiler yalnızca basit ad olmalı (küçük harf, rakam, _ ve -; joker, @ ve ! yok).
+      Geçersiz girdiler: {{ ((hardening_ssh_allow_users | default([])) + (hardening_ssh_allow_groups | default([]))) | reject('match', '^[a-z_][a-z0-9_-]*[$]?$') | list }}
+
+- name: Login user and groups for the access lists (become olmadan)
+  ansible.builtin.shell:
+    cmd: |
+      id -un
+      id -Gn
+    executable: /bin/sh
+  become: false
+  register: hardening_ssh_access_who
+  changed_when: false
+  check_mode: false
+  when: hardening_ssh_allow_users | length > 0 or hardening_ssh_allow_groups | length > 0
+
+- name: Refuse access lists that would lock out the login user
+  ansible.builtin.assert:
+    that:
+      - hardening_ssh_allow_users | length == 0 or hardening_ssh_access_who.stdout_lines[0] in hardening_ssh_allow_users
+      - hardening_ssh_allow_groups | length == 0 or (hardening_ssh_access_who.stdout_lines[1].split() | intersect(hardening_ssh_allow_groups) | length > 0)
+    fail_msg: >-
+      Ansible'ın bağlandığı kullanıcı ({{ hardening_ssh_access_who.stdout_lines[0] }}, grupları: {{ hardening_ssh_access_who.stdout_lines[1] }}) hardening_ssh_allow_users /
+      hardening_ssh_allow_groups ile SSH girişine izinli değil; yazılsaydı bu bağlantı yenilenemez, erişim kesilirdi. Hiçbir şey yazılmadı.
+  when: hardening_ssh_allow_users | length > 0 or hardening_ssh_allow_groups | length > 0
+
 - name: Login user (become olmadan)
   ansible.builtin.command: id -un
   become: false

@@ -4,3 +4,12 @@ minclass = 3
 maxrepeat = 3
 dictcheck = 1
 enforcing = 1
+{% if hardening_pwquality_difok | int > 0 %}
+difok = {{ hardening_pwquality_difok | int }}
+{% endif %}
+{% if hardening_pwquality_maxsequence | int > 0 %}
+maxsequence = {{ hardening_pwquality_maxsequence | int }}
+{% endif %}
+{% if hardening_pwquality_enforce_for_root | bool %}
+enforce_for_root
+{% endif %}
