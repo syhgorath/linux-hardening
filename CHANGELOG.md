@@ -5,6 +5,19 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.5.0] - 2026-10-21
+
+v0.4.0'dan sonra: `/tmp` ve `/dev/shm` için `noexec` (varsayılan **açık**), hesap kilitleme (`pam_faillock`) ve parola geçmişi (`pam_pwhistory`) seçenekleri (varsayılan **kapalı**), geri alma güvenlik ağının PAM'i kapsaması,
+Proxmox VE host koruması, isteğe bağlı saat düzeltme ve çok sayıda gerçek VM doğrulaması (verification-log 29-37). `component.yml` `vars` listesi 38'den 48'e çıktı (+10) (`sshpocket_api` değişmedi).
+**Dikkat (varsayılan AÇIK ve sunucuyu etkileyen TEK davranış değişikliği):** `hardening_tmp_noexec` ve `hardening_shm_noexec`: `/tmp` ve `/dev/shm`'ye `nodev,nosuid,noexec`; bu dizinlerden doğrudan çalıştırma kapanır
+(`./betik` reddedilir, `sh betik` çalışır). `/tmp`'ten ikili çalıştıran uygulamalar (Java/Node işleri, dışarıdan program çağıran PHP paketleri) bozulabilir; sorun olursa ilgili sunucuda `false` yapın (yazılmış yapılandırma geri alınmaz, elle silinir).
+Ansible, `apt`, nginx+php-fpm ve composer ile gerçek VM'de denendi, yeniden başlatma sonrası kalıcı. Yalnızca ayrı ve `tmpfs` olan dizin yönetilir; `fstab`'taki mevcut `/dev/shm` satırı ezilmez.
+**Her zaman açık korumalar:** Proxmox VE host'unda (`/etc/pve`) rol, `hardening_allow_unsupported` ile bile DURUR; geri alma betiği artık PAM dosyalarını da yedekler.
+**Varsayılan KAPALI yeni seçenekler:** `hardening_pam_faillock` (+ `_deny`, `_unlock_time`, `_fail_interval`, `_even_deny_root`; geri alma ağı ARMED olmadan rol çalışmaz), `hardening_pam_pwhistory_remember` (+ `_enforce_for_root`), `hardening_time_makestep`.
+**Önemli bulgu (bu pakette değil, Ubuntu 26.04'te):** sudo-rs ile Ansible'ın parolalı `become`'ı (`--ask-become-pass`) doğru parolayla bile `Timeout waiting for privilege escalation prompt` verir; çözüm `-e ansible_become_exe=/usr/bin/sudo.ws` (HOWTO bölüm 4).
+**Doğrulama notu:** her madde gerçek VM'de TEK TEK denendi. Bu sürüm adayının TÜM varsayılanlarıyla sıfırdan kurulumu ve ikinci koşusu ayrıca YAPILMADI (v0.4.0 için sshpocket üzerinden yapıldı: madde 29; `main` üstünde tam `harden` + `changed=0` madde 32'de, `noexec` öncesi).
+**Denenmeyenler:** Raspberry Pi, gerçek bir Proxmox host'u, `even_deny_root`, faillock'ta `su`/konsol girişi, faillock `rescue` yolunun gerçek tetiklenmesi, PDF üreten dış programlar, Java/Node ve Docker ile `noexec`.
+
 ### Eklendi
 - `hardening_pam_faillock` (varsayılan **kapalı**, `warn_if: true`) ve `hardening_pam_faillock_deny` (5), `_unlock_time` (900), `_fail_interval` (900), `_even_deny_root` (kapalı, `warn_if: true`): hesap kilitleme (`pam_faillock`; CIS 5.3.2.2, 5.3.3.1.1, 5.3.3.1.2 ve 5.3.2.4 ❌ → 🟡). İki `pam-auth-update` profili (`preauth`+`account` pam_unix'ten önce, `authfail` sonra). Rol yalnızca geri alma güvenlik ağı ARMED iken çalışır (kapalıysa/armed değilse DURUR), yığın sırası assert ile doğrulanır, hata olursa rescue geri alır; `harden.yml`'de `hardening_rollback`'in `pam` etiketiyle arm penceresinin içinde. Sudo/su/konsol kilitlenir, SSH anahtarı etkilenmez; klasik sudo ve Ansible yanlış parolada koşu başına 2 kayıt bırakır. `test_pam_faillock.py`. Gerçek VM'de denendi (verification-log 37).
 - `hardening-rollback` betiği PAM'i de kapsar: arm anında `/etc/pam.d/common-*`, `/var/lib/pam/*`, `hardening-faillock` profili ve `faillock.conf` yedeklenir; restore bunları OLDUĞU GİBİ geri yazar (`pam-auth-update` çalıştırmaz), sonradan eklenen faillock profilini siler, `/run/faillock` kilit sayaçlarını temizler ve PAM'i ssh/ufw'den ÖNCE geri alır. Gerçek VM'de bilerek bozuk `common-auth` zamanlayıcıyla kendiliğinden düzeldi (verification-log 36). `faillock` rolü için önkoşul; henüz hiçbir rol PAM'i arm penceresinde değiştirmiyor.
@@ -188,7 +201,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.4.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/syhgorath/linux-hardening/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/syhgorath/linux-hardening/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/syhgorath/linux-hardening/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/syhgorath/linux-hardening/compare/v0.2.1...v0.2.2
