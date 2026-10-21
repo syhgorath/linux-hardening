@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- `hardening_base` artık `cron` paketini `hardening_files`'tan önce kurar: minimal imajda (cron yok) AIDE onu sonradan getirdiği için cron dosya/dizin izinleri (CIS bölüm 2.4) ilk koşuda sıkılaşmıyor, ikinci koşuda sıkılaşıyordu. Cron zaten kuruluysa değişiklik yok. Temiz Ubuntu 26.04 konteynerinde ilk koşuda sıkılaştığı doğrulandı
+
 ### Eklendi
 - **Raspberry Pi platformu** (`hardening_platform=raspberry-pi`, `hardening_rpi_strict` varsayılan kapalı + `warn_if: true`, `hardening_rpi_markers`): Pi'de YALNIZCA `usb-storage` engeli gevşer (Pi USB'den açılabilir); `raspberry-pi` platformu yalnızca gerçek Pi'de kabul edilir (`hardening_allow_unsupported` atlatamaz); Pi algılanıp platform `generic` ise rol durmaz, NOT düşer. Raspberry Pi OS = `debian-13` profili. arm64 Debian konteynerinde Pi işaretleriyle denendi, **Pi donanımında DENENMEDİ**. Tasarım: docs/design/raspberry-pi.md
 - **Debian 13 CIS eşlemesi ve Proxmox notları** (`docs/cis-esleme-debian.md`): Debian 13 v1.1.0 ile Ubuntu 26.04 v1.0.0 benchmark'larının içindekiler listeleri betikle karşılaştırıldı, 341 madde numara/başlık/profil olarak birebir aynı çıktı; Ubuntu eşlemesi Debian için de geçerli (Debian'da ölçülmedi). Proxmox'ta farklı ele alınan Level 1 - Server maddeleri tablolandı. Kod değişikliği yok

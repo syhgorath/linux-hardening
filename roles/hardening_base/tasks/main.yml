@@ -15,6 +15,13 @@
     autoremove: true
   when: hardening_platform | default('generic') != 'proxmox-host'
 
+# cron: AIDE (hardening_aide, sonra çalışır) onu bağımlılık olarak getirir; minimal imajda yoksa hardening_files cron izinlerini (CIS bölüm 2.4) İLK koşuda göremez
+# ve ikinci koşuda sıkılaştırırdı (verification-log 45). Önce kurulur ki hardening_files aynı koşuda sıkılaştırsın. Zaten kuruluysa değişiklik yok.
+- name: Install cron (AIDE needs it; installed first so its file permissions are tightened in the same run)
+  ansible.builtin.apt:
+    name: cron
+    state: present
+
 - name: Install unattended-upgrades
   ansible.builtin.apt:
     name: unattended-upgrades
