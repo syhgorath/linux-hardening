@@ -225,6 +225,13 @@ for doc in ("README.md", "README.en.md", "HOWTO.md", "docs/component-vars.md"):
     if not re.search(r"hardening_ssh_allow_from[\s\S]{0,1500}VPN", (ROOT / doc).read_text(encoding="utf-8")):
         err(f"{doc}: hardening_ssh_allow_from için 'yalnızca VPN yazma' uyarısı yok")
 
+# 5b) docs/component-vars.md: component.yml'deki HER değişken belgelenmiş olmalı (tablo sürüklenmesin)
+_cv = (ROOT / "docs/component-vars.md").read_text(encoding="utf-8")
+for _v in comp.get("vars", []):
+    _n = _v.get("name") if isinstance(_v, dict) else _v
+    if _n and f"`{_n}`" not in _cv:
+        err(f"docs/component-vars.md: {_n} belgelenmemiş (component.yml'de var)")
+
 # 6) rollback_status çıktı sözleşmesi: bildirilen anahtarlar betiğin ve playbook'un yazdığı satırla aynı olmalı
 outs = comp.get("actions", {}).get("rollback_status", {}).get("outputs")
 if outs:

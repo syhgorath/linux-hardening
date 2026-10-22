@@ -275,6 +275,74 @@ vars:
     type: list[string]
     default: []
     description: "Onaylı dinleyen portlar (\"22/tcp\", \"123/udp\"). Boş (varsayılan): rapor yalnızca yerel olmayan adreste dinleyen portları not eder. Dolu: listede olmayanlar UYARI olur (CIS 2.1.23); hiçbir servis kapatılmaz. Yalnızca hardening_report=true iken etkili"
+  - name: hardening_ssh_disable_password
+    type: bool
+    default: true
+    warn_if: false                     # false = SSH parola girişi AÇIK kalır
+    description: "true (varsayılan): sshd PasswordAuthentication no; yalnızca anahtarla giriş. Rol, giriş yapan kullanıcının authorized_keys dosyası yoksa ya da boşsa durur. false: parola girişi açık kalır (brute-force riski)"
+  - name: hardening_ssh_kbdinteractive
+    type: bool
+    default: false
+    warn_if: true                      # true = AuthenticationMethods publickey,keyboard-interactive: yanlış PAM 2FA yapılandırması erişimi keser
+    description: "true: 2FA/TOTP için keyboard-interactive açılır ve AuthenticationMethods publickey,keyboard-interactive yazılır (anahtar VE PAM istemi birlikte gerekir). Sunucuda PAM 2FA'sını (örn. libpam-google-authenticator) bu rol kurmaz; yanlış yapılandırma erişimi keser, önce test sunucusunda deneyin. Varsayılan false"
+  - name: hardening_ssh_allow_tcp_forwarding
+    type: string
+    default: "no"
+    description: "sshd AllowTcpForwarding: no (varsayılan) | local | remote | yes. ProxyJump/SSH tüneli kullanıyorsanız jump host'ta en az local gerekir; yes gereksiz geniştir. Geçersiz değerde rol hiçbir şey yazmadan durur"
+  - name: hardening_fail2ban_maxretry
+    type: int
+    default: 5
+    min: 1
+    max: 100
+    description: "fail2ban sshd jail: bu kadar başarısız denemeden sonra ban (varsayılan 5)"
+  - name: hardening_fail2ban_bantime
+    type: string
+    default: "1h"
+    description: "fail2ban sshd jail ban süresi (fail2ban zaman biçimi: 10m, 1h, 1d; varsayılan 1h)"
+  - name: hardening_fail2ban_ignoreip
+    type: string
+    default: "127.0.0.1/8 ::1"
+    description: "fail2ban'ın asla banlamayacağı adresler (boşlukla ayrılmış). Ansible'ın bağlandığı kontrol makinesinin sunucunun GÖRDÜĞÜ adresi buna otomatik eklenir. Tüm yönetim ağını yazmak önerilmez (içerideki biri bile banlanmaz)"
+  - name: hardening_pass_max_days
+    type: int
+    default: 365
+    min: 1
+    max: 99999
+    description: "Yeni hesaplar için parola en çok kaç gün geçerli (login.defs PASS_MAX_DAYS; CIS 365 ya da daha az). Yalnızca YENİ hesapları etkiler"
+  - name: hardening_pass_min_days
+    type: int
+    default: 1
+    min: 0
+    max: 99999
+    description: "Yeni hesaplar için parolanın değiştirilebilmesi için en az gün (PASS_MIN_DAYS; CIS 1 ya da daha fazla). Yalnızca YENİ hesapları etkiler"
+  - name: hardening_pass_warn_age
+    type: int
+    default: 7
+    min: 0
+    max: 99999
+    description: "Parola dolmadan kaç gün önce uyarılır (PASS_WARN_AGE; CIS 7 ya da daha fazla). Yalnızca YENİ hesapları etkiler"
+  - name: hardening_umask
+    type: string
+    default: "027"
+    description: "Varsayılan umask (login.defs UMASK; CIS 027 ya da daha kısıtlı). YENİ dosyaların izinlerini etkiler; 027 grup yazma ve diğer erişimi kapatır"
+  - name: hardening_pwquality_minlen
+    type: int
+    default: 14
+    min: 8
+    max: 128
+    description: "En düşük parola uzunluğu (pwquality minlen; CIS 14 ya da daha fazla). Yalnızca parola DEĞİŞTİRİRKEN uygulanır, girişi etkilemez"
+  - name: hardening_ufw_extra_allow_host
+    type: list[string]
+    default: []
+    description: "Yalnızca BU sunucuya özel ek ufw kuralları (hardening_ufw_extra_allow ile BİRLEŞTİRİLİR, tekrarlar atılır). Biçimler: \"443/tcp\", \"80\", \"8000:8010/tcp\" ya da kaynak kısıtlı \"from 192.0.2.5 to any port 6379 proto tcp\". Geçersiz girdide ufw'ye dokunulmadan durur"
+  - name: hardening_auditd_docker_rules
+    type: bool
+    default: true
+    description: "true (varsayılan): Docker kuruluysa Docker dosyaları/dizinleri için denetim kuralı eklenir (CIS Docker 1.1.x); yalnızca VAR OLAN yollar için yazılır. false: Docker audit kuralı eklenmez"
+  - name: hardening_sudo_logfile
+    type: path
+    default: /var/log/sudo.log
+    description: "sudo günlük dosyası (CIS 5.2.3). Ubuntu 26.04'te varsayılan sudo-rs dosya günlüğünü desteklemez, orada olaylar journald'e gider ve bu değer kullanılmaz"
   - name: hardening_password_inactive_days
     type: int
     default: 0
