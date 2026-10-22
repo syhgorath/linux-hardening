@@ -94,7 +94,8 @@
   ansible.builtin.apt:
     name: libpam-tmpdir
     state: present
-  when: hardening_pam_tmpdir | bool
+  # Proxmox'ta (gevşek) kurulmaz: root cron/oturum işleri ve VM yedekleme araçları $TMPDIR'in /tmp olmasını varsayabilir (DENENMEDİ); hardening_pve_strict=true ile kurulur.
+  when: hardening_pam_tmpdir | bool and not (hardening_platform_relaxed | default(false) | bool)
 
 # --- root ortamı raporu (CIS 5.4.2: PATH bütünlüğü ve umask). SALT OKUNUR: hiçbir şeyi değiştirmez; `--check`'te de çalışır. Karar mantığı files/root_env_report.py ---
 - name: Root environment report (read-only)

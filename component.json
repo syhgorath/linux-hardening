@@ -382,7 +382,7 @@
       "name": "hardening_platform",
       "type": "string",
       "default": "generic",
-      "description": "Platform: generic (varsayılan) | proxmox-host | raspberry-pi. raspberry-pi yalnızca GERÇEKTEN Raspberry Pi olan hostta kabul edilir ve yalnızca usb-storage engelini gevşetir (Pi USB diskten açılabilir); denendi: Pi donanımında DEĞİL, arm64 Debian konteynerinde. Proxmox VE hostu generic ile sertleştirilemez (rol durur). proxmox-host yalnızca GERÇEKTEN Proxmox olan hostta ve şimdilik yalnızca --check önizlemesi içindir (gerçek koşu reddedilir). Proxmox'ta MTA değişimi ve ufw hiçbir zaman çalışmaz"
+      "description": "Platform: generic (varsayılan) | proxmox-host | raspberry-pi. Proxmox VE hostu generic ile sertleştirilemez (rol durur). proxmox-host yalnızca GERÇEKTEN Proxmox olan hostta kabul edilir; önizleme (--check) serbesttir, GERÇEK değişiklik için ayrıca hardening_pve_apply=true gerekir. Proxmox'ta MTA değişimi, ufw ve libpam-tmpdir hiçbir zaman (strict dışında) çalışmaz. raspberry-pi yalnızca GERÇEKTEN Raspberry Pi olan hostta kabul edilir ve yalnızca usb-storage engelini gevşetir (Pi USB diskten açılabilir); Pi donanımında DEĞİL, arm64 Debian konteynerinde denendi"
     },
     {
       "name": "hardening_rpi_strict",
@@ -416,7 +416,7 @@
       "type": "bool",
       "default": false,
       "warn_if": true,
-      "description": "true: playbooks/pve-firewall.yml Proxmox VE (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. Önce snapshot alın. DENENMEDİ"
+      "description": "true: Proxmox VE hostunda (hardening_platform=proxmox-host) GERÇEK değişikliğe izin verir: playbooks/harden.yml gerçekten çalışır ve playbooks/pve-firewall.yml (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. Önce snapshot alın. DENENMEDİ"
     },
     {
       "name": "hardening_pve_firewall_extra_ports",
