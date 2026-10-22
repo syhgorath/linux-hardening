@@ -1,6 +1,6 @@
 # Platform (docs/design/proxmox-host.md soru 5): `hardening_platform` generic | proxmox-host. Bu denetimler `hardening_allow_unsupported` ile ATLANAMAZ ve `--check`'te de çalışır.
 #   - Proxmox VE hostu (/etc/pve ya da /usr/bin/pveversion) `generic` platformla ASLA sertleştirilmez: Ubuntu kuralları (root girişi, ufw, MTA değişimi, ip_forward) hostu ve VM ağını bozar.
-#   - `proxmox-host` platformu yalnızca GERÇEKTEN Proxmox olan hostta kabul edilir ve şimdilik yalnızca `--check` önizlemesi için (gerçek değişiklik aşama 4: pve-firewall + geri alma kapsamı bekliyor).
+#   - `proxmox-host` platformu yalnızca GERÇEKTEN Proxmox olan hostta kabul edilir; gerçek değişiklik için ayrıca hardening_pve_apply=true gerekir (aşağıya bak; eskiden: pve-firewall + geri alma kapsamı bekliyor).
 - name: Check the platform setting
   ansible.builtin.assert:
     that: hardening_platform in hardening_platforms_known
@@ -35,12 +35,14 @@
       hardening_platform=proxmox-host seçildi ama bu sunucu Proxmox VE değil ({{ hardening_proxmox_markers | join(', ') }} yok). Platformu `generic` bırakın ya da doğru sunucuyu seçin.
   when: hardening_platform == 'proxmox-host' and not (hardening_is_proxmox | bool)
 
-- name: Refuse real changes on a Proxmox VE host (only the --check preview is supported so far)
+# Proxmox'ta GERÇEK değişiklik bilinçli bir kapıdan geçer (yanlış ayar hipervizörü ve VM'leri etkiler): hardening_pve_apply=true. Önizleme (--check) her zaman serbesttir.
+# Bu kapı hardening_allow_unsupported ile ATLANAMAZ. Güvenlik duvarı ayrı playbook'ta yönetilir (playbooks/pve-firewall.yml, aynı değişken).
+- name: Refuse real changes on a Proxmox VE host unless hardening_pve_apply is true
   ansible.builtin.fail:
     msg: >-
-      Proxmox VE hostunda şimdilik YALNIZCA önizleme (--check) desteklenir: pve-firewall yönetimi ve geri alma ağının pve-firewall kapsamı henüz yazılmadı (docs/design/proxmox-host.md, aşama 4).
-      Gerçek koşu REDDEDİLDİ; hiçbir şey değiştirilmedi.
-  when: hardening_platform == 'proxmox-host' and not ansible_check_mode
+      Proxmox VE hostunda gerçek değişiklik için hardening_pve_apply=true gerekir (yanlış ayar hipervizörü ve VM'leri etkileyebilir; önce snapshot alın, önce --check ile bakın).
+      Hiçbir şey değiştirilmedi. docs/design/proxmox-host.md'ye bak.
+  when: hardening_platform == 'proxmox-host' and not ansible_check_mode and not (hardening_pve_apply | default(false) | bool)
 
 # Raspberry Pi (docs/design/raspberry-pi.md): Pi algılanması BİLGİ amaçlıdır (generic platform reddedilmez, Pi'de Ubuntu/Debian sıradan çalışır); `raspberry-pi` platformu yalnızca GERÇEK Pi'de kabul edilir.
 - name: Look for Raspberry Pi markers

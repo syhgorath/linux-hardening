@@ -28,7 +28,7 @@ tasks = yaml.safe_load((ROOT / "roles/hardening_preflight/tasks/main.yml").read_
 defaults = yaml.safe_load((ROOT / "roles/hardening_preflight/defaults/main.yml").read_text(encoding="utf-8"))
 names = [t.get("name") for t in tasks]
 first = names.index("Check the platform setting")
-last = names.index("Refuse real changes on a Proxmox VE host (only the --check preview is supported so far)")
+last = names.index("Refuse real changes on a Proxmox VE host unless hardening_pve_apply is true")
 guard = tasks[first:last + 1]
 os_t = next(t for t in tasks if "ansible.builtin.assert" in t and t.get("name") == "Check distribution and version are supported")
 
@@ -48,11 +48,11 @@ check("kume denetimi: platform proxmox-host ile sinirli, --check'te de calisir, 
 check("kume denetimi OS denetiminden ONCE", c1 < tasks.index(os_t))
 
 
-def play(platform, markers, allow=False, check_mode=False, strict=False):
+def play(platform, markers, allow=False, check_mode=False, strict=False, apply=False):
     with tempfile.TemporaryDirectory() as t:
         pb = Path(t) / "p.yml"
         vars_ = {"hardening_proxmox_markers": markers, "hardening_allow_unsupported": allow, "hardening_platform": platform,
-                 "hardening_platforms_known": defaults["hardening_platforms_known"], "hardening_pve_strict": strict}
+                 "hardening_platforms_known": defaults["hardening_platforms_known"], "hardening_pve_strict": strict, "hardening_pve_apply": apply}
         pb.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "vars": vars_,
                                        "tasks": guard + [{"ansible.builtin.debug": {"msg": "DEVAM-EDILDI relaxed={{ hardening_platform_relaxed }} proxmox={{ hardening_is_proxmox }} platform={{ hardening_platform }}"}}]}]), encoding="utf-8")
         cmd = ["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pb)] + (["--check"] if check_mode else [])
@@ -81,7 +81,13 @@ with tempfile.TemporaryDirectory() as t:
     check("   hardening_pve_strict=true: relaxed=False", rc == 0 and "relaxed=False proxmox=True platform=proxmox-host" in out)
     for allow in (False, True):
         rc, out = play("proxmox-host", [str(pve)], allow=allow)
-        check(f"proxmox-host + GERCEK KOSU (allow_unsupported={allow}): DURUR (yalniz --check destekli)", rc != 0 and "YALNIZCA önizleme (--check)" in out and "DEVAM-EDILDI" not in out)
+        check(f"proxmox-host + GERCEK KOSU, hardening_pve_apply YOK (allow_unsupported={allow}): DURUR", rc != 0 and "hardening_pve_apply=true gerekir" in out and "DEVAM-EDILDI" not in out)
+    rc, out = play("proxmox-host", [str(pve)], apply=True)
+    check("proxmox-host + GERCEK KOSU + hardening_pve_apply=true: KABUL, relaxed=True", rc == 0 and "DEVAM-EDILDI relaxed=True proxmox=True platform=proxmox-host" in out)
+    rc, out = play("proxmox-host", no, apply=True)
+    check("   apply=true Proxmox OLMAYAN hostu kurtarmaz (reddedilir)", rc != 0 and "Proxmox VE değil" in out)
+    rc, out = play("generic", [str(pve)], apply=True)
+    check("   apply=true generic platformda Proxmox'u kurtarmaz (reddedilir)", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out)
     rc, out = play("proxmox-host", no, check_mode=True)
     check("proxmox-host ama Proxmox DEGIL: DURUR ('Proxmox VE değil')", rc != 0 and "Proxmox VE değil" in out)
     rc, out = play("baska-platform", no)

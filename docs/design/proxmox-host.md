@@ -64,6 +64,11 @@ Normal kullanıcı (`claude`) + SSH anahtarıyla, hiçbir şey değiştirilmeden
 - **`kernel`:** Proxmox'ta (`hardening_pve_strict=false`) `rp_filter` GEVŞEK (2): katı (1) çok arayüzlü / asimetrik yönlendirmede trafiği düşürür, Proxmox'un varsayılanı zaten 2. Diğer sysctl'ler ve modül kara listesi (`atm`, `can`, `dccp`, `rds`, `sctp`, `tipc`, CIS dosya sistemi modülleri) gözden geçirildi: Proxmox'u etkilemez (kuramsal; VM ağı üzerinde gerçek koşuyla denenmedi).
 - Sonraki: aşama 4 (`pve-firewall` + geri alma ağı kapsamı), sonra gerçek koşu.
 
+### Aşama 5 YAPILDI: tam `harden.yml` gerçek koşusu (iç içe Proxmox 9.2, tek düğüm)
+- Preflight'taki "yalnızca önizleme" reddi KALDIRILDI; yerine **`hardening_pve_apply=true` kapısı** geldi (aynı değişken `playbooks/pve-firewall.yml` için de geçerli). Önizleme (`--check`) serbest; kapı `hardening_allow_unsupported` ile atlanamaz.
+- `libpam-tmpdir` Proxmox'ta (gevşek) kurulmaz: `$TMPDIR=/tmp/user/<uid>` kök oturum/cron ve yedekleme araçlarıyla etkileşimi sınanmadığı için; `hardening_pve_strict=true` ile kurulur.
+- Sonuç ve denenmeyenler: docs/verification-log.md madde 49.
+
 ## Açık sorular (cevaplanmadan kod yazılmaz)
 1. **Root ve SSH. KISMEN CEVAPLANDI (2026-10-21):** kullanıcı root ile yönetmiyor (normal kullanıcı + sudo), tek düğüm; Proxmox'un `PermitRootLogin yes` varsayılanı ve ileride küme düğümleri arası root SSH'ı hâlâ açık konu. Ubuntu rollerimiz `root` ile bağlanmayı reddeder ve root girişini kapatır. Proxmox yönetimi ve (varsa) küme
    düğümleri arası işlemler `root` ile yapılıyor olabilir. *Doğrulanmadı.* Hangi hesapla yönetilecek, küme var mı?
