@@ -13,3 +13,8 @@ hardening_ssh_allow_tcp_forwarding: "no"
 # PermitRootLogin değeri: "no" (varsayılan) | "prohibit-password" (yalnızca anahtarla). `no` kök girişini tamamen kapatır. Proxmox VE KÜMESİNDE düğümler arası işlemler kökten SSH ister:
 # orada "prohibit-password" gerekir (preflight kümede "no" ile durur). Parola ile kök girişi hiçbir ayarla açılmaz. YAML'da no tırnaksız bool olur: "no" yazın.
 hardening_ssh_permit_root_login: "no"
+# Erişim kısıtı (CIS 5.1.5): yalnızca bu kullanıcılar / gruplar SSH ile girebilir (sshd AllowUsers / AllowGroups). Varsayılan BOŞ = kısıt yok (davranış değişmez).
+# İkisi de doluysa sshd bunları VE ile birleştirir (hem kullanıcı hem grup listesinde olmak gerekir). Ansible'ın bağlandığı kullanıcı listede (ya da gruplarda) YOKSA
+# rol hiçbir şey yazmadan DURUR (kendi erişimini kesmeyi önler). Yalnızca basit adlar: harf, rakam, _ ve -; joker, @ ve ! desteklenmez.
+hardening_ssh_allow_users: []
+hardening_ssh_allow_groups: []

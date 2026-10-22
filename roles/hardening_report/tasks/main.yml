@@ -1,0 +1,89 @@
+# SALT OKUNUR sistem raporu. Karar mantığı files/cis_report.py. Hiçbir şeyi değiştirmez; `--check`'te de çalışır.
+- name: System report (read-only)
+  when: hardening_report | bool
+  block:
+    - name: Read the IPv6 state
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          printf 'DISABLE_ALL=%s\n' "$(cat /proc/sys/net/ipv6/conf/all/disable_ipv6 2>/dev/null)"
+          printf 'GLOBAL_ADDRS=%s\n' "$(ip -6 -o addr show scope global 2>/dev/null | wc -l | tr -d ' ')"
+        executable: /bin/bash
+      register: hardening_report_ipv6
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read the listening sockets
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          ss -H -lntu 2>/dev/null | awk '{print $1 " " $5}'
+        executable: /bin/bash
+      register: hardening_report_listeners
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read the dot directories of local interactive users
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          getent passwd | awk -F: '$3 >= 1000 && $3 < 60000 && $7 !~ /(nologin|false)$/ {print $6}' | while read -r home; do
+            [ -d "$home" ] || continue
+            find "$home" -maxdepth 1 -type d -name '.*' ! -name '.' -exec stat -L -c '%a %U %n' {} + 2>/dev/null
+          done
+          true
+        executable: /bin/bash
+      become: true
+      register: hardening_report_dotdirs
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read nullok and empty passwords
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          grep -Hn 'pam_unix\.so.*nullok' /etc/pam.d/common-auth /etc/pam.d/common-password 2>/dev/null | sed 's/^/NULLOK:/'
+          awk -F: '$2 == "" {print "EMPTY:" $1}' {{ hardening_report_shadow_path | quote }} 2>/dev/null
+          true
+        executable: /bin/bash
+      become: true
+      register: hardening_report_nullok
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Evaluate the system report
+      ansible.builtin.script:
+        cmd: "cis_report.py {{ hardening_report_input | to_json | quote }}"
+        executable: python3
+      vars:
+        hardening_report_input:
+          ipv6:
+            disable_all: "{{ (hardening_report_ipv6.stdout_lines | select('match', '^DISABLE_ALL=') | map('regex_replace', '^DISABLE_ALL=', '') | list | first | default('')) }}"
+            global_addrs: "{{ (hardening_report_ipv6.stdout_lines | select('match', '^GLOBAL_ADDRS=') | map('regex_replace', '^GLOBAL_ADDRS=', '') | list | first | default('0')) | int }}"
+          listeners: "{{ hardening_report_listeners.stdout_lines | default([]) }}"
+          approved: "{{ hardening_approved_listeners | default([]) }}"
+          dotdirs: "{{ hardening_report_dotdirs.stdout_lines | default([]) }}"
+          nullok:
+            lines: "{{ hardening_report_nullok.stdout_lines | select('match', '^NULLOK:') | map('regex_replace', '^NULLOK:', '') | list }}"
+            empty_accounts: "{{ hardening_report_nullok.stdout_lines | select('match', '^EMPTY:') | map('regex_replace', '^EMPTY:', '') | list }}"
+      register: hardening_report_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the system report
+      ansible.builtin.set_fact:
+        hardening_report_result: "{{ hardening_report_raw.stdout | from_json }}"
+
+    - name: Warn from the system report
+      ansible.builtin.debug:
+        msg: "UYARI (rapor): {{ hardening_report_result.warnings | join(' ') }}"
+      when: hardening_report_result.warnings | length > 0
+
+    - name: Notes from the system report
+      ansible.builtin.debug:
+        msg: "NOT (rapor): {{ hardening_report_result.notes | join(' ') }}"
+      when: hardening_report_result.notes | length > 0

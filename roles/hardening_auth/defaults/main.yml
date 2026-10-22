@@ -5,6 +5,13 @@ hardening_pass_min_days: 1
 hardening_pass_warn_age: 7
 hardening_umask: "027"
 hardening_pwquality_minlen: 14
+# Parola kalitesi (pam_pwquality) ek kuralları, varsayılan KAPALI: yalnızca parola DEĞİŞTİRİRKEN uygulanır, girişi etkilemez.
+# difok (CIS 5.3.3.2.1): yeni parolada eskisinde bulunmaması gereken en az karakter sayısı; 0 = yazılmaz, 1..32 (CIS: 2 ya da daha fazla).
+hardening_pwquality_difok: 0
+# maxsequence (CIS 5.3.3.2.5): ardışık karakter dizisinin (12345, fedcb) izinli en uzun uzunluğu; 0 = yazılmaz, 1..10 (CIS: 3 ya da daha az, 0 DEĞİL).
+hardening_pwquality_maxsequence: 0
+# enforce_for_root (CIS 5.3.3.2.8): kalite kuralları root'un parola değişikliğine de uygulanır. Parolayı betikle ayarlayan otomasyonun zayıf parolası reddedilir.
+hardening_pwquality_enforce_for_root: false
 # Etkileşimli kabuk boşta kalma süresi (saniye, CIS TMOUT): 0 = KAPALI (varsayılan), 1..900. Açılınca /etc/profile.d/60-hardening-tmout.sh yazılır
 # (`readonly TMOUT=N`); boşta kalan kabuk oturumları kapanır (uzun süren elle işler, `screen`/`tmux` dışındaki oturumlar etkilenir).
 hardening_shell_timeout_seconds: 0

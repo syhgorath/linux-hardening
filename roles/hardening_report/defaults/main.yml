@@ -1,0 +1,7 @@
+# SALT OKUNUR sistem raporu (CIS 3.1.1 IPv6 durumu, 2.1.23 dinleyen servisler, 7.2.11 nokta dizinleri, 5.3.3.4.1 nullok/boş parola). Hiçbir şeyi DEĞİŞTİRMEZ; `--check`'te de çalışır.
+hardening_report: true
+# Onaylı dinleyiciler: "22/tcp", "123/udp". Boş (varsayılan): yalnızca bilgi notu (yerel olmayan adreste dinleyen portlar). Dolu: listede OLMAYAN yerel-olmayan portlar UYARI olur.
+# Sunucuya özgü (host_vars); rol hiçbir servisi kapatmaz.
+hardening_approved_listeners: []
+# Yalnızca TEST için.
+hardening_report_shadow_path: /etc/shadow

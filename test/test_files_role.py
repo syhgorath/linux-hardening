@@ -50,7 +50,7 @@ me = pwd.getpwuid(os.getuid()).pw_name
 mygrp = grp.getgrgid(os.getgid()).gr_name
 with tempfile.TemporaryDirectory() as tmp:
     root = Path(tmp) / "root"
-    for sub in ("etc/ssh/sshd_config.d", "etc/cron.d", "etc/security", "etc/apt/sources.list.d", "etc/apt/auth.conf.d", "etc/apt/trusted.gpg.d", "usr/share/keyrings", "var/log/journal", "var/log/nginx"):
+    for sub in ("etc/ssh/sshd_config.d", "etc/cron.d", "etc/security", "etc/apt/sources.list.d", "etc/apt/auth.conf.d", "etc/pam.d", "run", "etc/apt/trusted.gpg.d", "usr/share/keyrings", "var/log/journal", "var/log/nginx"):
         (root / sub).mkdir(parents=True)
     def mk(rel, mode, text="x\n"):
         p = root / rel
@@ -80,6 +80,11 @@ with tempfile.TemporaryDirectory() as tmp:
     mk("usr/share/keyrings/readme.txt", 0o666)    # *gpg degil: dokunulmamali
     mk("etc/apt/trusted.gpg.d/t.gpg", 0o666)
     (root / "etc/apt/auth.conf.d").chmod(0o775)
+    mk("etc/apt/auth.conf.d/proxy.conf", 0o644, "machine x login y password z\n")   # CIS 1.2.1.6: 0640'a (g-w, o-rwx)
+    mk("etc/apt/auth.conf.d/priv.conf", 0o600)                                    # zaten daha kisitli: GEVSEMEMELI
+    mk("etc/apt/auth.conf.d/notes.txt", 0o666)                                    # .conf degil: dokunulmamali
+    mk("etc/pam.d/login", 0o644, "session optional pam_motd.so motd=/run/motd.dynamic\nsession optional pam_motd.so noupdate\n")
+    mk("run/motd.dynamic", 0o666)                                                  # CIS 1.6.9: 0644
     real = mk("etc/real_motd_target", 0o666)
     (root / "etc/motd").symlink_to(real)         # sembolik bag: izlenmemeli, hedef degismemeli
     # /etc/shadow- , /etc/crontab, /etc/cron.allow ... YOK: olusturulmamali
@@ -135,6 +140,10 @@ with tempfile.TemporaryDirectory() as tmp:
     check("APT anahtari trusted.gpg.d 0666 -> 0644", 0o644, mode("etc/apt/trusted.gpg.d/t.gpg"))
     check("*gpg olmayan dosyaya dokunulmaz (readme.txt 0666)", 0o666, mode("usr/share/keyrings/readme.txt"))
     check("auth.conf.d dizini 0775 -> 0755 (yalniz yazma kalkar)", 0o755, mode("etc/apt/auth.conf.d"))
+    check("auth.conf.d/*.conf 0644 -> 0640 (diger okuma kalkar)", 0o640, mode("etc/apt/auth.conf.d/proxy.conf"))
+    check("auth.conf.d/*.conf 0600 GEVSEMEZ", 0o600, mode("etc/apt/auth.conf.d/priv.conf"))
+    check("auth.conf.d/*.conf olmayan dosyaya dokunulmaz (notes.txt 0666)", 0o666, mode("etc/apt/auth.conf.d/notes.txt"))
+    check("pam_motd dosyasi (pam.d'deki motd= yolu) 0666 -> 0644 (1.6.9)", 0o644, mode("run/motd.dynamic"))
     check("olmayan dosyalar OLUSTURULMAZ (shadow-, crontab, cron.allow)", [], [n for n in ("etc/shadow-", "etc/crontab", "etc/cron.allow") if (root / n).exists()])
     rc, res, out = run()
     check("ikinci kosu: changed=0 (idempotent)", (0, 0, 0), res)

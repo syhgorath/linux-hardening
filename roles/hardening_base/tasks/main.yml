@@ -91,6 +91,39 @@
       Compress=yes
   notify: Restart journald
 
+# CIS 6.1.1.1.5: journald döndürme/boyut sınırları. Varsayılan KAPALI (günlük saklama süresini etkiler); kapalıyken yalnızca bu rolün dosyası silinir.
+- name: Validate the journald rotation settings
+  ansible.builtin.assert:
+    that:
+      - hardening_journald_rotation in [true, false]
+      - hardening_journald_system_max_use | string is match('^[0-9]+[KMGT]$')
+      - hardening_journald_runtime_max_use | string is match('^[0-9]+[KMGT]$')
+      - hardening_journald_max_file_sec | string is match('^[0-9]+(s|min|h|day|week|month|year)$')
+    fail_msg: >-
+      journald ayarları geçersiz: hardening_journald_rotation bool; hardening_journald_system_max_use ve _runtime_max_use sayı + K|M|G|T (örn. 1G); hardening_journald_max_file_sec sayı + s|min|h|day|week|month|year (örn. 1month).
+
+- name: Write journald rotation limits
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/61-hardening-rotation.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir
+      [Journal]
+      SystemMaxUse={{ hardening_journald_system_max_use }}
+      RuntimeMaxUse={{ hardening_journald_runtime_max_use }}
+      MaxFileSec={{ hardening_journald_max_file_sec }}
+  when: hardening_journald_rotation | bool
+  notify: Restart journald
+
+- name: Remove journald rotation limits (this role's file)
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d/61-hardening-rotation.conf
+    state: absent
+  when: not (hardening_journald_rotation | bool)
+  notify: Restart journald
+
 # Önce DURDUR, sonra MASKELE (ayrı görevler): tek çağrıda maskelemek zamanlayıcıyı "Unit to trigger vanished" ile `failed` bırakıp `systemctl --failed`te gösteriyordu (gerçek VM'de görüldü).
 # --- Küçük servis kapatmaları (CIS 1.5.7 apport, 1.6.12 update-notifier-motd) ve SUID/SGID özeti (7.1.13, salt okunur) ---
 # Birimler her dağıtımda yoktur: önce durumları (salt okunur) okunur, `LoadState` boş/not-found ise dokunulmaz.
