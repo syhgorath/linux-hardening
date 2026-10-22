@@ -5,6 +5,13 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.6.0] - 2026-10-22
+
+v0.5.0'dan sonra: **Debian 13**, **Proxmox VE** (tek düğüm: pve-firewall ve tam sertleştirme), **Raspberry Pi** platformu ve CIS Level 1 Server'ın kalan maddelerinin büyük kısmı. `component.yml` `vars` listesi 48'den 80'e çıktı (+32; 15'i rollerde zaten olup menüde eksik olanlardı). Ayrıntılar aşağıdaki "Düzeltildi", "Eklendi" ve "Belgeler" bölümlerinde; doğrulama kayıtları verification-log 39-51.
+**Dikkat (Ubuntu/Debian'da varsayılan AÇIK, yeni davranışlar):** (1) `hardening_base` artık `cron` paketini kurar (AIDE onu zaten bağımlılık olarak getiriyordu; değişiklik yalnızca minimal imajda görünür, `cron` izinleri ilk koşuda sıkılaşır); (2) `/etc/apt/auth.conf.d/*.conf` ve `pam_motd` dosyasının izinleri sıkılaşır (yalnızca izin kaldırır); (3) yeni SALT OKUNUR `hardening_report` (IPv6 durumu, dinleyen servisler, nokta dizinleri, `nullok`/boş parola): hiçbir şeyi değiştirmez. Yeni pwquality/journald/sshd erişim seçenekleri ve `hardening_pve_apply`, `hardening_rpi_strict` **varsayılan KAPALI**.
+**Platformlar:** Proxmox VE hostu `hardening_platform=proxmox-host` + `hardening_pve_apply=true` ile (TEK düğüm; MTA değişimi, `ufw`, `libpam-tmpdir`, `noexec` ve `usb-storage` engeli çalışmaz; `rp_filter` gevşek), güvenlik duvarı `playbooks/pve-firewall.yml` ile. Raspberry Pi: `hardening_platform=raspberry-pi` (yalnızca `usb-storage` engeli gevşer). Platform atlatması yok (`hardening_allow_unsupported` etkisiz).
+**Denenmeyenler:** gerçek Raspberry Pi donanımı, VM/CT'li ve kümeli Proxmox, `auditd` Debian'da, sshpocket arayüzünde gerçek form.
+
 ### Düzeltildi
 - `hardening_base` artık `cron` paketini `hardening_files`'tan önce kurar: minimal imajda (cron yok) AIDE onu sonradan getirdiği için cron dosya/dizin izinleri (CIS bölüm 2.4) ilk koşuda sıkılaşmıyor, ikinci koşuda sıkılaşıyordu. Cron zaten kuruluysa değişiklik yok. Temiz Ubuntu 26.04 konteynerinde ilk koşuda sıkılaştığı doğrulandı
 
@@ -220,7 +227,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.5.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/syhgorath/linux-hardening/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/syhgorath/linux-hardening/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/syhgorath/linux-hardening/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/syhgorath/linux-hardening/compare/v0.2.2...v0.3.0
