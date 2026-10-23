@@ -218,6 +218,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **56. Küçük sshpocket bulguları: `disarm` changed=0 ve `visudo -c` (2026-10-23).** sshpocket 3.6.9 gerçek VM turu bulguları 4 ve 7. (7) `rollback.yml --tags disarm` armed değilken `changed=1` dönüyordu: düzeltildi, gerçek Ansible ile `changed=1` (armed) / `changed=0` (armed değil) ölçülür; sabit `changed_when: true` geri konunca test düşer (mutasyon doğrulandı). (4) `visudo -c` uyarısı: disposable `sshpocket-lab:ubuntu26` konteynerinde klasik sudo 1.9.17p2 ve `sudo-rs` 0.2.13 kurulup `/etc/sudoers.d/99-bozuk` ile ölçüldü: sağlam yapılandırmada rc=0, bozuk dosyada her ikisinde rc=1 ve hata metni. Görevin `when`'i `rc != 0`'a bağlı; `when: true` yapılınca 2 test düşer. Gerçek VM'de `harden.yml` koşusu BU PR'da yapılmadı.
 
+**57. Lynis paket seçenekleri, Colima Ubuntu 26.04 (2026-10-24).** Lynis 3.1.6'nın test mantığı tek kullanımlık konteynerde okundu: CRYP-8005 (SW prng) ve HW RNG yalnızca ekrana yazar, puan vermez (haveged/rng-tools EKLENMEDİ); PKGS-7370 debsums kurulu değil 0/2, kurulu 1/1, `CRON_CHECK` daily/weekly/monthly ise zamanlama 3/3 (aksi 1/3); PKGS-7394 apt-show-versions kurulu ve yükseltilebilir paket yoksa 3/3; PKGS-7392 bekleyen güvenlik güncellemesinde 0/25 (en ağır kalem); ACCT-9622 etkin 3/3, değilse 2/3. `hl-t-ub` konteynerinde `harden.yml --tags base,fail2ban,report`: `--check` `failed=0`, 1. koşu `ok=52 changed=8`, **2. koşu `changed=0`**; `-e hardening_apt_upgrade=true` 1. koşu `changed=1`, 2. `changed=0`. `CRON_CHECK=weekly`, `jail.local` var, `acct` etkin ve `pacct` yazılıyor; rapor `NOPASSWD` UYARISI üretti. Lynis puanı bu konteynerde ÖLÇÜLMEDİ (gerçek VM/sshpocket gerekir).
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

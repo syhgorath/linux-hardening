@@ -88,6 +88,19 @@ def decide(cfg):
     if pu.get("no_authtok"):
         warn.append("pam_unix parola satırında `use_authtok` yok (CIS 5.3.3.4.4): %s." % "; ".join(str(x)[:100] for x in pu["no_authtok"][:3]))
 
+    # 5.2.4 (Level 2): sudoers'ta NOPASSWD olmamalı; DEĞİŞTİRİLMEZ (otomasyon hesabı için bilinçli olabilir)
+    nopw = [str(x) for x in cfg.get("nopasswd") or []]
+    if nopw:
+        warn.append("sudoers'ta NOPASSWD var, yani bazı kullanıcılar parola sormadan sudo kullanıyor (CIS 5.2.4, Level 2): %s. Değiştirilmedi; otomasyon hesabı için bilinçli olabilir." % "; ".join(x[:100] for x in nopw[:5]))
+    # 5.4.3 (Level 2): /etc/shells içinde nologin listelenmemeli (nologin kabuğu 'geçerli kabuk' sayılır); DEĞİŞTİRİLMEZ
+    if cfg.get("shells_nologin"):
+        note.append("/etc/shells içinde nologin listeleniyor (CIS 5.4.3, Level 2): hesaplar nologin kabuğuyla 'geçerli kabuk' sayılır. Değiştirilmedi.")
+    # 1.1.2.3.1, 1.1.2.4.1, 1.1.2.5.1, 1.1.2.6.1, 1.1.2.7.1 (Level 2): ayrı bölümler kurulumda yapılır; yalnızca durum bildirilir
+    mounts = cfg.get("mounts") or {}
+    missing = [m for m, sep in mounts.items() if str(sep).lower() not in ("yes", "true", "1")]
+    if mounts and missing:
+        note.append("Ayrı bölüm (mount noktası) yok: %s (CIS 1.1.2.x.1, Level 2). Bölümler kurulumda belirlenir; çalışan sunucuda sonradan eklenmez, bu paket de dokunmaz." % ", ".join(missing))
+
     return {"status": "warn" if warn else "ok", "warnings": warn, "notes": note}
 
 

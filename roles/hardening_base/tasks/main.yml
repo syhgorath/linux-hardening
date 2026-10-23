@@ -222,6 +222,75 @@
       Beklenmeyen bir program varsa inceleyin. İlk 40: {{ hardening_base_suid.stdout_lines[:40] | join(', ') }}
   when: hardening_suid_report | bool
 
+# --- Lynis'in paket testleri: debsums (PKGS-7370), apt-show-versions (PKGS-7394), acct (ACCT-9622) ---
+- name: Check the debsums cron setting
+  ansible.builtin.assert:
+    that: hardening_debsums_cron_check in ['daily', 'weekly', 'monthly', 'never']
+    fail_msg: "hardening_debsums_cron_check daily, weekly, monthly ya da never olmalı."
+    quiet: true
+  when: hardening_debsums | bool
+
+- name: Install debsums
+  ansible.builtin.apt:
+    name: debsums
+    state: present
+  register: hardening_debsums_install
+  when: hardening_debsums | bool
+
+# Paket /etc/default/debsums dosyasını CRON_CHECK=never ile kurar. --check'te paket henüz kurulmamışsa dosya yoktur: atlanır.
+- name: Schedule the debsums check (CRON_CHECK)
+  ansible.builtin.lineinfile:
+    path: /etc/default/debsums
+    regexp: '^CRON_CHECK='
+    line: "CRON_CHECK={{ hardening_debsums_cron_check }}"
+  when:
+    - hardening_debsums | bool
+    - not (ansible_check_mode and hardening_debsums_install is changed)
+
+- name: Install apt-show-versions
+  ansible.builtin.apt:
+    name: apt-show-versions
+    state: present
+  when: hardening_apt_show_versions | bool
+
+- name: Install acct (process accounting)
+  ansible.builtin.apt:
+    name: acct
+    state: present
+  register: hardening_acct_install
+  when: hardening_process_accounting | bool
+
+- name: Enable process accounting
+  ansible.builtin.systemd:
+    name: acct
+    enabled: true
+    state: started
+  when:
+    - hardening_process_accounting | bool
+    - not ansible_check_mode
+
+# --- Bekleyen paket güncellemeleri (varsayılan KAPALI) ---
+- name: Upgrade the installed packages (apt-get upgrade)
+  ansible.builtin.apt:
+    upgrade: "yes"
+    update_cache: true
+    cache_valid_time: 3600
+  register: hardening_apt_upgrade_result
+  when: hardening_apt_upgrade | bool
+
+- name: Look for a pending reboot after the upgrade
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: hardening_apt_reboot_required
+  when: hardening_apt_upgrade | bool
+
+- name: Warn that a reboot is required
+  ansible.builtin.debug:
+    msg: "UYARI (apt): yükseltmeden sonra yeniden başlatma gerekiyor (/var/run/reboot-required); sunucu yeniden BAŞLATILMADI."
+  when:
+    - hardening_apt_upgrade | bool
+    - hardening_apt_reboot_required.stat.exists | default(false)
+
 # Düz metin istemcilerini kaldır (varsayılan KAPALI). `remove` (purge değil); bağımlı paket varsa apt onları da listeler/kaldırır, bu yüzden autoremove KAPALI.
 - name: Remove legacy plaintext clients (telnet, ftp)
   ansible.builtin.apt:

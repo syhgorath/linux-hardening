@@ -72,6 +72,23 @@
       failed_when: false
       check_mode: false
 
+    - name: Read the sudoers NOPASSWD lines, the shells list and the mount points
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          grep -rEn '^[^#]*NOPASSWD' /etc/sudoers /etc/sudoers.d 2>/dev/null | sed 's/^/NOPASSWD:/'
+          grep -Eq '^[^#]*nologin' /etc/shells 2>/dev/null && echo SHELLS_NOLOGIN
+          for m in /home /var /var/tmp /var/log /var/log/audit; do
+            if findmnt -n -M "$m" >/dev/null 2>&1; then echo "MOUNT:$m:yes"; else echo "MOUNT:$m:no"; fi
+          done
+          true
+        executable: /bin/bash
+      become: true
+      register: hardening_report_sudomount
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
     - name: Evaluate the system report
       ansible.builtin.script:
         cmd: "cis_report.py {{ hardening_report_input | to_json | quote }}"
@@ -89,6 +106,9 @@
           pamunix:
             remember: "{{ hardening_report_pamcheck.stdout_lines | select('match', '^REMEMBER:') | map('regex_replace', '^REMEMBER:', '') | list }}"
             no_authtok: "{{ hardening_report_pamcheck.stdout_lines | select('match', '^NOAUTHTOK:') | map('regex_replace', '^NOAUTHTOK:', '') | list }}"
+          nopasswd: "{{ hardening_report_sudomount.stdout_lines | select('match', '^NOPASSWD:') | map('regex_replace', '^NOPASSWD:', '') | list }}"
+          shells_nologin: "{{ 'SHELLS_NOLOGIN' in hardening_report_sudomount.stdout_lines }}"
+          mounts: "{{ dict(hardening_report_sudomount.stdout_lines | select('match', '^MOUNT:') | map('regex_replace', '^MOUNT:', '') | map('split', ':') | list) }}"
           nullok:
             lines: "{{ hardening_report_nullok.stdout_lines | select('match', '^NULLOK:') | map('regex_replace', '^NULLOK:', '') | list }}"
             empty_accounts: "{{ hardening_report_nullok.stdout_lines | select('match', '^EMPTY:') | map('regex_replace', '^EMPTY:', '') | list }}"
