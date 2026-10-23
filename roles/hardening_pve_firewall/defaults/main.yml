@@ -5,6 +5,9 @@ hardening_ssh_allow_from: []
 hardening_pve_firewall_extra_ports: []
 # Gerçek koşu kapısı: false iken playbooks/pve-firewall.yml yalnızca ne yapacağını GÖSTERİR, hiçbir şey yazmaz. true = güvenlik duvarını gerçekten yaz ve etkinleştir.
 hardening_pve_apply: false
+# Etkin yazma kapısı (iç): playbooks/pve-firewall.yml bunu hardening_pve_apply VEYA eylem onayından (hardening_pve_fw_confirm, yalnızca playbooks/pve-firewall-uygula.yml verir) türetir.
+# Rol tek başına çağrılırsa hardening_pve_apply'dan türer.
+hardening_pve_fw_write: "{{ hardening_pve_apply | default(false) | bool }}"
 # İç ayarlar (testlerde değiştirilir).
 hardening_pve_firewall_file: /etc/pve/firewall/cluster.fw
 hardening_pve_cluster_marker: /etc/pve/corosync.conf

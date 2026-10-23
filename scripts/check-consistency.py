@@ -214,7 +214,7 @@ else:
         err("component.json, component.yml ile aynı değil: python3 -I scripts/make-component-json.py")
 
 # 5d) hardening_ssh_allow_from "yalnızca VPN yazma" uyarısı (#39): apply/preview uyarılarında, değişken açıklamasında ve belgelerde olmalı
-for name in ("preview", "apply"):
+for name in ("preview", "apply", "pve_firewall_preview", "pve_firewall_apply"):
     warns = comp.get("actions", {}).get(name, {}).get("warnings", [])
     if not any("hardening_ssh_allow_from" in str(w) and "VPN" in str(w) for w in warns):
         err(f"actions.{name}: warnings içinde hardening_ssh_allow_from + VPN uyarısı yok (tüm bağlantı ağlarını yaz)")

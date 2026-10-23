@@ -56,7 +56,7 @@
     msg: "pve-firewall: {{ hardening_pve_fw_plan.reasons | join(' ') }}"
   when: hardening_pve_fw_plan.status == 'noop'
 
-- name: Show what would be written (hardening_pve_apply=false or --check)
+- name: Show what would be written (yazma kapısı kapalı ya da --check)
   ansible.builtin.debug:
     msg: "pve-firewall ÖNİZLEME (yazılmadı), {{ hardening_pve_firewall_file }}:\n{{ hardening_pve_fw_plan.content }}"
-  when: hardening_pve_fw_plan.status == 'apply' and (not (hardening_pve_apply | bool) or ansible_check_mode)
+  when: hardening_pve_fw_plan.status == 'apply' and (not (hardening_pve_fw_write | bool) or ansible_check_mode)
