@@ -24,3 +24,32 @@ hardening_auditd_docker_paths:
   - /etc/systemd/system/docker.socket
   - /run/docker.sock
   - /run/containerd/containerd.sock
+# CIS Level 2 denetim kuralları (6.2.3.x) ve auditd dosya/araç izinleri (6.2.4.x). Varsayılan KAPALI: true iken /etc/audit/rules.d/61-hardening-cis-l2.rules yazılır
+# (ayrıcalıklı komutlar, başarısız dosya erişimleri, chmod/chown/xattr, silme/yeniden adlandırma, mount, oturum, PAM/nsswitch/hosts/issue izleme...) ve audit günlük/yapılandırma/araç
+# dosyalarının izinleri sıkılaştırılır. BEDELİ: günlük hacmi ciddi artar (başarısız erişimler ve her dosya silme/yeniden adlandırma kayda geçer), disk dolabilir. `-e 2` (değiştirilemez
+# yapılandırma, 6.2.3 (değiştirilemez yapılandırma)) bilerek YOKTUR. false'a dönünce kural dosyası silinir ve kurallar yeniden yüklenir; izinler gevşetilmez.
+hardening_auditd_cis_l2: false
+# İç ayar (izlenecek aday yollar; var olmayanlar atlanır, çünkü var olmayan yola kural eklemek yüklemeyi bozar).
+hardening_auditd_l2_candidates:
+  - /etc/issue
+  - /etc/issue.net
+  - /etc/hosts
+  - /etc/networks
+  - /etc/network/
+  - /etc/netplan/
+  - /etc/security/opasswd
+  - /etc/nsswitch.conf
+  - /etc/pam.conf
+  - /etc/pam.d/
+  - /var/run/utmp
+  - /var/log/wtmp
+  - /var/log/btmp
+  - /var/log/faillog
+  - /var/log/tallylog
+  - /etc/apparmor/
+  - /etc/apparmor.d/
+  - /usr/bin/chcon
+  - /usr/bin/setfacl
+  - /usr/bin/chacl
+  - /usr/sbin/usermod
+  - /usr/bin/kmod
