@@ -13,3 +13,8 @@ Sonuç: ✅ sorunsuz | ⚠️ sorunlu (nasıl) | 💥 bozdu (nasıl) | ⏳ denen
 | `hardening_process_accounting` | açık | ✅ `acct` etkin, `pacct` yazılıyor | ⏳ | ⏳ | ⏳ | |
 | `hardening_fail2ban_jail_local` | açık | ✅ | ⏳ | ⏳ | ⏳ | |
 | `hardening_apt_upgrade` | KAPALI | ✅ 1. koşu `changed=1`, 2. `changed=0` | ⏳ | ⏳ | ⏳ | servis yeniden başlatma etkisi sshpocket'te bakılacak |
+| `hardening_auditd_conf_cis` | KAPALI | ✅ değerler yazılır, 2. koşu `changed=0` | ⏳ | ⏳ | ⏳ | kapatınca değerler geri alınmaz |
+| `hardening_auditd_disk_full_halt` | KAPALI | ✅ | ⏳ | ⏳ | ⏳ | disk dolunca sunucu kapanır |
+| `hardening_auditd_backlog_limit` | 0 | ✅ GRUB yok uyarısı (konteyner) | ⏳ | ⏳ | ⏳ | yeniden başlatma gerekir |
+| `hardening_auditd_immutable` | KAPALI | ✅ dosya yazılır/silinir; kilit davranışı VM'de denenmeli | ⏳ | ⏳ | ⏳ | `-e 2`: yeniden başlatmaya kadar kural değişmez |
+| `hardening_aide_audit_tools` | KAPALI | ✅ dosya yazılır/silinir; AIDE'nin kuralı gerçekten uyguladığı VM'de denenmeli | ⏳ | ⏳ | ⏳ | |

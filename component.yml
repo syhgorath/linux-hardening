@@ -404,6 +404,29 @@ vars:
     default: false
     warn_if: true                      # true = CIS Level 2 audit kuralları yazılır: günlük hacmi ciddi artar, disk dolabilir
     description: "true: CIS Level 2 denetim kuralları (6.2.3.x: ayrıcalıklı komutlar, başarısız dosya erişimleri, chmod/chown/xattr, silme/yeniden adlandırma, mount, oturum, PAM/hosts/issue/AppArmor izleme) /etc/audit/rules.d/61-hardening-cis-l2.rules'a yazılır ve audit günlük/yapılandırma/araç dosyalarının izinleri sıkılaşır (6.2.4.x). Günlük hacmi ciddi artar, disk dolabilir; `-e 2` (değiştirilemez yapılandırma) bilerek YOKTUR. Varsayılan kapalı; false'a dönünce kural dosyası silinir, izinler gevşetilmez"
+  - name: hardening_auditd_conf_cis
+    type: bool
+    default: false
+    warn_if: true                      # keep_logs günlükleri silmez: disk dolabilir; düşük diskte tek kullanıcı kipine geçer
+    description: "false (varsayılan): auditd.conf'a dokunulmaz. true: /etc/audit/auditd.conf'a max_log_file = 8, max_log_file_action = keep_logs (günlükler ASLA silinmez: disk dolabilir), space_left_action = email (bir MTA ister), admin_space_left_action = single (düşük diskte tek kullanıcı kipine geçer, konsol gerekir) yazılır (CIS 6.2.2). Değerler rolde hardening_auditd_conf_values ile değiştirilir. Kapatınca yazılan değerler GERİ ALINMAZ (eski değerler tutulmaz); geri almak için snapshot ya da elle düzeltme gerekir. Önce snapshot alın"
+  - name: hardening_auditd_disk_full_halt
+    type: bool
+    default: false
+    warn_if: true                      # disk dolunca SUNUCU KAPANIR
+    description: "false (varsayılan): yazılmaz. true: auditd.conf'a disk_full_action = halt ve disk_error_action = halt yazılır (CIS 6.2.2): audit diski dolunca ya da hata verince sunucu DURDURULUR, konsolsuz/uzaktan yönetilen sunucuda geri gelmez. Kapatınca yazılan değerler GERİ ALINMAZ (eski değerler tutulmaz); geri almak için snapshot ya da elle düzeltme gerekir. Önce snapshot alın"
+  - name: hardening_auditd_backlog_limit
+    type: int
+    default: 0
+    description: "0 (varsayılan): dokunulmaz. >0 (önerilen 8192): GRUB_CMDLINE_LINUX'a audit_backlog_limit=N yazılır ve update-grub çalışır (CIS 6.2.1). Etkisi YENİDEN BAŞLATMADAN sonra başlar ve geri alma güvenlik ağı kapsamında DEĞİLDİR; /etc/default/grub yoksa (Raspberry Pi, LXC) dokunulmaz. Önce snapshot alın"
+  - name: hardening_auditd_immutable
+    type: bool
+    default: false
+    warn_if: true                      # -e 2: yeniden başlatmaya kadar audit kuralları değiştirilemez
+    description: "false (varsayılan): yazılmaz. true: /etc/audit/rules.d/99-hardening-finalize.rules ile -e 2 yazılır (CIS 6.2.3): yeniden başlatmaya kadar audit kuralları DEĞİŞTİRİLEMEZ; sonraki koşular kuralları yükleyemez (atlanır ve uyarılır). Kapatınca dosya silinir ama kilit yeniden başlatmaya kadar sürer. Önce snapshot alın"
+  - name: hardening_aide_audit_tools
+    type: bool
+    default: false
+    description: "false (varsayılan): yazılmaz. true: audit araçları (auditctl, auditd, ausearch, aureport, autrace, augenrules) AIDE'de sha512 özet ve öznitelik denetimiyle izlenir (CIS 6.3.3, Level 2). AIDE veritabanı bu kuraldan önce üretildiyse aide --update gerekir; araçlar paketle güncellenince günlük kontrol 'değişti' der (beklenen)"
   - name: hardening_motd_disable_scripts
     type: list[string]
     default: []

@@ -222,6 +222,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **58. `log_martians` ufw tarafından 0'a çekiliyordu, gerçek VM + Colima (2026-10-24).** Ubuntu VM'inde `lynis show details KRNL-6000` (kullanıcı çıktısı): 77 anahtardan YALNIZCA 4'ü farklı: `kernel.modules_disabled` (1/0), `kernel.unprivileged_bpf_disabled` (1/2), iki `log_martians` (1/0). `/etc/sysctl.d/60-hardening.conf` `log_martians = 1` yazıyor ama canlı değer 0 ve başka sysctl.d dosyası değeri etkilemiyor. Sebep: ufw paketinin `/etc/ufw/sysctl.conf` dosyası (`IPT_SYSCTL`) `log_martians=0` satırları içerir ve ufw başlarken uygular. `hl-t-ub` (Colima Ubuntu 26.04, ufw etkin) hatayı yeniden üretti (dosya 0, canlı 0); `harden.yml --tags kernel,ufw` sonrası dosya 1, canlı 1; ikinci koşu `changed=0`; `ufw reload` sonrası canlı 1. Lynis her sysctl anahtarı için 1 puan verir (eşleşirse 1/1, değilse 0/1). Gerçek VM'de düzeltmenin Lynis etkisi henüz ÖLÇÜLMEDİ.
 
+**59. auditd/AIDE Level 2 seçenekleri, Colima Ubuntu 26.04 (2026-10-24).** `hl-t-ub`: `harden.yml --tags auditd,aide` ile beş seçenek açık: 1. koşu `ok=32 changed=5`, 2. koşu `changed=1` (yalnızca `Load audit rules`: konteynerde çekirdek denetimi yok, `auditctl -l` başarısız, bu görev her koşuda çalışır; mevcut davranış, VM'de değil); kapatınca `-e 2` dosyası ve AIDE kuralı silinir, `auditd.conf` değerleri (keep_logs, halt...) geri alınmaz (belgelendi). Kilit algılama (`auditctl -s` çıktısı `enabled 2`) ve GRUB `replace` mantığı gerçek Ansible ile birim testinde denendi; `-e 2` kilidinin gerçek çekirdekte davranışı, GRUB ve AIDE kuralının gerçekten uygulandığı VM'de DENENMEDİ.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

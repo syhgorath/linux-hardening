@@ -11,3 +11,13 @@ hardening_aide_pve_excludes:
   - /var/lib/lxcfs
   - /var/lib/vz
   - /var/lib/ceph
+# false (varsayılan): CIS 6.3.3 (Level 2). true iken audit araçları (hardening_aide_audit_tool_paths) AIDE'de özet (sha512) ve öznitelik (p+i+n+u+g+s+b+acl+xattrs) ile izlenir.
+# AIDE veritabanı bu kuraldan ÖNCE üretildiyse `aide --update` gerekir; araçlar paketle güncellenince günlük kontrol "değişti" der (beklenen).
+hardening_aide_audit_tools: false
+hardening_aide_audit_tool_paths:
+  - /usr/sbin/auditctl
+  - /usr/sbin/auditd
+  - /usr/sbin/ausearch
+  - /usr/sbin/aureport
+  - /usr/sbin/autrace
+  - /usr/sbin/augenrules
