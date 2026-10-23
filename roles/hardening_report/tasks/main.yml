@@ -55,6 +55,23 @@
       failed_when: false
       check_mode: false
 
+    - name: Read the MOTD files and the pam_unix arguments
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          id=$(sed -n 's/^ID=//p' /etc/os-release 2>/dev/null | tr -d '"')
+          { sed -n 's/^[^#]*session[[:space:]]\{1,\}\(required\|optional\)[[:space:]]\{1,\}pam_motd\.so.*motd=\([^[:space:]]*\).*/\2/p' /etc/pam.d/sshd /etc/pam.d/login /etc/pam.d/su 2>/dev/null; echo /etc/motd; } | sort -u | while read -r f; do
+            [ -r "$f" ] && [ -n "$id" ] && grep -Eqi '\\[vrms]|\b'"$id"'\b' "$f" && echo "MOTD:$f"
+          done
+          grep -Hn 'pam_unix\.so.*remember' /etc/pam.d/common-password /etc/pam.d/common-auth 2>/dev/null | sed 's/^/REMEMBER:/'
+          awk '/^password/ && /pam_unix\.so/ && !/use_authtok/ {print "NOAUTHTOK:" FILENAME ":" FNR}' /etc/pam.d/common-password 2>/dev/null
+          true
+        executable: /bin/bash
+      register: hardening_report_pamcheck
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
     - name: Evaluate the system report
       ansible.builtin.script:
         cmd: "cis_report.py {{ hardening_report_input | to_json | quote }}"
@@ -67,6 +84,11 @@
           listeners: "{{ hardening_report_listeners.stdout_lines | default([]) }}"
           approved: "{{ hardening_approved_listeners | default([]) }}"
           dotdirs: "{{ hardening_report_dotdirs.stdout_lines | default([]) }}"
+          motd:
+            hits: "{{ hardening_report_pamcheck.stdout_lines | select('match', '^MOTD:') | map('regex_replace', '^MOTD:', '') | list }}"
+          pamunix:
+            remember: "{{ hardening_report_pamcheck.stdout_lines | select('match', '^REMEMBER:') | map('regex_replace', '^REMEMBER:', '') | list }}"
+            no_authtok: "{{ hardening_report_pamcheck.stdout_lines | select('match', '^NOAUTHTOK:') | map('regex_replace', '^NOAUTHTOK:', '') | list }}"
           nullok:
             lines: "{{ hardening_report_nullok.stdout_lines | select('match', '^NULLOK:') | map('regex_replace', '^NULLOK:', '') | list }}"
             empty_accounts: "{{ hardening_report_nullok.stdout_lines | select('match', '^EMPTY:') | map('regex_replace', '^EMPTY:', '') | list }}"

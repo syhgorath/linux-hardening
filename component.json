@@ -521,6 +521,12 @@
       "description": "true: CIS Level 2 denetim kuralları (6.2.3.x: ayrıcalıklı komutlar, başarısız dosya erişimleri, chmod/chown/xattr, silme/yeniden adlandırma, mount, oturum, PAM/hosts/issue/AppArmor izleme) /etc/audit/rules.d/61-hardening-cis-l2.rules'a yazılır ve audit günlük/yapılandırma/araç dosyalarının izinleri sıkılaşır (6.2.4.x). Günlük hacmi ciddi artar, disk dolabilir; `-e 2` (değiştirilemez yapılandırma) bilerek YOKTUR. Varsayılan kapalı; false'a dönünce kural dosyası silinir, izinler gevşetilmez"
     },
     {
+      "name": "hardening_motd_disable_scripts",
+      "type": "list[string]",
+      "default": [],
+      "description": "Girişte gösterilen MOTD betiklerinden kapatılacaklar (CIS 1.6.4): /etc/update-motd.d içindeki dosya adları, örn. 00-header, 10-help-text, 50-motd-news. Varsayılan BOŞ = dokunulmaz. Kapatmak betiğin çalıştırma iznini kaldırır (silinmez); giriş mesajı değişir. Geri almak için listeden çıkarmak yetmez, izni elle iade edin (chmod 755). Sembolik bağlar atlanır"
+    },
+    {
       "name": "hardening_password_inactive_days",
       "type": "int",
       "default": 0,

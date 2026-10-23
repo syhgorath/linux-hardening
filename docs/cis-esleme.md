@@ -25,7 +25,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
 | 1.4 | Önyükleyici | 2 |  | 1 | 1 |  |  |
 | 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 | 3 |  | 1 |  |
-| 1.6 | Oturum açma uyarı metinleri | 12 | 9 |  |  | 2 | 1 |
+| 1.6 | Oturum açma uyarı metinleri | 12 | 9 | 1 |  | 2 |  |
 | 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
 | 2.1 | Sunucu servisleri | 22 |  | 2 |  | 20 |  |
 | 2.2 | İstemci paketleri | 6 |  | 2 |  | 4 |  |
@@ -37,13 +37,13 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 4.1 | Güvenlik duvarı (ufw) | 4 | 4 |  |  |  |  |
 | 5.1 | SSH sunucusu | 24 | 20 | 4 |  |  |  |
 | 5.2 | Yetki yükseltme (sudo, su) | 6 | 2 | 3 |  | 1 |  |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 14 | 3 | 2 | 2 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 25 | 4 | 14 | 3 | 4 |  |
 | 5.4 | Kullanıcı hesapları ve ortamı | 15 |  | 8 |  | 7 |  |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 15 | 2 | 2 | 2 | 9 |  |
 | 6.3 | Bütünlük denetimi (AIDE) | 2 | 2 |  |  |  |  |
 | 7.1 | Sistem dosyası izinleri | 13 | 10 | 1 |  | 2 |  |
 | 7.2 | Yerel kullanıcı ve grup ayarları | 11 |  | 1 |  | 10 |  |
-| | **Toplam** | **274** | **107** | **47** | **17** | **100** | **3** |
+| | **Toplam** | **274** | **107** | **48** | **17** | **102** | **0** |
 
 Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısmen karşılanıyor (🟡'lerin çoğu varsayılan KAPALI seçenek ya da salt okunur rapor). Bu, **uyumluluk yüzdesi değildir**: ölçülmedi, maddeler eşit ağırlıkta değil.
 
@@ -163,6 +163,7 @@ Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısm
 
 | Madde | Durum |
 |---|---|
+| 1.6.4 | MOTD içeriği: SALT OKUNUR rapor (pam_motd'nin gösterdiği dosyalarda `\\m \\r \\s \\v` ya da dağıtım adı varsa uyarı) + `hardening_motd_disable_scripts` (varsayılan BOŞ: `/etc/update-motd.d` betiklerinin çalıştırma izni kaldırılır). Ubuntu 26.04'te `00-header`, `10-help-text`, `50-motd-news` yetmedi (`91-contract-ua-esm-status` da `ubuntu.com` yazıyor); düz dosyaları (Debian `/etc/motd`) elle düzenleyin |
 | 2.1.23 | Yalnızca SALT OKUNUR rapor: yerel olmayan adreste dinleyen portlar not; `hardening_approved_listeners` doluysa listede olmayanlar uyarı. Hiçbir servis kapatılmaz (`hardening_report`) |
 | 3.1.1 | Yalnızca SALT OKUNUR rapor: IPv6 etkin/devre dışı notu; IPv6 kapatılmaz (`hardening_report`) |
 | 5.1.5 | `hardening_ssh_allow_users` / `hardening_ssh_allow_groups` (varsayılan BOŞ = kısıt yok); bağlanan kullanıcı listede değilse rol durur |
@@ -251,7 +252,7 @@ Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısm
 | 2.4 | Zamanlanmış işler (cron, at) | 2.4.1.1 |
 | 3.1 | Ağ aygıtları (IPv6, kablosuz, bluetooth) | 3.1.2, 3.1.3 |
 | 5.2 | Yetki yükseltme (sudo, su) | 5.2.1 |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.2.1, 5.3.3.4.3 |
+| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.2.1, 5.3.3.4.3, 5.3.3.4.2, 5.3.3.4.4 |
 | 5.4 | Kullanıcı hesapları ve ortamı | 5.4.1.6, 5.4.2.1, 5.4.2.2, 5.4.2.3, 5.4.2.4, 5.4.2.7, 5.4.2.8 |
 | 6.1 | Günlük kaydı (journald, rsyslog, logrotate) | 6.1.1.1.1, 6.1.1.1.2, 6.1.1.1.3, 6.1.1.1.4, 6.1.2.1, 6.1.2.2, 6.1.2.3, 6.1.2.6, 6.1.2.7 |
 | 7.1 | Sistem dosyası izinleri | 7.1.11, 7.1.12 |
@@ -262,12 +263,7 @@ Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısm
 
 ## Yok (❌), konuya göre
 
-Her satır, o bölümde ✅/🟡/⏸️ **olmayan** Level 1 maddeleridir (numaralar yalnız konu gruplamak içindir).
-
-| Bölüm | Konu | Madde numaraları |
-|---|---|---|
-| 1.6 | Oturum açma uyarı metinleri | 1.6.4 |
-| 5.3 | PAM (parola kalitesi, kilitleme, geçmiş) | 5.3.3.4.2, 5.3.3.4.4 |
+**Kalan yok:** Level 1 Server maddelerinin hiçbiri "kodda karşılığı yok" durumunda değil. Her madde ✅, 🟡 (kısmen, çoğu varsayılan KAPALI seçenek ya da salt okunur rapor), ⏸️ (bilerek yok, gerekçeli) ya da ⚪ (varsayılan uygun, ölçüldü) bölümlerinden birinde. Bu bir uyumluluk iddiası DEĞİLDİR: CIS-CAT/OpenSCAP ile ölçülmedi.
 
 ## Level 1 dışında yaptıklarımız
 

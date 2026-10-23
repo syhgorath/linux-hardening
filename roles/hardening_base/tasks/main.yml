@@ -124,6 +124,32 @@
   when: not (hardening_journald_rotation | bool)
   notify: Restart journald
 
+# CIS 1.6.4: girişte gösterilen MOTD betiklerinden istenenler kapatılır (çalıştırma izni kaldırılır). Varsayılan boş: dokunulmaz. Olmayan ad atlanır.
+- name: Validate the MOTD script names
+  ansible.builtin.assert:
+    that:
+      - hardening_motd_disable_scripts is sequence and hardening_motd_disable_scripts is not string
+      - hardening_motd_disable_scripts | reject('match', '^[A-Za-z0-9][A-Za-z0-9._-]*$') | list | length == 0
+    fail_msg: "hardening_motd_disable_scripts geçersiz: liste olmalı, girdiler yalnızca dosya adı olmalı (harf, rakam, nokta, _ ve -; yol ya da '..' yok)."
+
+- name: Look for the MOTD scripts
+  ansible.builtin.stat:
+    path: "{{ hardening_motd_dir }}/{{ item }}"
+  loop: "{{ hardening_motd_disable_scripts }}"
+  register: hardening_motd_stat
+  check_mode: false
+
+- name: Disable the listed MOTD scripts (remove the execute bit)
+  ansible.builtin.file:
+    path: "{{ hardening_motd_dir }}/{{ item.item }}"
+    state: file
+    mode: "a-x"
+    follow: false
+  loop: "{{ hardening_motd_stat.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists and item.stat.isreg | default(false)
+
 # Önce DURDUR, sonra MASKELE (ayrı görevler): tek çağrıda maskelemek zamanlayıcıyı "Unit to trigger vanished" ile `failed` bırakıp `systemctl --failed`te gösteriyordu (gerçek VM'de görüldü).
 # --- Küçük servis kapatmaları (CIS 1.5.7 apport, 1.6.12 update-notifier-motd) ve SUID/SGID özeti (7.1.13, salt okunur) ---
 # Birimler her dağıtımda yoktur: önce durumları (salt okunur) okunur, `LoadState` boş/not-found ise dokunulmaz.

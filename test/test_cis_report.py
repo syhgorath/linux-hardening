@@ -61,6 +61,16 @@ check("nullok yok, bos parola yok -> 'nullok yok' notu", "`nullok` yok" in n(run
 o = run({"nullok": {"lines": ["x"], "empty_accounts": ["a", "b"]}})
 check("hem nullok hem bos parola", "a, b" in w(o) and "nullok" in n(o))
 
+# MOTD (1.6.4) ve pam_unix (5.3.3.4.2, 5.3.3.4.4)
+o = run({"motd": {"hits": ["/run/motd.dynamic", "/etc/motd"]}})
+check("MOTD'da isletim sistemi bilgisi -> UYARI, dosyalar ve hardening_motd_disable_scripts yonlendirmesi", "1.6.4" in w(o) and "/run/motd.dynamic" in w(o) and "hardening_motd_disable_scripts" in w(o) and o["status"] == "warn", str(o))
+check("MOTD temiz -> uyari yok", not run({"motd": {"hits": []}})["warnings"])
+o = run({"pamunix": {"remember": ["/etc/pam.d/common-password:26:password pam_unix.so remember=5"], "no_authtok": []}})
+check("pam_unix remember= -> UYARI (5.3.3.4.2)", "5.3.3.4.2" in w(o) and "remember=" in w(o), str(o))
+o = run({"pamunix": {"remember": [], "no_authtok": ["/etc/pam.d/common-password:26"]}})
+check("pam_unix use_authtok yok -> UYARI (5.3.3.4.4)", "5.3.3.4.4" in w(o) and "use_authtok" in w(o), str(o))
+check("pam_unix temiz -> uyari yok", not run({"pamunix": {"remember": [], "no_authtok": []}})["warnings"])
+
 # genel
 check("bos girdi -> ok, bos", run({}) == {"status": "ok", "warnings": [], "notes": []})
 check("status warn <=> uyari var", run({"nullok": {"empty_accounts": ["x"]}})["status"] == "warn" and run({"ipv6": {"disable_all": "1"}})["status"] == "ok")
