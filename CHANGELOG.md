@@ -5,6 +5,11 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.7.0] - 2026-10-23
+
+v0.6.0'dan sonra: **Proxmox güvenlik duvarı için iki sshpocket eylemi** (eylem sayısı 6 → 8), **CIS Level 1 Server'da "kodda karşılığı yok" madde kalmadı** ve opt-in **auditd Level 2**. Kırıcı değişiklik yok: yeni seçeneklerin hepsi varsayılan KAPALI ya da salt okunur.
+**Denenmeyenler (değişmedi):** gerçek Raspberry Pi donanımı, VM/CT'li ve kümeli Proxmox, `auditd` Debian'da, sshpocket arayüzünde gerçek form.
+
 ### Eklendi
 - **Son 3 CIS Level 1 maddesi (1.6.4, 5.3.3.4.2, 5.3.3.4.4): artık Level 1 Server'da "kodda karşılığı yok" madde kalmadı.** `hardening_report` MOTD'daki işletim sistemi bilgisini (1.6.4), `pam_unix` `remember=` (5.3.3.4.2) ve `use_authtok` eksikliğini (5.3.3.4.4) UYARI olarak bildirir (hiçbir şeyi değiştirmez); yeni `hardening_motd_disable_scripts` (varsayılan BOŞ, `/etc/update-motd.d` betiklerinin çalıştırma iznini kaldırır, sembolik bağlar atlanır). Ubuntu VM'inde 5.3.3.4.2 ve 5.3.3.4.4'ün varsayılan olarak sağlandığı ölçüldü (verification-log 54)
 - **`hardening_auditd_cis_l2`** (varsayılan **KAPALI**, `warn_if: true`): CIS Level 2 denetim kuralları (6.2.3.x) `/etc/audit/rules.d/61-hardening-cis-l2.rules` dosyasına (yalnızca var olan yollar için; 32 bit kuralları yalnızca x86_64'te; üretici `files/audit_l2_rules.py`, birim testli) ve audit günlük/yapılandırma/araç dosyası izinleri (6.2.4.x, yalnızca izin kaldırır). Günlük hacmi artar, disk dolabilir. `-e 2` (6.2.3.35) ve disk dolunca durdurma (6.2.2.x) bilerek YOK. Gerçek Ubuntu VM'inde 76 kural yüklendi, `augenrules --check` "No change", kapatınca geri alındı (verification-log 53)
@@ -232,7 +237,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.6.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/syhgorath/linux-hardening/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/syhgorath/linux-hardening/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/syhgorath/linux-hardening/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/syhgorath/linux-hardening/compare/v0.3.0...v0.4.0

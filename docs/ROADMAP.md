@@ -14,7 +14,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.3.0 yayını | Yayımlandı (CIS Ubuntu 26.04 Level 1 Server eşlemesi, `hardening_files`/`hardening_sudo`/`hardening_docker` rolleri, zaman raporu, `examples/`, README "Dikkat") |
 | v0.4.0 yayını | Yayımlandı (küçük Lynis maddeleri, `apt-listchanges`, AIDE zamanlayıcı, `su` kısıtı, Docker `daemon.json` seçenekleri, root ortamı ve `/tmp` raporları, Grup 3 tasarım notu) |
 | v0.5.0 yayını | Yayımlandı (`/tmp` ve `/dev/shm` noexec varsayılan açık, `pam_faillock`, `pam_pwhistory`, geri alma PAM kapsamı, Proxmox koruması, `hardening_time_makestep`, sudo-rs + Ansible bulgusu). Etiket, imza ve Release bakımcıda; sonra sshpocket `components.lock` |
-| v0.6.0 yayını | Hazırlandı (Debian 13, Proxmox VE tek düğüm: pve-firewall ve tam sertleştirme, Raspberry Pi platformu, CIS Level 1 kalan maddeler: salt okunur rapor, pwquality/journald/sshd erişim seçenekleri, menüye 15 eksik ayar, cron sırası düzeltmesi) |
+| v0.6.0 yayını | Yayımlandı (Debian 13, Proxmox VE tek düğüm: pve-firewall ve tam sertleştirme, Raspberry Pi platformu, CIS Level 1 kalan maddeler: salt okunur rapor, pwquality/journald/sshd erişim seçenekleri, menüye 15 eksik ayar, cron sırası düzeltmesi) |
+| v0.7.0 yayını | Hazırlandı (Proxmox güvenlik duvarı için `pve_firewall_preview`/`pve_firewall_apply` eylemleri, CIS Level 1 Server'da kalan son 3 madde, opt-in `hardening_auditd_cis_l2`, `hardening_motd_disable_scripts`) |
 
 ## Orta
 | İş | Not |
