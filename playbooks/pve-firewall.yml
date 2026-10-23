@@ -7,6 +7,11 @@
   hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
   gather_facts: false
   pre_tasks:
+    # Yazma kapısı: hardening_pve_apply=true (CLI/form) VEYA playbooks/pve-firewall-uygula.yml (sshpocket eylemi; onay eylemin kendisinde). hardening_pve_fw_confirm component.yml'de YOKTUR: formdan verilemez.
+    - name: Work out whether the firewall may be written
+      ansible.builtin.set_fact:
+        hardening_pve_fw_write: "{{ (hardening_pve_apply | default(false) | bool) or (hardening_pve_fw_confirm | default(false) | bool) }}"
+
     - name: Look for the Proxmox VE markers
       ansible.builtin.stat:
         path: "{{ item }}"
@@ -24,7 +29,7 @@
         that:
           - hardening_rollback_enabled | default(true) | bool
         fail_msg: "Gerçek koşu geri alma güvenlik ağı olmadan yapılmaz (hardening_rollback_enabled=false). Güvenlik duvarı hatası sunucuyu ve VM'leri erişilemez bırakabilir."
-      when: hardening_pve_apply | default(false) | bool
+      when: hardening_pve_fw_write | bool
   tasks:
     - name: Plan the Proxmox firewall (read-only)
       ansible.builtin.include_role:
@@ -35,7 +40,7 @@
     - name: Arm the rollback safety net
       ansible.builtin.include_role:
         name: hardening_rollback
-      when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | default(false) | bool
+      when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_fw_write | bool
 
     - name: Apply the Proxmox firewall
       ansible.builtin.include_role:
@@ -46,4 +51,4 @@
         name: hardening_verify_access
       vars:
         hardening_verify_access_tcp_ports: [8006]
-      when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | default(false) | bool and not ansible_check_mode
+      when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_fw_write | bool and not ansible_check_mode

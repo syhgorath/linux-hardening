@@ -60,3 +60,8 @@ Küme (corosync/ceph/SDN kuralları), VM/CT güvenlik duvarları, `nftables` mod
 2. Mevcut `cluster.fw`'de kullanıcı kuralı varsa **dokunma ve rapor et** mi, birleştir mi? (öneri: dokunma)
 3. Ek portlar varsayılan **kapalı** mı (3128 SPICE ve 111 rpcbind kapanır)? (öneri: kapalı, `hardening_pve_firewall_extra_ports` ile açılır)
 4. Gerçek koşu için ayrı `hardening_pve_apply: true` kapısı olsun mu? (öneri: evet)
+
+## 8. sshpocket eylemleri (eklendi)
+- `pve_firewall_preview` (`playbooks/pve-firewall.yml`, salt okunur, onay yok) ve `pve_firewall_apply` (`playbooks/pve-firewall-uygula.yml`, `type-server-name`, önizlemeyi şart koşar). Eylem sayısı 6 → 8.
+- Yazma kapısı iki kaynaktan açılır: `hardening_pve_apply=true` (CLI / form) ya da `playbooks/pve-firewall-uygula.yml`'nin verdiği iç değişken `hardening_pve_fw_confirm` (component.yml'de YOKTUR, formdan verilemez). sshpocket `-e` ile `hardening_pve_apply=false` geçirse bile uygulama eylemi yazar (denendi); önizleme eylemi ise formda `hardening_pve_apply` açık olsa bile yazmaz (kapı yalnızca `uygula` ya da bu değişkenle açılır).
+- Eylem her sunucuda görünür (sshpocket sunucu türüne göre gizleyemez); Proxmox olmayan hostta hiçbir şey yapmadan durur.

@@ -1,6 +1,6 @@
-# UYGULAMA AŞAMASI: yalnızca plan 'apply' ve hardening_pve_apply=true ve --check değil. Önce plan.yml ve geri alma ağı arm'ı çalışmış olmalı.
+# UYGULAMA AŞAMASI: yalnızca plan 'apply' ve yazma kapısı açık (hardening_pve_apply=true ya da eylem onayı) ve --check değil. Önce plan.yml ve geri alma ağı arm'ı çalışmış olmalı.
 - name: Apply the Proxmox firewall
-  when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_apply | bool and not ansible_check_mode
+  when: hardening_pve_fw_plan.status == 'apply' and hardening_pve_fw_write | bool and not ansible_check_mode
   block:
     # Güvenlik ağı olmadan ASLA yazılmaz: geri alma ağı armed değilse (rol tek başına çağrıldıysa) dur.
     - name: Require an armed rollback safety net

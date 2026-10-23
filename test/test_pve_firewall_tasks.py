@@ -36,7 +36,7 @@ check("yazmadan once armed kontrolu: armed degilse DURUR", guard[0]["ansible.bui
 
 check("yazan her sey `apply` blogunun icinde (blok disinda copy/file/systemd/command-yazan yok)",
       all(mod(t) in {"ansible.builtin.stat", "ansible.builtin.slurp", "ansible.builtin.command", "ansible.builtin.script", "ansible.builtin.set_fact", "ansible.builtin.fail", "ansible.builtin.debug"} for t in tasks if "block" not in t))
-check("blok kosulu: plan apply + hardening_pve_apply + --check degil", all(x in block["when"] for x in ("== 'apply'", "hardening_pve_apply | bool", "not ansible_check_mode")))
+check("blok kosulu: plan apply + yazma kapisi (hardening_pve_fw_write) + --check degil", all(x in block["when"] for x in ("== 'apply'", "hardening_pve_fw_write | bool", "not ansible_check_mode")))
 check("sira: enable 0 yaz -> compile -> enable 1 yaz -> restart -> durum", bn == ["Write the file DISABLED first (enable 0)", "Validate the rules without applying them (pve-firewall compile)", "Write the file ENABLED (enable 1)", "Apply now (pve-firewall restart)", "Verify the firewall is enabled and running"], bn)
 check("ilk yazim enable: 0 icerigi, ikinci enable: 1 icerigi", "content_disabled" in b[0]["ansible.builtin.command"]["stdin"] and b[2]["ansible.builtin.command"]["stdin"].endswith("fw_plan.content }}"))
 check("pmxcfs: yazma `tee` ile (copy pmxcfs'te 'Operation not permitted' verdi) ve hedef cluster.fw", all(t["ansible.builtin.command"]["argv"][0] == "tee" and "firewall_file" in t["ansible.builtin.command"]["argv"][1] for t in (b[0], b[2])))
@@ -59,8 +59,8 @@ pb = yaml.safe_load((ROOT / "playbooks/pve-firewall.yml").read_text(encoding="ut
 inc = lambda x: x["ansible.builtin.include_role"]
 seq = [(inc(x)["name"], inc(x).get("tasks_from")) for x in pb["tasks"]]
 check("sira: plan -> geri alma arm -> uygula -> dogrula(disarm)", seq == [("hardening_pve_firewall", "plan"), ("hardening_rollback", None), ("hardening_pve_firewall", None), ("hardening_verify_access", None)], str(seq))
-check("arm yalniz plan 'apply' iken ve gercek kosuda (reddedilen/noop kosu armed BIRAKMAZ)", "== 'apply'" in pb["tasks"][1]["when"] and "hardening_pve_apply" in pb["tasks"][1]["when"])
-check("dogrulama (disarm) yalniz arm edildiyse ve --check degilken", "== 'apply'" in pb["tasks"][3]["when"] and "hardening_pve_apply" in pb["tasks"][3]["when"] and "not ansible_check_mode" in pb["tasks"][3]["when"])
+check("arm yalniz plan 'apply' iken ve gercek kosuda (reddedilen/noop kosu armed BIRAKMAZ)", "== 'apply'" in pb["tasks"][1]["when"] and "hardening_pve_fw_write" in pb["tasks"][1]["when"])
+check("dogrulama (disarm) yalniz arm edildiyse ve --check degilken", "== 'apply'" in pb["tasks"][3]["when"] and "hardening_pve_fw_write" in pb["tasks"][3]["when"] and "not ansible_check_mode" in pb["tasks"][3]["when"])
 pt = " ".join(str(x) for x in pb["pre_tasks"])
 check("Proxmox olmayan hedefte DURUR", "pveversion" in pt and "/etc/pve" in pt and "Stop when the target is not a Proxmox VE host" in pt)
 check("gercek kosu geri alma aginsiz reddedilir", "hardening_rollback_enabled" in pt)
@@ -120,6 +120,21 @@ with tempfile.TemporaryDirectory() as td:
     r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(plan_pb), "-e", json.dumps(ev)], capture_output=True, text=True, stdin=subprocess.DEVNULL,
                        env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg"), "ANSIBLE_ROLES_PATH": str(ROOT / "roles"), "SSH_CONNECTION": "192.0.2.10 50000 198.51.100.1 22"})
     check("armed degilken uygulama DURUR ve dosya YAZILMAZ", r.returncode != 0 and "armed değil" in r.stdout + r.stderr and not (td / "cluster.fw").exists(), (r.stdout + r.stderr)[-300:])
+
+# ---- yazma kapisi ve sshpocket eylem playbook'u ----
+gate = pb["pre_tasks"][0]
+check("yazma kapisi: hardening_pve_apply VEYA hardening_pve_fw_confirm'den turetilir (ilk pre_task)", gate["ansible.builtin.set_fact"]["hardening_pve_fw_write"] == "{{ (hardening_pve_apply | default(false) | bool) or (hardening_pve_fw_confirm | default(false) | bool) }}")
+up = yaml.safe_load((ROOT / "playbooks/pve-firewall-uygula.yml").read_text(encoding="utf-8"))[0]
+check("pve-firewall-uygula.yml: pve-firewall.yml'i hardening_pve_fw_confirm=true ile iceri alir", up["ansible.builtin.import_playbook"] == "pve-firewall.yml" and up["vars"] == {"hardening_pve_fw_confirm": True})
+import re as _re
+comp = yaml.safe_load((ROOT / "component.yml").read_text(encoding="utf-8"))
+check("hardening_pve_fw_confirm component.yml vars'ta YOK (formdan verilemez)", "hardening_pve_fw_confirm" not in {v["name"] for v in comp["vars"]})
+acts = comp["actions"]
+check("eylemler: pve_firewall_preview (degisiklik yok, onay yok) ve pve_firewall_apply (type-server-name, preview'i sart kosar)",
+      acts["pve_firewall_preview"]["effects"] == [] and acts["pve_firewall_preview"]["confirm"] == "none" and acts["pve_firewall_preview"]["cmd"] == "ansible-playbook playbooks/pve-firewall.yml"
+      and acts["pve_firewall_apply"]["confirm"] == "type-server-name" and acts["pve_firewall_apply"]["requires"] == ["pve_firewall_preview"] and acts["pve_firewall_apply"]["cmd"] == "ansible-playbook playbooks/pve-firewall-uygula.yml"
+      and "changes-config" in acts["pve_firewall_apply"]["effects"])
+check("eylem komutlarinda -e/-i yok (sshpocket ekler)", not any(_re.search(r"(^|\s)(-e|-i|--extra-vars)\b", a["cmd"]) for k, a in acts.items() if k.startswith("pve_firewall")))
 
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)

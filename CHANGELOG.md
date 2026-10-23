@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **Proxmox güvenlik duvarı için iki sshpocket eylemi** (eylem sayısı 6 → 8): `pve_firewall_preview` (`playbooks/pve-firewall.yml`, salt okunur) ve `pve_firewall_apply` (`playbooks/pve-firewall-uygula.yml`, `type-server-name`, önizlemeyi şart koşar). Uygulama eylemi yazma onayını kendisi taşır (`hardening_pve_fw_confirm`, component.yml'de yok): formdan `hardening_pve_apply=false` gelse bile yazar. Eylem her sunucuda görünür; Proxmox olmayan hostta hiçbir şey yapmadan durur. Tutarlılık betiği iki eylem için de "tüm bağlantı ağlarını yaz (VPN + LAN)" uyarısını zorunlu kılar. İç içe Proxmox 9.2'de denendi (verification-log 52)
+
 ## [0.6.0] - 2026-10-22
 
 v0.5.0'dan sonra: **Debian 13**, **Proxmox VE** (tek düğüm: pve-firewall ve tam sertleştirme), **Raspberry Pi** platformu ve CIS Level 1 Server'ın kalan maddelerinin büyük kısmı. `component.yml` `vars` listesi 48'den 80'e çıktı (+32; 15'i rollerde zaten olup menüde eksik olanlardı). Ayrıntılar aşağıdaki "Düzeltildi", "Eklendi" ve "Belgeler" bölümlerinde; doğrulama kayıtları verification-log 39-51.

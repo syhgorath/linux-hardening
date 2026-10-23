@@ -84,6 +84,34 @@
         "hardening_rollback_enabled=false güvenlik ağını kapatır."
       ]
     },
+    "pve_firewall_preview": {
+      "cmd": "ansible-playbook playbooks/pve-firewall.yml",
+      "effects": [],
+      "requires_sudo": true,
+      "confirm": "none",
+      "warnings": [
+        "Yalnızca Proxmox VE hostları içindir; başka sunucuda 'yalnızca Proxmox VE hostları içindir' diyerek hiçbir şey yapmadan durur.",
+        "Salt okunur: yazılacak cluster.fw içeriğini gösterir, hiçbir şey yazmaz. Küme, boş/geçersiz hardening_ssh_allow_from, kontrol makinesini kapsamayan liste ve kullanıcının kendi cluster.fw dosyası varsa nedenini söyleyerek durur.",
+        "hardening_ssh_allow_from'a sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ofis). Kural yalnızca bu ağlardan SSH, web arayüzü (8006) ve ping'e izin verir; VPN NAT'lıysa sunucunun GÖRDÜĞÜ adres değişebilir, hepsini yaz."
+      ]
+    },
+    "pve_firewall_apply": {
+      "cmd": "ansible-playbook playbooks/pve-firewall-uygula.yml",
+      "effects": [
+        "changes-config"
+      ],
+      "requires_sudo": true,
+      "requires": [
+        "pve_firewall_preview"
+      ],
+      "confirm": "type-server-name",
+      "warnings": [
+        "Proxmox VE güvenlik duvarını (datacenter cluster.fw) GERÇEKTEN yazar ve etkinleştirir: gelen trafik varsayılan DROP, SSH/8006/ping yalnızca hardening_ssh_allow_from ağlarından. YANLIŞ AĞ LİSTESİ web arayüzünü ve SSH'ı keser; önce VM/host snapshot'ı alın.",
+        "hardening_ssh_allow_from'a sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ofis); yalnızca VPN yazarsan LAN'dan, yalnızca LAN yazarsan VPN'den girişin kesilir. Kontrol makinesinin adresi listede değilse rol hiçbir şey yazmadan durur.",
+        "Önce enable: 0 yazılır, pve-firewall compile ile doğrulanır, sonra enable: 1. Zamanlı geri alma ağı arm edilir; yeni SSH bağlantısı ve 8006 doğrulanamazsa cluster.fw önceki hâline döner (yoksa silinir).",
+        "Yalnızca TEK düğümde çalışır (küme reddedilir); kullanıcının kendi kuralları olan cluster.fw dosyasına dokunulmaz. VM/CT güvenlik duvarlarına dokunulmaz."
+      ]
+    },
     "rollback_status": {
       "cmd": "ansible-playbook playbooks/rollback.yml",
       "effects": [],
@@ -583,7 +611,7 @@
       "type": "bool",
       "default": false,
       "warn_if": true,
-      "description": "true: Proxmox VE hostunda (hardening_platform=proxmox-host) GERÇEK değişikliğe izin verir: playbooks/harden.yml gerçekten çalışır ve playbooks/pve-firewall.yml (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. Önce snapshot alın. DENENMEDİ"
+      "description": "true: Proxmox VE hostunda (hardening_platform=proxmox-host) GERÇEK değişikliğe izin verir: playbooks/harden.yml gerçekten çalışır (güvenlik duvarı eylemi pve_firewall_apply bu değişkene BAĞLI DEĞİLDİR, onayı eylemin kendisinde) ve playbooks/pve-firewall.yml (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. Önce snapshot alın. DENENMEDİ"
     },
     {
       "name": "hardening_pve_firewall_extra_ports",

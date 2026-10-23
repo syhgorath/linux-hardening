@@ -1,0 +1,7 @@
+# Proxmox VE güvenlik duvarını GERÇEKTEN yazar (sshpocket eylemi pve_firewall_apply). playbooks/pve-firewall.yml'i yazma onayıyla çalıştırır: -e verilemez
+# (sshpocket -e'yi kendisi ekler), bu yüzden onay bu ayrı dosyada bir play değişkeni olarak taşınır (hardening_pve_fw_confirm component.yml'de YOKTUR).
+# Önizleme için playbooks/pve-firewall.yml. Aynı korumalar: tek düğüm, allow_from kontrol makinesini kapsamalı, kullanıcının cluster.fw'sine dokunulmaz, zamanlı geri alma ağı, yeni SSH + 8006 doğrulaması.
+- name: Proxmox VE firewall (write)
+  ansible.builtin.import_playbook: pve-firewall.yml
+  vars:
+    hardening_pve_fw_confirm: true
