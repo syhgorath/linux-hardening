@@ -45,6 +45,7 @@ CASES = [
     ("sshd-hardening.rootkey.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2", {"hardening_ssh_permit_root_login": "prohibit-password"}),
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
     ("sysctl.pve.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_platform_relaxed": True}),
+    ("sysctl.modules-locked.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_modules_disabled": True}),
     ("sysctl.extra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_extra_sysctl": False}),
     ("sysctl.ra-off.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_kernel_disable_ipv6_ra": True}),
     ("hardening.rules", "roles/hardening_auditd/templates/hardening.rules.j2", {}),

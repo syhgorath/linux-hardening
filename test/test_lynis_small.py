@@ -35,7 +35,10 @@ check("varsayilan: ek sysctl ACIK", True, kd["hardening_kernel_extra_sysctl"])
 check("varsayilan: libpam-tmpdir ACIK", True, ad["hardening_pam_tmpdir"])
 tpl = (ROOT / "roles/hardening_kernel/templates/sysctl.conf.j2").read_text(encoding="utf-8")
 check("sysctl: üç satir yalniz hardening_kernel_extra_sysctl blogunda", True, "{% if hardening_kernel_extra_sysctl %}" in tpl and tpl.index("fs.protected_fifos") > tpl.index("{% if hardening_kernel_extra_sysctl %}"))
-check("sysctl: ip_forward ve kernel.modules_disabled'a DOKUNULMAZ (modules_disabled yeniden baslatmaya dek geri alinamaz)", True, "modules_disabled" not in tpl and "ip_forward =" not in tpl)
+check("sysctl: ip_forward'a DOKUNULMAZ", True, "ip_forward =" not in tpl)
+check("sysctl: modules_disabled yalniz kendi KAPALI secenegiyle (yeniden baslatmaya dek geri alinamaz), extra_sysctl blogunda DEGIL", (False, True),
+      (kd["hardening_kernel_modules_disabled"], "{% if hardening_kernel_modules_disabled %}\nkernel.modules_disabled = 1" in tpl and tpl.index("kernel.modules_disabled") > tpl.index("{% endif %}", tpl.index("{% if hardening_kernel_extra_sysctl %}"))))
+check("sysctl: unprivileged_bpf_disabled=1 extra_sysctl blogunda", True, tpl.index("kernel.unprivileged_bpf_disabled = 1") > tpl.index("{% if hardening_kernel_extra_sysctl %}") and tpl.index("kernel.unprivileged_bpf_disabled = 1") < tpl.index("{% endif %}", tpl.index("{% if hardening_kernel_extra_sysctl %}")))
 
 tasks = load("roles/hardening_auth/tasks/main.yml")
 t = next(x for x in tasks if x.get("name") == "Install libpam-tmpdir")

@@ -19,3 +19,6 @@ hardening_ufw_prune_ssh: false
 # true: yönlendirilen (routed/forward) trafik için varsayılan ilke deny (CIS 4.1.5). Ubuntu'da zaten deny gelir; false = ufw'nin ayarına dokunulmaz
 # (ufw ile yönlendirme/NAT/köprü yapan, bunu bilerek ACCEPT bırakmış sunucular için).
 hardening_ufw_routed_deny: true
+# true (varsayılan): ufw'nin kendi /etc/ufw/sysctl.conf dosyasında net/ipv4/conf/{all,default}/log_martians=1 yapılır ve canlı değer düzeltilir (CIS 3.3.1).
+# ufw dosyası aksi halde değeri 0'a çeker ve sysctl.d'deki 1'i ezer. Hatalı kaynak adresli paketler günlüğe yazılır (gürültülü ağlarda günlük şişebilir). false: dokunulmaz.
+hardening_ufw_log_martians: true
