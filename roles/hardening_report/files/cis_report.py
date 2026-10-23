@@ -76,6 +76,18 @@ def decide(cfg):
     elif nk:
         note.append("pam_unix'te `nullok` yok.")
 
+    # 1.6.4: pam_motd'nin gösterdiği dosyalarda işletim sistemi bilgisi (\\m \\r \\s \\v ya da dağıtım adı) olmamalı; DEĞİŞTİRİLMEZ, nasıl kapatılacağı söylenir
+    motd = cfg.get("motd") or {}
+    hits = [str(h) for h in motd.get("hits") or []]
+    if hits:
+        warn.append("MOTD dosyalarında işletim sistemi bilgisi var (CIS 1.6.4): %s. Değiştirilmedi. /etc/update-motd.d betikleri üretiyorsa hardening_motd_disable_scripts (örn. [\"00-header\", \"10-help-text\"]) ile kapatılır; düz dosyaysa (örn. Debian'ın /etc/motd'u) içeriğini elle düzenleyin, rol dokunmaz." % ", ".join(hits[:5]))
+    # 5.3.3.4.2 / 5.3.3.4.4: pam_unix'te `remember=` olmamalı (geçmiş için pam_pwhistory), parola yığınında `use_authtok` olmalı
+    pu = cfg.get("pamunix") or {}
+    if pu.get("remember"):
+        warn.append("pam_unix'te `remember=` var (CIS 5.3.3.4.2: parola geçmişi için pam_pwhistory kullanılmalı): %s." % "; ".join(str(x)[:100] for x in pu["remember"][:3]))
+    if pu.get("no_authtok"):
+        warn.append("pam_unix parola satırında `use_authtok` yok (CIS 5.3.3.4.4): %s." % "; ".join(str(x)[:100] for x in pu["no_authtok"][:3]))
+
     return {"status": "warn" if warn else "ok", "warnings": warn, "notes": note}
 
 

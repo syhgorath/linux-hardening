@@ -120,6 +120,32 @@ check("listeler bos -> kontrol hic calismaz (atlanir)", rc == 0 and "skipping" i
 names = [x.get("name") for x in st]
 check("liste dogrulamasi ve kilitlenme korumasi drop-in yazmadan ONCE", names.index("Refuse access lists that would lock out the login user") < names.index("Write sshd drop-in (00- oneki: cloud-init drop-in dosyasindan once okunur)"))
 
+# ---- MOTD betikleri (1.6.4) ----
+bd = load("roles/hardening_base/defaults/main.yml")
+check("hardening_motd_disable_scripts varsayilan BOS (dokunulmaz)", bd["hardening_motd_disable_scripts"] == [])
+mv = next(x for x in bt if x.get("name") == "Validate the MOTD script names")
+ms = next(x for x in bt if x.get("name") == "Look for the MOTD scripts")
+mf = next(x for x in bt if x.get("name") == "Disable the listed MOTD scripts (remove the execute bit)")
+for label, v, ok in (("bos", [], True), ("gecerli adlar", ["00-header", "10-help-text", "50-motd-news"], True), ("yol", ["../etc/passwd"], False), ("alt dizin", ["a/b"], False),
+                     ("bosluk", ["00 header"], False), ("string", "00-header", False), ("noktayla baslar", [".gizli"], False)):
+    rc, out = ansible([mv], {"hardening_motd_disable_scripts": v})
+    check(f"motd ad dogrulama: {label} -> {'gecer' if ok else 'REDDEDILIR'}", (rc == 0) == ok, out[-200:])
+with tempfile.TemporaryDirectory() as td:
+    d = Path(td)
+    for n, mode in (("00-header", 0o755), ("10-help-text", 0o755), ("90-keep", 0o755)):
+        (d / n).write_text("#!/bin/sh\n"); (d / n).chmod(mode)
+    (d / "link").symlink_to(d / "90-keep")
+    vars_ = {"hardening_motd_dir": str(d), "hardening_motd_disable_scripts": ["00-header", "10-help-text", "yok-boyle", "link"]}
+    rc, out = ansible([ms, mf], vars_)
+    st = lambda n: (d / n).stat().st_mode & 0o777
+    check("listedeki betiklerin calistirma izni kalkar (00-header, 10-help-text -> 0644/0655 degil x yok)", rc == 0 and not (st("00-header") & 0o111) and not (st("10-help-text") & 0o111), out[-200:])
+    check("listede olmayan betige dokunulmaz (90-keep 755)", st("90-keep") == 0o755)
+    check("sembolik bag izlenmez (hedef 90-keep hala 755), olmayan ad atlanir", st("90-keep") == 0o755 and not (d / "yok-boyle").exists())
+    rc, out = ansible([ms, mf], vars_)
+    check("ikinci kosu: degisiklik yok (idempotent)", rc == 0 and "changed=0" in out, out[-200:])
+    rc, out = ansible([ms, mf], {**vars_, "hardening_motd_disable_scripts": []})
+    check("liste bos -> hicbir sey yapilmaz, izinler geri VERILMEZ", rc == 0 and not (st("00-header") & 0o111))
+
 # ---- rapor rolu ----
 rt = load("roles/hardening_report/tasks/main.yml")
 inner = rt[0]["block"]

@@ -27,3 +27,8 @@ hardening_journald_rotation: false
 hardening_journald_system_max_use: "1G"
 hardening_journald_runtime_max_use: "200M"
 hardening_journald_max_file_sec: "1month"
+# Girişte gösterilen MOTD betiklerinden kapatılacaklar (CIS 1.6.4): /etc/update-motd.d içindeki adlar (örn. ["00-header", "10-help-text"]). Varsayılan BOŞ = dokunulmaz.
+# Kapatmak betiğin çalıştırma iznini kaldırır (silinmez; paket güncellemesi izni geri vermez); giriş mesajı değişir. Geri almak için listeden çıkarıp `chmod +x` ile iade edilir (rol açmaz).
+hardening_motd_disable_scripts: []
+# İç ayar (testlerde değiştirilir).
+hardening_motd_dir: /etc/update-motd.d
