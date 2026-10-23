@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **`pve_firewall_preview` önizleme değil gerçekten YAZIYORDU** (gerçek Proxmox VE 9 VM'inde sshpocket 3.6.9 turunda görüldü): sunucu değişkenlerinde `hardening_platform=proxmox-host` ve `hardening_pve_apply=true` (ana `apply` için zaten gerekli) iken eylem `playbooks/pve-firewall.yml`'i çalıştırdığı için `cluster.fw` yazılıyor, `pve-firewall restart` çalışıyordu. Eylem artık yeni `playbooks/pve-firewall-onizleme.yml --check` komutunu çalıştırır: yazma kapısı (`hardening_pve_fw_write`) `hardening_pve_fw_preview_only` ile DAİMA kapalıdır (değişken `component.yml`'de yok, formdan açılamaz); `hardening_pve_apply` ve `hardening_pve_fw_confirm` ne olursa olsun yazılmaz, geri alma ağı arm edilmez. Gerçek yazma yalnızca `pve_firewall_apply` ile. Gerçek Ansible koşusuyla denen birim testleri: `test_pve_firewall_tasks.py`
+
 ## [0.7.0] - 2026-10-23
 
 v0.6.0'dan sonra: **Proxmox güvenlik duvarı için iki sshpocket eylemi** (eylem sayısı 6 → 8), **CIS Level 1 Server'da "kodda karşılığı yok" madde kalmadı** ve opt-in **auditd Level 2**. Kırıcı değişiklik yok: yeni seçeneklerin hepsi varsayılan KAPALI ya da salt okunur.

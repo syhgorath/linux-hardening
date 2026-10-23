@@ -85,13 +85,13 @@
       ]
     },
     "pve_firewall_preview": {
-      "cmd": "ansible-playbook playbooks/pve-firewall.yml",
+      "cmd": "ansible-playbook playbooks/pve-firewall-onizleme.yml --check",
       "effects": [],
       "requires_sudo": true,
       "confirm": "none",
       "warnings": [
         "Yalnızca Proxmox VE hostları içindir; başka sunucuda 'yalnızca Proxmox VE hostları içindir' diyerek hiçbir şey yapmadan durur.",
-        "Salt okunur: yazılacak cluster.fw içeriğini gösterir, hiçbir şey yazmaz. Küme, boş/geçersiz hardening_ssh_allow_from, kontrol makinesini kapsamayan liste ve kullanıcının kendi cluster.fw dosyası varsa nedenini söyleyerek durur.",
+        "Salt okunur: yazılacak cluster.fw içeriğini gösterir, hiçbir şey yazmaz (hardening_pve_apply=true olsa bile; yazma yalnızca pve_firewall_apply ile). Küme, boş/geçersiz hardening_ssh_allow_from, kontrol makinesini kapsamayan liste ve kullanıcının kendi cluster.fw dosyası varsa nedenini söyleyerek durur.",
         "hardening_ssh_allow_from'a sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ofis). Kural yalnızca bu ağlardan SSH, web arayüzü (8006) ve ping'e izin verir; VPN NAT'lıysa sunucunun GÖRDÜĞÜ adres değişebilir, hepsini yaz."
       ]
     },
@@ -624,7 +624,7 @@
       "type": "bool",
       "default": false,
       "warn_if": true,
-      "description": "true: Proxmox VE hostunda (hardening_platform=proxmox-host) GERÇEK değişikliğe izin verir: playbooks/harden.yml gerçekten çalışır (güvenlik duvarı eylemi pve_firewall_apply bu değişkene BAĞLI DEĞİLDİR, onayı eylemin kendisinde) ve playbooks/pve-firewall.yml (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. Önce snapshot alın. DENENMEDİ"
+      "description": "true: Proxmox VE hostunda (hardening_platform=proxmox-host) GERÇEK değişikliğe izin verir: playbooks/harden.yml gerçekten çalışır (güvenlik duvarı eylemi pve_firewall_apply bu değişkene BAĞLI DEĞİLDİR, onayı eylemin kendisinde) ve playbooks/pve-firewall.yml (TEK düğüm) datacenter güvenlik duvarını (cluster.fw) hardening_ssh_allow_from ağlarına göre gerçekten yazar ve etkinleştirir; zamanlı geri alma ağı ve yeni SSH + 8006 doğrulaması eşliğinde. false: yalnızca ne yazacağını gösterir. sshpocket eylemi pve_firewall_preview bu değişken true olsa bile ASLA yazmaz. Önce snapshot alın. DENENMEDİ"
     },
     {
       "name": "hardening_pve_firewall_extra_ports",

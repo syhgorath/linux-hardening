@@ -123,7 +123,7 @@ with tempfile.TemporaryDirectory() as td:
 
 # ---- yazma kapisi ve sshpocket eylem playbook'u ----
 gate = pb["pre_tasks"][0]
-check("yazma kapisi: hardening_pve_apply VEYA hardening_pve_fw_confirm'den turetilir (ilk pre_task)", gate["ansible.builtin.set_fact"]["hardening_pve_fw_write"] == "{{ (hardening_pve_apply | default(false) | bool) or (hardening_pve_fw_confirm | default(false) | bool) }}")
+check("yazma kapisi: (hardening_pve_apply VEYA hardening_pve_fw_confirm) VE onizleme-only DEGIL (ilk pre_task)", gate["ansible.builtin.set_fact"]["hardening_pve_fw_write"] == "{{ ((hardening_pve_apply | default(false) | bool) or (hardening_pve_fw_confirm | default(false) | bool)) and not (hardening_pve_fw_preview_only | default(false) | bool) }}")
 up = yaml.safe_load((ROOT / "playbooks/pve-firewall-uygula.yml").read_text(encoding="utf-8"))[0]
 check("pve-firewall-uygula.yml: pve-firewall.yml'i hardening_pve_fw_confirm=true ile iceri alir", up["ansible.builtin.import_playbook"] == "pve-firewall.yml" and up["vars"] == {"hardening_pve_fw_confirm": True})
 import re as _re
@@ -131,9 +131,38 @@ comp = yaml.safe_load((ROOT / "component.yml").read_text(encoding="utf-8"))
 check("hardening_pve_fw_confirm component.yml vars'ta YOK (formdan verilemez)", "hardening_pve_fw_confirm" not in {v["name"] for v in comp["vars"]})
 acts = comp["actions"]
 check("eylemler: pve_firewall_preview (degisiklik yok, onay yok) ve pve_firewall_apply (type-server-name, preview'i sart kosar)",
-      acts["pve_firewall_preview"]["effects"] == [] and acts["pve_firewall_preview"]["confirm"] == "none" and acts["pve_firewall_preview"]["cmd"] == "ansible-playbook playbooks/pve-firewall.yml"
+      acts["pve_firewall_preview"]["effects"] == [] and acts["pve_firewall_preview"]["confirm"] == "none" and acts["pve_firewall_preview"]["cmd"] == "ansible-playbook playbooks/pve-firewall-onizleme.yml --check"
       and acts["pve_firewall_apply"]["confirm"] == "type-server-name" and acts["pve_firewall_apply"]["requires"] == ["pve_firewall_preview"] and acts["pve_firewall_apply"]["cmd"] == "ansible-playbook playbooks/pve-firewall-uygula.yml"
       and "changes-config" in acts["pve_firewall_apply"]["effects"])
+# ---- onizleme DAIMA salt okunur (sshpocket turu: pve_firewall_preview apply=true iken yaziyordu) ----
+pv = yaml.safe_load((ROOT / "playbooks/pve-firewall-onizleme.yml").read_text(encoding="utf-8"))[0]
+check("pve-firewall-onizleme.yml: pve-firewall.yml'i hardening_pve_fw_preview_only=true ile iceri alir", pv["ansible.builtin.import_playbook"] == "pve-firewall.yml" and pv["vars"] == {"hardening_pve_fw_preview_only": True})
+check("hardening_pve_fw_preview_only component.yml vars'ta YOK", "hardening_pve_fw_preview_only" not in {v["name"] for v in comp["vars"]})
+check("pve_firewall_preview: onizleme playbook'u + --check", acts["pve_firewall_preview"]["cmd"] == "ansible-playbook playbooks/pve-firewall-onizleme.yml --check")
+
+
+def gate_write(play_vars, extra):
+    """Gercek kapi gorevi (pve-firewall.yml'in ilk pre_task'i) verilen play degiskenleri ve -e ile Ansible'da calistirilir; sonuc: yazma kapisi acik mi."""
+    with tempfile.TemporaryDirectory() as td:
+        pbk = Path(td) / "g.yml"
+        pbk.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "vars": play_vars, "tasks": [
+            gate, {"ansible.builtin.fail": {"msg": "WRITE_OPEN"}, "when": "hardening_pve_fw_write | bool"}]}]), encoding="utf-8")
+        r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pbk), "-e", json.dumps(extra)], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                           env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg"), "ANSIBLE_ROLES_PATH": str(ROOT / "roles")})
+        return "WRITE_OPEN" in r.stdout + r.stderr, r.returncode
+
+
+w, rc = gate_write(pv["vars"], {"hardening_pve_apply": True})
+check("onizleme + hardening_pve_apply=true (sunucu degiskeni): yazma kapisi KAPALI", (w, rc) == (False, 0))
+w, rc = gate_write(pv["vars"], {"hardening_pve_apply": True, "hardening_pve_fw_confirm": True})
+check("onizleme + apply + confirm (-e ile): yazma kapisi yine KAPALI", (w, rc) == (False, 0))
+w, rc = gate_write({}, {"hardening_pve_apply": True})
+check("pve-firewall.yml dogrudan + apply=true: yazma kapisi ACIK (CLI davranisi degismedi)", w is True)
+w, rc = gate_write(up["vars"], {"hardening_pve_apply": False})
+check("pve-firewall-uygula.yml (eylem onayi): yazma kapisi ACIK", w is True)
+w, rc = gate_write({}, {})
+check("hicbiri verilmeden: yazma kapisi KAPALI", (w, rc) == (False, 0))
+
 check("eylem komutlarinda -e/-i yok (sshpocket ekler)", not any(_re.search(r"(^|\s)(-e|-i|--extra-vars)\b", a["cmd"]) for k, a in acts.items() if k.startswith("pve_firewall")))
 
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")

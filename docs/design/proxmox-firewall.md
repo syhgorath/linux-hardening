@@ -62,6 +62,6 @@ Küme (corosync/ceph/SDN kuralları), VM/CT güvenlik duvarları, `nftables` mod
 4. Gerçek koşu için ayrı `hardening_pve_apply: true` kapısı olsun mu? (öneri: evet)
 
 ## 8. sshpocket eylemleri (eklendi)
-- `pve_firewall_preview` (`playbooks/pve-firewall.yml`, salt okunur, onay yok) ve `pve_firewall_apply` (`playbooks/pve-firewall-uygula.yml`, `type-server-name`, önizlemeyi şart koşar). Eylem sayısı 6 → 8.
+- `pve_firewall_preview` (`playbooks/pve-firewall-onizleme.yml --check`, HER ZAMAN salt okunur, onay yok; `hardening_pve_apply=true` sunucu değişkeni olsa bile yazmaz: yazma kapısı `hardening_pve_fw_preview_only` ile kapatılır. Gerçek sshpocket turunda `pve_firewall_preview`'ün `apply=true` iken `cluster.fw` yazdığı görüldü; bu düzeltildi) ve `pve_firewall_apply` (`playbooks/pve-firewall-uygula.yml`, `type-server-name`, önizlemeyi şart koşar). Eylem sayısı 6 → 8.
 - Yazma kapısı iki kaynaktan açılır: `hardening_pve_apply=true` (CLI / form) ya da `playbooks/pve-firewall-uygula.yml`'nin verdiği iç değişken `hardening_pve_fw_confirm` (component.yml'de YOKTUR, formdan verilemez). sshpocket `-e` ile `hardening_pve_apply=false` geçirse bile uygulama eylemi yazar (denendi); önizleme eylemi ise formda `hardening_pve_apply` açık olsa bile yazmaz (kapı yalnızca `uygula` ya da bu değişkenle açılır).
 - Eylem her sunucuda görünür (sshpocket sunucu türüne göre gizleyemez); Proxmox olmayan hostta hiçbir şey yapmadan durur.
