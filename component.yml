@@ -2,7 +2,7 @@
 # Tutarlılık (VERSION, profiller, destek matrisi, değişkenler) scripts/check-consistency.py ile denetlenir.
 # component.json bu dosyadan TÜRETİLİR (python3 scripts/make-component-json.py) ve pakete o girer; elle düzenlemeyin.
 id: linux-hardening
-version: 0.7.0            # VERSION dosyasıyla aynı olmalı
+version: 0.7.1            # VERSION dosyasıyla aynı olmalı
 sshpocket_api: 1          # sshpocket paket standardı v1 (docs/package-standard.md, sshpocket reposu)
 name: "Linux sertleştirme"
 description: "Ubuntu sunucuları Ansible ile sertleştirir (SSH, ufw, kernel, auditd, fail2ban, AIDE); Lynis denetimi ve geri alma güvenlik ağı içerir"

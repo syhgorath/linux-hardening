@@ -5,17 +5,19 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.7.1] - 2026-10-24
+
+v0.7.0'dan sonra, sshpocket 3.6.9 gerçek VM turunun bulguları. **Önemli:** `pve_firewall_preview` v0.7.0'da `hardening_pve_apply=true` iken güvenlik duvarını yazıyordu; bu sürümde düzeltildi. Kırıcı değişiklik yok.
+
 ### Düzeltildi
 - `playbooks/rollback.yml --tags disarm`: geri alma ağı armed DEĞİLKEN de `changed=1` dönüyordu (gerçek VM turunda görüldü, kozmetik). Betik armed değilken artık "armed degil: yapilacak bir sey yok" der (temizlik yine yapılır), eylem yalnızca "disarmed" çıktısında değişiklik sayar. Birim testleri: `test_rollback_script.sh` (6), `test_rollback_playbook.sh` (gerçek Ansible `changed=` sayımı)
+- **`pve_firewall_preview` önizleme değil gerçekten YAZIYORDU** (gerçek Proxmox VE 9 VM'inde sshpocket 3.6.9 turunda görüldü): sunucu değişkenlerinde `hardening_platform=proxmox-host` ve `hardening_pve_apply=true` (ana `apply` için zaten gerekli) iken eylem `playbooks/pve-firewall.yml`'i çalıştırdığı için `cluster.fw` yazılıyor, `pve-firewall restart` çalışıyordu. Eylem artık yeni `playbooks/pve-firewall-onizleme.yml --check` komutunu çalıştırır: yazma kapısı (`hardening_pve_fw_write`) `hardening_pve_fw_preview_only` ile DAİMA kapalıdır (değişken `component.yml`'de yok, formdan açılamaz); `hardening_pve_apply` ve `hardening_pve_fw_confirm` ne olursa olsun yazılmaz, geri alma ağı arm edilmez. Gerçek yazma yalnızca `pve_firewall_apply` ile. Gerçek Ansible koşusuyla denen birim testleri: `test_pve_firewall_tasks.py`
 
 ### Eklendi
 - `hardening_sudo`: sudoers yapılandırmasının tamamı `visudo -c` ile SALT OKUNUR denetlenir, sorun varsa UYARI verir (kullanıcının dosyalarına dokunmaz, koşuyu durdurmaz). Ubuntu 26.04'ün sudo-rs'i `/etc/sudoers.d` içindeki bozuk bir dosyada hata basıp çalışmaya devam eder (rc=0); mevcut `become` denemesi bunu yakalamıyordu. sudo-rs 0.2.13 ve klasik sudo 1.9.17'de bozuk dosyada `visudo -c` çıkış kodu 1 verir (disposable konteynerde ölçüldü)
 
 ### Belgeler
 - `docs/known-issues.md`: sertleştirmeden sonra yeni kullanıcıya parola verirken geçerli kurallar (14 karakter, 3 sınıf, 3 art arda aynı karakter, sözlük kelimesi yok); `/etc/sudoers.d` 0750 olunca root olmayan kullanıcının dizini listeleyememesi (beklenen)
-
-### Düzeltildi
-- **`pve_firewall_preview` önizleme değil gerçekten YAZIYORDU** (gerçek Proxmox VE 9 VM'inde sshpocket 3.6.9 turunda görüldü): sunucu değişkenlerinde `hardening_platform=proxmox-host` ve `hardening_pve_apply=true` (ana `apply` için zaten gerekli) iken eylem `playbooks/pve-firewall.yml`'i çalıştırdığı için `cluster.fw` yazılıyor, `pve-firewall restart` çalışıyordu. Eylem artık yeni `playbooks/pve-firewall-onizleme.yml --check` komutunu çalıştırır: yazma kapısı (`hardening_pve_fw_write`) `hardening_pve_fw_preview_only` ile DAİMA kapalıdır (değişken `component.yml`'de yok, formdan açılamaz); `hardening_pve_apply` ve `hardening_pve_fw_confirm` ne olursa olsun yazılmaz, geri alma ağı arm edilmez. Gerçek yazma yalnızca `pve_firewall_apply` ile. Gerçek Ansible koşusuyla denen birim testleri: `test_pve_firewall_tasks.py`
 
 ## [0.7.0] - 2026-10-23
 
@@ -249,7 +251,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.7.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/syhgorath/linux-hardening/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/syhgorath/linux-hardening/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/syhgorath/linux-hardening/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/syhgorath/linux-hardening/compare/v0.4.0...v0.5.0
