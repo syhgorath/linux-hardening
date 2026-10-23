@@ -34,7 +34,7 @@ X86 = {"arch": "x86_64", "has_b32": True, "paths": PATHS, "sudo_logfile": "/var/
 r = run(X86)["rules"]
 lines = [l for l in r.splitlines() if l and not l.startswith("#")]
 
-check("-c (hata olsa da yuklemeye devam, 6.2.3.34) var, ilk kural satiri", lines[0] == "-c")
+check("-c (hata olsa da yuklemeye devam, 6.2.3) var, ilk kural satiri", lines[0] == "-c")
 check("-e 2 (degistirilemez yapilandirma) YOK", not any(re.match(r"^-e\b", l) for l in lines))
 check("her kural satiri gecerli bicimde (-a always,exit / -w / -c)", all(re.match(r"^(-c|-a always,exit .+ -k \S+|-w \S+ -p [rwxa]+ -k \S+)$", l) for l in lines), [l for l in lines if not re.match(r"^(-c|-a always,exit .+ -k \S+|-w \S+ -p [rwxa]+ -k \S+)$", l)][:3])
 check("kural satirlari tekrarsiz (auditctl 'Rule exists' demesin)", len(lines) == len(set(lines)))
