@@ -5,6 +5,11 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **Lynis puanı için paket seçenekleri** (Lynis'in test mantığı konteynerde okundu; `docs/deneme-matrisi.md` bu seçeneklerin sshpocket deneme notlarını tutar). Varsayılan **AÇIK**, her biri kendi değişkeniyle kapanır: `hardening_debsums` + `hardening_debsums_cron_check` (`weekly`; PKGS-7370: kurulum 0/2 → 1/1, zamanlama 1/3 → 3/3), `hardening_apt_show_versions` (PKGS-7394), `hardening_process_accounting` (`acct`, ACCT-9622), `hardening_fail2ban_jail_local` (boş `jail.local`, DEB-0880; var olan dosyaya dokunulmaz). `haveged`/`rng-tools` EKLENMEDİ: Lynis'in rastgele sayı testleri (CRYP-8005, HW RNG) puan vermiyor, yalnızca ekrana yazıyor
+- `hardening_apt_upgrade` (varsayılan **KAPALI**, `warn_if: true`): her koşuda `apt-get upgrade` (`dist-upgrade` değil). Lynis PKGS-7392 bekleyen güvenlik güncellemesi için 25 puan kaybettirir, en ağır kalem; servisler yeniden başlayabilir, yeni çekirdek yeniden başlatma ister (sunucu yeniden BAŞLATILMAZ, UYARI verilir)
+- `hardening_report`: Level 2 salt okunur raporlar: sudoers'ta `NOPASSWD` (5.2.4, UYARI), `/etc/shells`'te `nologin` (5.4.3, NOT), ayrı bölümler `/home` `/var` `/var/tmp` `/var/log` `/var/log/audit` (1.1.2.x.1, NOT)
+
 ## [0.7.1] - 2026-10-24
 
 v0.7.0'dan sonra, sshpocket 3.6.9 gerçek VM turunun bulguları. **Önemli:** `pve_firewall_preview` v0.7.0'da `hardening_pve_apply=true` iken güvenlik duvarını yazıyordu; bu sürümde düzeltildi. Kırıcı değişiklik yok.

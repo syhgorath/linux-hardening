@@ -4,3 +4,5 @@
 hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1"
 hardening_fail2ban_maxretry: 5
 hardening_fail2ban_bantime: 1h
+# true (varsayılan): boş bir /etc/fail2ban/jail.local oluşturulur (Lynis DEB-0880; var olan dosyaya dokunulmaz). Davranışı değiştirmez.
+hardening_fail2ban_jail_local: true

@@ -210,6 +210,43 @@
       "description": "true (varsayılan): apt-listchanges kurulur ve yükseltmeyi bloklamayacak şekilde ayarlanır (frontend=text, confirm=false, e-posta yok); değişiklik notları apt çıktısında/günlüğünde görünür. Bilgilendirmedir. apt-listbugs Ubuntu'da yoktur ve eklenmez. false: kurulmaz (kurulu paket kaldırılmaz)"
     },
     {
+      "name": "hardening_debsums",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): debsums kurulur (Lynis PKGS-7370: paket dosyalarını dpkg'nin bilinen-iyi toplamlarıyla doğrular) ve /etc/default/debsums içinde CRON_CHECK hardening_debsums_cron_check değerine ayarlanır. Zamanlanmış kontrol haftada bir disk okur; sonuç e-postayla gider (MTA yoksa görünmez). false: debsums kurulmaz, CRON_CHECK'e dokunulmaz (kurulu paket kaldırılmaz)"
+    },
+    {
+      "name": "hardening_debsums_cron_check",
+      "type": "string",
+      "default": "weekly",
+      "description": "debsums zamanlaması: daily | weekly (varsayılan) | monthly | never (zamanlama yok; Lynis PKGS-7370 zamanlama puanı verilmez). Yalnızca hardening_debsums=true iken"
+    },
+    {
+      "name": "hardening_apt_show_versions",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): apt-show-versions kurulur (Lynis PKGS-7394: yükseltilebilir paketleri listeler). Salt okunur araç. Lynis'in bu testten puan alması için sistemde yükseltilebilir paket de kalmamalıdır. false: kurulmaz (kurulu paket kaldırılmaz)"
+    },
+    {
+      "name": "hardening_process_accounting",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): acct kurulur ve acct.service etkinleştirilir (Lynis ACCT-9622: süreç muhasebesi, /var/log/account/pacct). Küçük bir günlük yazma bedeli vardır; logrotate paketle gelir. false: kurulmaz/etkinleştirilmez (kurulu paket kaldırılmaz)"
+    },
+    {
+      "name": "hardening_fail2ban_jail_local",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): boş (yalnızca açıklama) bir /etc/fail2ban/jail.local oluşturulur (Lynis DEB-0880: değişiklikler jail.conf yerine jail.local'de tutulmalı). Var olan jail.local'e dokunulmaz. Davranışı değiştirmez. false: oluşturulmaz"
+    },
+    {
+      "name": "hardening_apt_upgrade",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "false (varsayılan): paket güncellemesi yapılmaz. true: her koşuda apt-get upgrade (dist-upgrade DEĞİL, paket kaldırmaz) çalışır. Çalışan servisler (Docker, MySQL, nginx dahil) yeniden başlayabilir; yeni çekirdek/kütüphane yeniden başlatma ister (sunucu yeniden BAŞLATILMAZ, /var/run/reboot-required varsa UYARI). Lynis PKGS-7392'de bekleyen güvenlik güncellemesi en ağır puan kalemidir. Önce snapshot alın"
+    },
+    {
       "name": "hardening_kernel_extra_sysctl",
       "type": "bool",
       "default": true,

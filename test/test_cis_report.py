@@ -76,5 +76,16 @@ check("bos girdi -> ok, bos", run({}) == {"status": "ok", "warnings": [], "notes
 check("status warn <=> uyari var", run({"nullok": {"empty_accounts": ["x"]}})["status"] == "warn" and run({"ipv6": {"disable_all": "1"}})["status"] == "ok")
 check("bozuk JSON cokmez", run("{bozuk")["status"] == "ok" and run("[1]")["status"] == "ok")
 
+# 5.2.4 NOPASSWD, 5.4.3 nologin, 1.1.2.x.1 ayri bolumler (Level 2; hepsi salt okunur)
+o = run({"nopasswd": ["/etc/sudoers.d/90-cloud-init-users:3:ubuntu ALL=(ALL) NOPASSWD:ALL"]})
+check("NOPASSWD var -> UYARI (degistirilmedi)", "NOPASSWD" in w(o) and "Değiştirilmedi" in w(o) and "5.2.4" in w(o), str(o))
+check("NOPASSWD yok -> uyari yok", not w(run({"nopasswd": []})))
+o = run({"shells_nologin": True})
+check("/etc/shells'te nologin -> NOT (uyari degil)", "5.4.3" in n(o) and not o["warnings"], str(o))
+check("nologin listede degil -> not yok", "5.4.3" not in n(run({"shells_nologin": False})))
+o = run({"mounts": {"/home": "no", "/var": "yes", "/var/tmp": "no", "/var/log": "yes", "/var/log/audit": "no"}})
+check("ayri bolum yok -> NOT, eksik olanlar listelenir, ayri olanlar listelenmez", "/home" in n(o) and "/var/tmp" in n(o) and "/var/log/audit" in n(o) and "/var, " not in n(o) and not o["warnings"], str(o))
+check("tum bolumler ayri -> not yok", "Ayrı bölüm" not in n(run({"mounts": {"/home": "yes", "/var": "yes"}})))
+
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)

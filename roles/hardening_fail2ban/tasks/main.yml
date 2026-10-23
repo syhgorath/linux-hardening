@@ -26,6 +26,20 @@
              else []))
          | join(' ') }}
 
+# Lynis DEB-0880: jail.conf paket güncellemeleriyle değişebilir, değişiklikler jail.local'de tutulmalı. Bu paketin ayarı zaten jail.d/sshd.local'dedir; boş (yalnızca açıklama)
+# bir jail.local oluşturulur. force: false = kullanıcının var olan jail.local'ine DOKUNULMAZ.
+- name: Create an empty jail.local (user overrides go here)
+  ansible.builtin.copy:
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+    force: false
+    content: |
+      # Kendi fail2ban ayarlarınızı buraya yazın (jail.conf paket güncellemeleriyle değişir, bu dosya değişmez).
+      # linux-hardening'in sshd ayarı jail.d/sshd.local dosyasındadır.
+  when: hardening_fail2ban_jail_local | bool
+
 - name: Configure sshd jail
   ansible.builtin.template:
     src: sshd.local.j2
