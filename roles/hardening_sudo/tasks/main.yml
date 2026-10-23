@@ -43,6 +43,23 @@
       failed_when: hardening_sudo_probe.stdout | trim != '0'
       when: not ansible_check_mode
 
+    # sudo-rs, /etc/sudoers.d içinde bozuk bir dosya varsa hataları basıp ÇALIŞMAYA DEVAM EDER (rc=0): yukarıdaki `become` denemesi bunu yakalamaz.
+    # Tüm yapılandırma `visudo -c` ile SALT OKUNUR denetlenir; sorun bulunursa yalnızca UYARIR (kullanıcının dosyalarına dokunulmaz, koşu durmaz).
+    - name: Check the whole sudoers configuration (visudo -c, read-only)
+      ansible.builtin.command: /usr/sbin/visudo -c
+      become: true
+      register: hardening_sudo_visudo_check
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Warn about a broken sudoers configuration
+      ansible.builtin.debug:
+        msg: >-
+          UYARI (sudo): `visudo -c` sudoers yapılandırmasında sorun buldu (çıkış kodu {{ hardening_sudo_visudo_check.rc }}): {{ (hardening_sudo_visudo_check.stdout_lines + hardening_sudo_visudo_check.stderr_lines) | join(' | ') }}.
+          Ubuntu 26.04'ün sudo-rs'i bozuk bir /etc/sudoers.d dosyasında hata basıp çalışmaya devam eder; dosyayı düzeltin. Bu rol kullanıcının dosyalarına dokunmaz.
+      when: hardening_sudo_visudo_check.rc | default(0) != 0
+
     # 5.2.5: sudoers'ta "!authenticate" (parolasız/yeniden kimlik doğrulamasız sudo) olmamalı. Dosyaları DEĞİŞTİRMEYİZ (kasıtlı olabilir): yalnızca uyarırız.
     - name: Look for '!authenticate' in sudoers (read-only)
       ansible.builtin.shell:

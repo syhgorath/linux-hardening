@@ -68,7 +68,8 @@
 
     - name: Disarm (değişiklik doğrulandı; geri alma iptal edilir)
       ansible.builtin.command: "{{ hardening_rollback_ctl_path }} disarm"
-      changed_when: true
+      register: hardening_rollback_ctl_disarm
+      changed_when: "'disarmed' in hardening_rollback_ctl_disarm.stdout"   # armed değilken betik "armed degil: yapilacak bir sey yok" der: değişiklik yok
       when: hardening_rollback_ctl_script.stat.exists
       tags: [disarm, never]
 

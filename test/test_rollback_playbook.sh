@@ -50,4 +50,11 @@ P="SSHPOCKET_RESULT linux-hardening.rollback_status"
 expect_eq "yeni betik: satir oldugu gibi" "$P installed=yes armed=yes timer=active remaining_seconds=212 timeout_seconds=300" "$(status_line "$TMP/yeni-betik")"
 expect_eq "eski betik: satir cevrilir" "$P installed=yes armed=yes timer=active remaining_seconds=unknown timeout_seconds=unknown" "$(status_line "$TMP/eski-betik")"
 expect_eq "bozuk cikti: unknown" "$P installed=yes armed=unknown timer=unknown remaining_seconds=unknown timeout_seconds=unknown" "$(status_line "$TMP/bozuk-betik")"
+# disarm: armed iken changed=1, armed degilken changed=0 (sshpocket turu: armed=no iken changed=1 donuyordu)
+printf '#!/bin/sh\necho disarmed\n' > "$TMP/disarm-armed"
+printf '#!/bin/sh\necho "armed degil: yapilacak bir sey yok"\n' > "$TMP/disarm-degil"
+chmod +x "$TMP/disarm-armed" "$TMP/disarm-degil"
+disarm_recap() { ap -i "$TESTDIR/inventory-local.yml" "$PB" --tags disarm -e "hardening_rollback_ctl_path=$1" 2>&1 | grep -E 'changed=' | sed -E 's/.*(changed=[0-9]+).*/\1/'; }
+expect_eq "disarm armed iken: changed=1" "changed=1" "$(disarm_recap "$TMP/disarm-armed")"
+expect_eq "disarm armed degilken: changed=0" "changed=0" "$(disarm_recap "$TMP/disarm-degil")"
 finish

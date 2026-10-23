@@ -167,13 +167,19 @@ do_arm() {
 }
 
 do_disarm() {
+  was_armed=0
+  [ -e "$ARMED" ] && was_armed=1
   rm -f "$ARMED" "$STATE/had-dropin" "$STATE/00-hardening.conf" "$STATE/ufw-active"
   for f in $UFW_FILES; do rm -f "$STATE/ufw/$f"; done
   rmdir "$STATE/ufw" 2>/dev/null || true
   pam_clear_backup
   pve_clear_backup
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
-  log "disarmed"
+  if [ "$was_armed" = 1 ]; then
+    log "disarmed"
+  else
+    log "armed degil: yapilacak bir sey yok"
+  fi
 }
 
 do_restore() {

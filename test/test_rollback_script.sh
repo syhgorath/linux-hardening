@@ -123,7 +123,9 @@ file_eq "ilk yedege donuldu" "$R/etc/ssh/sshd_config.d/00-hardening.conf" "BIRIN
 echo "-- 6) disarm: armed+yedek silinir, sonra restore no-op"
 setup; printf 'ORIGINAL-DROPIN\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
 hr arm >/dev/null; printf 'ONAYLI-DEGISIKLIK\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
-hr disarm >/dev/null
+out=$(hr disarm); expect_contains "  armed iken disarm 'disarmed' der (Ansible changed)" "$out" "disarmed"
+out=$(hr disarm); expect_contains "  armed degilken disarm degisiklik yok der" "$out" "armed degil: yapilacak bir sey yok"
+if printf '%s' "$out" | grep -q "disarmed"; then bad "armed degilken 'disarmed' yazdi (Ansible changed=1 olurdu)"; else ok "armed degilken 'disarmed' YOK"; fi
 absent "armed silindi" "$R/var/lib/hardening-rollback/armed"
 absent "yedek silindi" "$R/var/lib/hardening-rollback/00-hardening.conf"
 absent "bos ufw yedek klasoru de silindi (artik birakilmaz)" "$R/var/lib/hardening-rollback/ufw"

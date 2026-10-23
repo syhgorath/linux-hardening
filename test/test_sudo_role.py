@@ -66,6 +66,23 @@ scan = next(t for t in inner if "ansible.builtin.shell" in t)
 check("!authenticate taramasi salt okunur (grep), changed_when=false, --check'te de calisir", "grep" in str(scan["ansible.builtin.shell"]) and scan.get("changed_when") is False and scan.get("check_mode") is False)
 check("!authenticate yalnizca UYARIR, sudoers'i degistirmez", not any("!authenticate" in str(t.get("ansible.builtin.lineinfile", "")) for t in inner))
 
+# visudo -c: tum yapilandirma SALT OKUNUR denetlenir, sorun yalniz UYARILIR (sudo-rs bozuk /etc/sudoers.d dosyasinda hata basip rc=0 ile calismaya devam eder)
+vc = next(t for t in inner if "visudo -c" in str(t.get("ansible.builtin.command", "")) and "-cf" not in str(t.get("ansible.builtin.command", "")))
+check("visudo -c: become ile, salt okunur (changed_when=false, --check'te de calisir), sorunda koşuyu DURDURMAZ", vc.get("become") is True and vc.get("changed_when") is False and vc.get("check_mode") is False and vc.get("failed_when") is False)
+vw = next(t for t in inner if "ansible.builtin.debug" in t and "visudo -c" in str(t["ansible.builtin.debug"]))
+check("visudo -c uyarisi yalniz rc != 0 iken", "rc" in str(vw.get("when")) and "!= 0" in str(vw.get("when")))
+check("visudo -c sonrasi hicbir sudoers dosyasi degistirilmez (lineinfile/file absent yok, rescue disinda)", not any(("ansible.builtin.lineinfile" in t) or ("ansible.builtin.file" in t) for t in inner[names.index(vc["name"]):]))
+with tempfile.TemporaryDirectory() as d:
+    pbk = Path(d) / "w.yml"
+    pbk.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "tasks": [
+        {"ansible.builtin.set_fact": {"hardening_sudo_visudo_check": {"rc": 1, "stdout_lines": [], "stderr_lines": ["/etc/sudoers.d/bozuk:1:1: syntax error"]}}}, vw]}]), encoding="utf-8")
+    r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pbk)], capture_output=True, text=True, stdin=subprocess.DEVNULL, env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
+    check("bozuk sudoers: uyari dosya adini ve hatayi gosterir", r.returncode == 0 and "UYARI (sudo)" in r.stdout and "bozuk:1:1: syntax error" in r.stdout, r.stdout[-300:])
+    pbk.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "tasks": [
+        {"ansible.builtin.set_fact": {"hardening_sudo_visudo_check": {"rc": 0, "stdout_lines": ["parsed OK"], "stderr_lines": []}}}, vw]}]), encoding="utf-8")
+    r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pbk)], capture_output=True, text=True, stdin=subprocess.DEVNULL, env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
+    check("saglam sudoers: uyari YOK", r.returncode == 0 and "UYARI (sudo)" not in r.stdout, r.stdout[-300:])
+
 play = yaml.safe_load((ROOT / "playbooks/harden.yml").read_text(encoding="utf-8"))[0]
 roles = [r.get("role") for r in play["roles"] if isinstance(r, dict)]
 entry = next((r for r in play["roles"] if isinstance(r, dict) and r.get("role") == "hardening_sudo"), None)
