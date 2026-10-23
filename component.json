@@ -514,6 +514,13 @@
       "description": "sudo günlük dosyası (CIS 5.2.3). Ubuntu 26.04'te varsayılan sudo-rs dosya günlüğünü desteklemez, orada olaylar journald'e gider ve bu değer kullanılmaz"
     },
     {
+      "name": "hardening_auditd_cis_l2",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "true: CIS Level 2 denetim kuralları (6.2.3.x: ayrıcalıklı komutlar, başarısız dosya erişimleri, chmod/chown/xattr, silme/yeniden adlandırma, mount, oturum, PAM/hosts/issue/AppArmor izleme) /etc/audit/rules.d/61-hardening-cis-l2.rules'a yazılır ve audit günlük/yapılandırma/araç dosyalarının izinleri sıkılaşır (6.2.4.x). Günlük hacmi ciddi artar, disk dolabilir; `-e 2` (değiştirilemez yapılandırma) bilerek YOKTUR. Varsayılan kapalı; false'a dönünce kural dosyası silinir, izinler gevşetilmez"
+    },
+    {
       "name": "hardening_password_inactive_days",
       "type": "int",
       "default": 0,

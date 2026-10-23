@@ -25,6 +25,123 @@
     mode: "0640"
   register: hardening_auditd_rules_file
 
+# --- CIS Level 2 (6.2.3.x kuralları, 6.2.4.x izinleri); varsayılan KAPALI. Karar mantığı files/audit_l2_rules.py ---
+- name: CIS Level 2 audit rules and file permissions
+  when: hardening_auditd_cis_l2 | bool
+  block:
+    - name: Read the machine architecture
+      ansible.builtin.command: uname -m
+      register: hardening_auditd_l2_arch
+      changed_when: false
+      check_mode: false
+
+    - name: Look for the files to watch
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ (hardening_auditd_l2_candidates + [hardening_sudo_logfile | default('/var/log/sudo.log')]) | unique | list }}"
+      register: hardening_auditd_l2_stat
+      check_mode: false
+
+    - name: Find setuid and setgid programs (read-only)
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          mounts=$(findmnt -rn -o TARGET,FSTYPE,OPTIONS 2>/dev/null | awk '$2 ~ /^(ext[234]|xfs|btrfs|f2fs|zfs|overlay)$/ && $3 !~ /nosuid/ {print $1}')
+          [ -n "$mounts" ] || mounts=/
+          for m in $mounts; do find "$m" -xdev -type f \( -perm -4000 -o -perm -2000 \) 2>/dev/null; done | sort -u
+        executable: /bin/bash
+      register: hardening_auditd_l2_priv
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Build the Level 2 audit rules
+      ansible.builtin.script:
+        cmd: "audit_l2_rules.py {{ hardening_auditd_l2_input | to_json | quote }}"
+        executable: python3
+      vars:
+        hardening_auditd_l2_input:
+          arch: "{{ hardening_auditd_l2_arch.stdout | trim }}"
+          has_b32: "{{ (hardening_auditd_l2_arch.stdout | trim) == 'x86_64' }}"
+          paths: "{{ hardening_auditd_l2_stat.results | selectattr('stat.exists') | map(attribute='item') | list }}"
+          priv: "{{ hardening_auditd_l2_priv.stdout_lines | default([]) }}"
+          sudo_logfile: "{{ hardening_sudo_logfile | default('/var/log/sudo.log') }}"
+      register: hardening_auditd_l2_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Write the Level 2 audit rules
+      ansible.builtin.copy:
+        content: "{{ (hardening_auditd_l2_raw.stdout | from_json).rules }}"
+        dest: /etc/audit/rules.d/61-hardening-cis-l2.rules
+        owner: root
+        group: root
+        mode: "0640"
+      register: hardening_auditd_l2_file
+
+    # 6.2.4.x: günlük dizini ve dosyaları, yapılandırma dosyaları, araçlar (yalnızca izin KALDIRIR; olmayan yol atlanır)
+    - name: Find audit log, configuration and tool files
+      ansible.builtin.find:
+        paths: "{{ item.paths }}"
+        patterns: "{{ item.patterns }}"
+        file_type: file
+      loop:
+        - { key: logs, paths: [/var/log/audit], patterns: ["*"] }
+        - { key: conf, paths: [/etc/audit], patterns: ["*.conf"] }
+        - { key: rules, paths: [/etc/audit/rules.d], patterns: ["*.rules"] }
+        - { key: tools, paths: [/usr/sbin, /sbin], patterns: [auditctl, auditd, ausearch, aureport, autrace, augenrules] }
+      loop_control:
+        label: "{{ item.key }}"
+      register: hardening_auditd_l2_files
+      check_mode: false
+
+    - name: Tighten the audit log directory (CIS 6.2.4 günlük dizini)
+      ansible.builtin.file:
+        path: /var/log/audit
+        state: directory
+        mode: "g-w,o-rwx"
+      failed_when: false
+
+    - name: Tighten audit log files (CIS 6.2.4 günlük dosyaları)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: root
+        mode: "u-x,g-wx,o-rwx"
+      loop: "{{ hardening_auditd_l2_files.results[0].files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Tighten audit configuration files (CIS 6.2.4 yapılandırma)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: root
+        group: root
+        mode: "u-x,g-wx,o-rwx"
+      loop: "{{ hardening_auditd_l2_files.results[1].files + hardening_auditd_l2_files.results[2].files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Tighten audit tools (CIS 6.2.4 araçlar)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: root
+        group: root
+        mode: "go-w"
+        follow: false
+      loop: "{{ hardening_auditd_l2_files.results[3].files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+- name: Remove the Level 2 audit rules (option off)
+  ansible.builtin.file:
+    path: /etc/audit/rules.d/61-hardening-cis-l2.rules
+    state: absent
+  register: hardening_auditd_l2_removed
+  when: not (hardening_auditd_cis_l2 | bool)
+
 - name: Enable and start auditd
   ansible.builtin.systemd:
     name: auditd
@@ -48,7 +165,7 @@
   changed_when: true
   when: >-
     not ansible_check_mode and
-    (hardening_auditd_rules_file is changed or hardening_auditd_loaded.rc != 0 or 'No rules' in hardening_auditd_loaded.stdout)
+    (hardening_auditd_rules_file is changed or hardening_auditd_l2_file is changed or hardening_auditd_l2_removed is changed or hardening_auditd_loaded.rc != 0 or 'No rules' in hardening_auditd_loaded.stdout)
 
 # İsteğe bağlı (hardening_auditd_restart_services, varsayılan boş): auditd'den ÖNCE başlamış servisleri kurallar yüklendikten sonra yeniden başlatır,
 # böylece denetlenmeye başlarlar. sshd bilerek yasak: erişim kaybı riski (docs/design/auditd-kapsam.md 1b).

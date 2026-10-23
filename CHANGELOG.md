@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- **`hardening_auditd_cis_l2`** (varsayılan **KAPALI**, `warn_if: true`): CIS Level 2 denetim kuralları (6.2.3.x) `/etc/audit/rules.d/61-hardening-cis-l2.rules` dosyasına (yalnızca var olan yollar için; 32 bit kuralları yalnızca x86_64'te; üretici `files/audit_l2_rules.py`, birim testli) ve audit günlük/yapılandırma/araç dosyası izinleri (6.2.4.x, yalnızca izin kaldırır). Günlük hacmi artar, disk dolabilir. `-e 2` (6.2.3.35) ve disk dolunca durdurma (6.2.2.x) bilerek YOK. Gerçek Ubuntu VM'inde 76 kural yüklendi, `augenrules --check` "No change", kapatınca geri alındı (verification-log 53)
 - **Proxmox güvenlik duvarı için iki sshpocket eylemi** (eylem sayısı 6 → 8): `pve_firewall_preview` (`playbooks/pve-firewall.yml`, salt okunur) ve `pve_firewall_apply` (`playbooks/pve-firewall-uygula.yml`, `type-server-name`, önizlemeyi şart koşar). Uygulama eylemi yazma onayını kendisi taşır (`hardening_pve_fw_confirm`, component.yml'de yok): formdan `hardening_pve_apply=false` gelse bile yazar. Eylem her sunucuda görünür; Proxmox olmayan hostta hiçbir şey yapmadan durur. Tutarlılık betiği iki eylem için de "tüm bağlantı ağlarını yaz (VPN + LAN)" uyarısını zorunlu kılar. İç içe Proxmox 9.2'de denendi (verification-log 52)
 
 ## [0.6.0] - 2026-10-22
