@@ -1,5 +1,6 @@
 # Proxmox VE (TEK düğüm) güvenlik duvarı: datacenter cluster.fw'yi hardening_ssh_allow_from ağlarına göre yönetir (ufw yerine). harden.yml'den AYRIDIR.
 #   ansible-playbook -i envanter.yml playbooks/pve-firewall.yml -e '{"hardening_ssh_allow_from": ["192.0.2.0/24"]}'          # ÖNİZLEME (hiçbir şey yazılmaz)
+#   ansible-playbook -i envanter.yml playbooks/pve-firewall-onizleme.yml ...                                                   # HER ZAMAN salt okunur (hardening_pve_apply=true olsa bile; sshpocket eylemi pve_firewall_preview)
 #   ansible-playbook -i envanter.yml playbooks/pve-firewall.yml -e '{"hardening_ssh_allow_from": [...], "hardening_pve_apply": true}'   # GERÇEK
 # Gerçek koşu: önce zamanlı geri alma ağı arm edilir, kural yazılır, kontrol makinesinden YENİ SSH + 8006 bağlantısı doğrulanır; başarısızsa önceki duruma dönülür.
 # Önce VM/host snapshot'ı alın. Tasarım: docs/design/proxmox-firewall.md
@@ -8,9 +9,10 @@
   gather_facts: false
   pre_tasks:
     # Yazma kapısı: hardening_pve_apply=true (CLI/form) VEYA playbooks/pve-firewall-uygula.yml (sshpocket eylemi; onay eylemin kendisinde). hardening_pve_fw_confirm component.yml'de YOKTUR: formdan verilemez.
+    # playbooks/pve-firewall-onizleme.yml hardening_pve_fw_preview_only=true taşır: kapıyı DAİMA kapatır (hardening_pve_apply sunucu değişkenlerinden gelse bile). Bu değişken de component.yml'de YOKTUR.
     - name: Work out whether the firewall may be written
       ansible.builtin.set_fact:
-        hardening_pve_fw_write: "{{ (hardening_pve_apply | default(false) | bool) or (hardening_pve_fw_confirm | default(false) | bool) }}"
+        hardening_pve_fw_write: "{{ ((hardening_pve_apply | default(false) | bool) or (hardening_pve_fw_confirm | default(false) | bool)) and not (hardening_pve_fw_preview_only | default(false) | bool) }}"
 
     - name: Look for the Proxmox VE markers
       ansible.builtin.stat:

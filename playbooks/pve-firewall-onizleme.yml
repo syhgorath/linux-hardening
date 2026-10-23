@@ -1,0 +1,7 @@
+# Proxmox VE güvenlik duvarı ÖNİZLEMESİ (sshpocket eylemi pve_firewall_preview): HİÇBİR ŞEY YAZMAZ. playbooks/pve-firewall.yml'i yazma kapısı DAİMA kapalı çalıştırır:
+# sunucu değişkenlerinde hardening_pve_apply=true olsa (ana `apply` için gerekir) bile cluster.fw yazılmaz, pve-firewall restart çalışmaz, geri alma ağı arm edilmez.
+# hardening_pve_fw_preview_only component.yml'de YOKTUR: formdan ya da -e ile verilemez/kapatılamaz. Gerçek yazma için playbooks/pve-firewall-uygula.yml.
+- name: Proxmox VE firewall (preview, never writes)
+  ansible.builtin.import_playbook: pve-firewall.yml
+  vars:
+    hardening_pve_fw_preview_only: true
