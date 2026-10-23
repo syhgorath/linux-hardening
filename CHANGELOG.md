@@ -5,6 +5,13 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **`log_martians=1` (CIS 3.3.1) ufw etkinken gerçekte 0'dı** (gerçek Ubuntu VM'inde Lynis KRNL-6000 ile görüldü; eşleme belgesi ✅ diyordu): ufw, `/etc/ufw/sysctl.conf` dosyasını başlarken uygular ve orada `log_martians=0` yazar, `sysctl.d`'deki `1` ezilirdi. `hardening_ufw_log_martians` (varsayılan **AÇIK**) ufw'nin dosyasını `1` yapar ve canlı değeri düzeltir. Colima Ubuntu 26.04'te hata yeniden üretildi (değer 0) ve düzeltildi (1); ikinci koşu `changed=0`, `ufw reload` sonrası değer 1 kalır. `test_ufw_log_martians.py`
+
+### Eklendi
+- `hardening_kernel_extra_sysctl` (varsayılan açık) artık `kernel.unprivileged_bpf_disabled=1` de yazar (Lynis KRNL-6000; Ubuntu varsayılanı 2 ayrıcalıksız eBPF'yi zaten kapatır, 1 root'un yeniden açmasını da engeller)
+- `hardening_kernel_modules_disabled` (varsayılan **KAPALI**, `warn_if: true`): `kernel.modules_disabled=1`. Yeniden başlatmaya kadar GERİ ALINAMAZ; sonrasında hiçbir çekirdek modülü yüklenemez (Docker overlay/br_netfilter, USB, ağ/ses sürücüleri). Lynis KRNL-6000 gerçek VM ölçümünde yalnızca 4 anahtar farklıydı (`modules_disabled`, `unprivileged_bpf_disabled`, iki `log_martians`)
+
 ### Eklendi
 - **Lynis puanı için paket seçenekleri** (Lynis'in test mantığı konteynerde okundu; `docs/deneme-matrisi.md` bu seçeneklerin sshpocket deneme notlarını tutar). Varsayılan **AÇIK**, her biri kendi değişkeniyle kapanır: `hardening_debsums` + `hardening_debsums_cron_check` (`weekly`; PKGS-7370: kurulum 0/2 → 1/1, zamanlama 1/3 → 3/3), `hardening_apt_show_versions` (PKGS-7394), `hardening_process_accounting` (`acct`, ACCT-9622), `hardening_fail2ban_jail_local` (boş `jail.local`, DEB-0880; var olan dosyaya dokunulmaz). `haveged`/`rng-tools` EKLENMEDİ: Lynis'in rastgele sayı testleri (CRYP-8005, HW RNG) puan vermiyor, yalnızca ekrana yazıyor
 - `hardening_apt_upgrade` (varsayılan **KAPALI**, `warn_if: true`): her koşuda `apt-get upgrade` (`dist-upgrade` değil). Lynis PKGS-7392 bekleyen güvenlik güncellemesi için 25 puan kaybettirir, en ağır kalem; servisler yeniden başlayabilir, yeni çekirdek yeniden başlatma ister (sunucu yeniden BAŞLATILMAZ, UYARI verilir)

@@ -20,6 +20,7 @@
   ansible.builtin.apt:
     name: ufw
     state: present
+  register: hardening_ufw_installed
 
 # Port DEĞİŞTİRME desteklenmez. Ubuntu'da sshd çoğunlukla ssh.socket ile (socket activation) başlar; bu durumda
 # sshd_config'teki Port yok sayılır, bu yüzden "port ayarı" yazmak yanıltıcıdır. Bunun yerine gerçekten
@@ -172,3 +173,36 @@
   ansible.builtin.command: ufw --force enable
   changed_when: true
   when: "'Status: active' not in hardening_ufw_state.stdout"
+
+# ufw kendi /etc/ufw/sysctl.conf dosyasını (IPT_SYSCTL) başlarken uygular ve orada log_martians=0 YAZAR; sysctl.d'deki log_martians=1 (CIS 3.3.1) bu yüzden ufw
+# etkinken eziliyordu (gerçek Ubuntu VM'inde Lynis KRNL-6000 ile görüldü: değer 0). Dosya hizalanır ve canlı değer düzeltilir.
+- name: Keep log_martians=1 in ufw's own sysctl file (CIS 3.3.1)
+  ansible.builtin.lineinfile:
+    path: /etc/ufw/sysctl.conf
+    regexp: '^net/ipv4/conf/{{ item }}/log_martians='
+    line: 'net/ipv4/conf/{{ item }}/log_martians=1'
+  loop: [all, default]
+  when:
+    - hardening_ufw_log_martians | bool
+    - not (ansible_check_mode and hardening_ufw_installed is changed)
+
+- name: Read the live log_martians values
+  ansible.builtin.command: "sysctl -n net.ipv4.conf.{{ item }}.log_martians"
+  loop: [all, default]
+  register: hardening_ufw_martians_live
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: hardening_ufw_log_martians | bool
+
+- name: Set the live log_martians values
+  ansible.builtin.command: "sysctl -w net.ipv4.conf.{{ item.item }}.log_martians=1"
+  loop: "{{ hardening_ufw_martians_live.results | default([]) | selectattr('stdout', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  changed_when: true
+  when:
+    - hardening_ufw_log_martians | bool
+    - not ansible_check_mode
+    - item.rc == 0
+    - item.stdout | trim != '1'

@@ -30,6 +30,10 @@ kernel.randomize_va_space = 2
 fs.protected_fifos = 2
 kernel.sysrq = 0
 net.core.bpf_jit_harden = 2
+kernel.unprivileged_bpf_disabled = 1
+{% endif %}
+{% if hardening_kernel_modules_disabled %}
+kernel.modules_disabled = 1
 {% endif %}
 kernel.dmesg_restrict = 1
 kernel.kptr_restrict = 2

@@ -250,7 +250,20 @@
       "name": "hardening_kernel_extra_sysctl",
       "type": "bool",
       "default": true,
-      "description": "true (varsayılan): üç ek sysctl: fs.protected_fifos=2, kernel.sysrq=0 (VM konsolundan SysRq acil yeniden başlatma kullanılamaz), net.core.bpf_jit_harden=2 (eBPF yoğun iş yüklerinde küçük performans bedeli). false: yazılmaz"
+      "description": "true (varsayılan): dört ek sysctl: kernel.unprivileged_bpf_disabled=1 (ayrıcalıksız eBPF yeniden başlatmaya kadar kalıcı kapalı; Ubuntu varsayılanı 2 zaten kapalı ama root açabiliyor), fs.protected_fifos=2, kernel.sysrq=0 (VM konsolundan SysRq acil yeniden başlatma kullanılamaz), net.core.bpf_jit_harden=2 (eBPF yoğun iş yüklerinde küçük performans bedeli). false: yazılmaz"
+    },
+    {
+      "name": "hardening_kernel_modules_disabled",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "false (varsayılan): yazılmaz. true: kernel.modules_disabled=1 (Lynis KRNL-6000). Yeniden başlatmaya kadar GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez (Docker overlay/br_netfilter, USB, ağ ve ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez, yeniden başlatma gerekir. Önce snapshot alın"
+    },
+    {
+      "name": "hardening_ufw_log_martians",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): ufw'nin kendi /etc/ufw/sysctl.conf dosyasında log_martians=1 yapılır ve canlı değer düzeltilir (CIS 3.3.1). ufw dosyası aksi halde log_martians'ı 0'a çekip sysctl.d'deki 1'i eziyordu (gerçek Ubuntu VM'inde Lynis ile görüldü). Hatalı kaynak adresli paketler günlüğe yazılır (gürültülü ağlarda günlük şişebilir). false: dokunulmaz"
     },
     {
       "name": "hardening_pam_tmpdir",
