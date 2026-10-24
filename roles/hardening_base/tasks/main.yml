@@ -269,6 +269,42 @@
     - hardening_process_accounting | bool
     - not ansible_check_mode
 
+# --- Kötü amaçlı yazılım tarayıcısı (Lynis HRDN-7230; hardening_malware_scanner, varsayılan none) ---
+# rkhunter: bilinen rootkit izleri, gizli dosyalar, şüpheli portlar, giriş yapılandırması ve kendi dosya özet veritabanı. AIDE ile örtüşen yanı dosya bütünlüğüdür; imza/sezgi
+# denetimleri AIDE'de yoktur. ClamAV bilerek EKLENMEDİ: dosya yükleme/işleme servisine aittir (RAM ve imza güncellemesi bedeli).
+- name: Check the malware scanner setting
+  ansible.builtin.assert:
+    that: hardening_malware_scanner in ['none', 'rkhunter']
+    fail_msg: "hardening_malware_scanner none ya da rkhunter olmalı."
+    quiet: true
+
+- name: Install rkhunter
+  ansible.builtin.apt:
+    name: rkhunter
+    state: present
+  register: hardening_rkhunter_install
+  when: hardening_malware_scanner == 'rkhunter'
+
+# Günlük kontrol (cron.daily) ve apt sonrası özet veritabanı güncellemesi (yanlış alarmı azaltır). Sonuç /var/log/rkhunter.log dosyasında ve root'a e-postayla gider (MTA yoksa görünmez).
+- name: Enable the daily rkhunter check and the apt database refresh
+  ansible.builtin.lineinfile:
+    path: /etc/default/rkhunter
+    regexp: '^{{ item.key }}='
+    line: '{{ item.key }}="{{ item.value }}"'
+  loop:
+    - { key: CRON_DAILY_RUN, value: "true" }
+    - { key: APT_AUTOGEN, value: "true" }
+  when:
+    - hardening_malware_scanner == 'rkhunter'
+    - not (ansible_check_mode and hardening_rkhunter_install is changed)
+
+# İlk dosya özet veritabanı: bu olmadan ilk günlük kontrol "veritabanı yok" der.
+- name: Build the rkhunter file properties database
+  ansible.builtin.command: rkhunter --propupd
+  args:
+    creates: /var/lib/rkhunter/db/rkhunter.dat
+  when: hardening_malware_scanner == 'rkhunter'
+
 # --- Bekleyen paket güncellemeleri (varsayılan KAPALI) ---
 - name: Upgrade the installed packages (apt-get upgrade)
   ansible.builtin.apt:
