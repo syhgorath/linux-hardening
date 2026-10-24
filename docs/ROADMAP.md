@@ -17,7 +17,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.6.0 yayını | Yayımlandı (Debian 13, Proxmox VE tek düğüm: pve-firewall ve tam sertleştirme, Raspberry Pi platformu, CIS Level 1 kalan maddeler: salt okunur rapor, pwquality/journald/sshd erişim seçenekleri, menüye 15 eksik ayar, cron sırası düzeltmesi) |
 | v0.7.0 yayını | Yayımlandı (Proxmox güvenlik duvarı için `pve_firewall_preview`/`pve_firewall_apply` eylemleri, CIS Level 1 Server'da kalan son 3 madde, opt-in `hardening_auditd_cis_l2`, `hardening_motd_disable_scripts`) |
 | v0.7.1 | Yayımlanmadı: içeriği v0.8.0'a katıldı |
-| v0.8.0 yayını | Hazırlandı (Lynis puanı için seçenekler, `log_martians` ve `pve_firewall_preview` düzeltmeleri, CIS Level 2 seçenekleri: auditd/AIDE, ufw giden DROP, AppArmor, derleyici kısıtı, rkhunter; `docs/deneme-matrisi.md`) |
+| v0.8.0 yayını | Yayımlandı (Lynis puanı için seçenekler, `log_martians` ve `pve_firewall_preview` düzeltmeleri, CIS Level 2 seçenekleri: auditd/AIDE, ufw giden DROP, AppArmor, derleyici kısıtı, rkhunter; `docs/deneme-matrisi.md`) |
+| v0.8.1 yayını | Hazırlandı (`kernel_modules_disabled` + ufw önyükleme modül listesi, `verify_access` ssh-agent ipucu ve ek bağımsız değişken, manifest sınırları, deneme matrisi) |
 
 ## Orta
 | İş | Not |
