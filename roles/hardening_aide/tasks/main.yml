@@ -28,6 +28,36 @@
       {% endfor %}
   when: hardening_platform | default('generic') == 'proxmox-host'
 
+# CIS 6.3.3 (Level 2; varsayılan KAPALI): audit araçları kriptografik özetle korunur. AIDE, kural dosyaları arasında İLK eşleşen kuralı uygular: bu dosya 00_ ile başlar ki
+# varsayılan kurallardan ÖNCE okunsun. Veritabanı İLK kez üretilmeden önce yazılmalıdır; var olan veritabanında etkili olması için `aide --update` ile yenilenmelidir.
+- name: Make sure the AIDE config drop-in directory exists (audit tools)
+  ansible.builtin.file:
+    path: /etc/aide/aide.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: hardening_aide_audit_tools | bool and not (ansible_check_mode and hardening_aide_install is changed)
+
+- name: Protect the audit tools with cryptographic checksums (CIS 6.3.3)
+  ansible.builtin.copy:
+    dest: /etc/aide/aide.conf.d/00_hardening_audit_tools
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir (CIS 6.3.3): audit araçları özet + öznitelik denetimi.
+      {% for t in hardening_aide_audit_tool_paths %}
+      {{ t }} p+i+n+u+g+s+b+acl+xattrs+sha512
+      {% endfor %}
+  when: hardening_aide_audit_tools | bool and not (ansible_check_mode and hardening_aide_install is changed)
+
+- name: Remove the audit tools AIDE rules (option off)
+  ansible.builtin.file:
+    path: /etc/aide/aide.conf.d/00_hardening_audit_tools
+    state: absent
+  when: not (hardening_aide_audit_tools | bool)
+
 - name: Initialize AIDE database (ilk seferde dakikalar sürebilir)
   ansible.builtin.command: aideinit -y -f
   args:

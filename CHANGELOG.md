@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **auditd/AIDE Level 2 seçenekleri**, hepsi varsayılan **KAPALI**: `hardening_auditd_conf_cis` (`auditd.conf`: `max_log_file`, `keep_logs`, `space_left_action=email`, `admin_space_left_action=single`; `warn_if`), `hardening_auditd_disk_full_halt` (disk dolunca/hata verince `halt`; `warn_if`), `hardening_auditd_backlog_limit` (GRUB'a `audit_backlog_limit=N`, önerilen 8192; yeniden başlatmada etkili), `hardening_auditd_immutable` (`-e 2`; `warn_if`; kilitliyken kural yüklemesi atlanır ve UYARILIR), `hardening_aide_audit_tools` (audit araçları için AIDE sha512 + öznitelik kuralı, CIS 6.3.3). Kapatınca `auditd.conf` değerleri ve GRUB satırı geri ALINMAZ. `test_auditd_secenekleri.py` (gerçek Ansible, geçici dosyalar; mutasyon doğrulaması). Colima Ubuntu 26.04'te açma/kapama koşuldu (konteynerde çekirdek denetimi yok: `Load audit rules` her koşuda `changed` görünür, VM'de değil)
+
 ### Düzeltildi
 - **`log_martians=1` (CIS 3.3.1) ufw etkinken gerçekte 0'dı** (gerçek Ubuntu VM'inde Lynis KRNL-6000 ile görüldü; eşleme belgesi ✅ diyordu): ufw, `/etc/ufw/sysctl.conf` dosyasını başlarken uygular ve orada `log_martians=0` yazar, `sysctl.d`'deki `1` ezilirdi. `hardening_ufw_log_martians` (varsayılan **AÇIK**) ufw'nin dosyasını `1` yapar ve canlı değeri düzeltir. Colima Ubuntu 26.04'te hata yeniden üretildi (değer 0) ve düzeltildi (1); ikinci koşu `changed=0`, `ufw reload` sonrası değer 1 kalır. `test_ufw_log_martians.py`
 
