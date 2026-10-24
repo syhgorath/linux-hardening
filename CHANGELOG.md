@@ -5,6 +5,14 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **`hardening_kernel_modules_disabled=true` ile ufw yeniden başlatmada AÇILMIYORDU** (sshpocket 3.6.10 gerçek Ubuntu VM'i; güvenlik duvarı SESSİZCE kapalı kalıyordu): `kernel.modules_disabled=1` önyüklemede erken uygulanınca netfilter modülleri yüklenemiyordu. Seçenek açıkken şu an yüklü TÜM modüller + `hardening_kernel_preload_modules` (ufw/netfilter ve `binfmt_misc`) `/etc/modules-load.d/60-hardening-preload.conf` ile kilitten ÖNCE yüklenir; kapalıyken dosya silinir. Yeniden başlatmadan sonra `ufw status` ve `systemctl --failed` ile doğrulayın. `test_modul_onyukleme.py`
+- `hardening_verify_access`: yeni SSH doğrulaması `ansible_private_key_file` takma adını da tanır (`-i` + `IdentitiesOnly=yes`), `hardening_verify_access_ssh_extra_args` ile ek ssh bağımsız değişkeni alır ve "Too many authentication failures" hatasında ipucu verir (ssh-agent'ta 3'ten fazla anahtar + `MaxAuthTries 3`)
+
+### Eklendi
+- `component.yml`: `hardening_ssh_max_sessions` için `min: 1`/`max: 10`, `hardening_auditd_backlog_limit` için `min: 0` sınırı (sshpocket arayüzü doğrular)
+- `docs/deneme-matrisi.md`: sshpocket 3.6.10 turunun sonuçları ve Lynis puanları (Ubuntu 61 → 83 varsayılan → 85 seçeneklerle; Proxmox 62 → 83)
+
 ## [0.8.0] - 2026-10-24
 
 v0.7.0'dan sonra: sshpocket 3.6.9 gerçek VM turunun bulguları, **Lynis puanı için seçenekler** (Lynis'in test mantığı okunup puan veren kalemler eklendi; gerçek Ubuntu VM'inde `lynis show details KRNL-6000` çıktısı kullanıldı) ve **CIS Level 2** seçenekleri. `component.yml` `vars` listesi 82'den 100'e çıktı (+18). v0.7.1 etiketlenmedi; içeriği bu sürüme katıldı.

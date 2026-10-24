@@ -257,7 +257,7 @@
       "type": "bool",
       "default": false,
       "warn_if": true,
-      "description": "false (varsayılan): yazılmaz. true: kernel.modules_disabled=1 (Lynis KRNL-6000). Yeniden başlatmaya kadar GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez (Docker overlay/br_netfilter, USB, ağ ve ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez, yeniden başlatma gerekir. Önce snapshot alın"
+      "description": "false (varsayılan): yazılmaz. true: kernel.modules_disabled=1 (Lynis KRNL-6000). Yeniden başlatmaya kadar GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez (Docker overlay/br_netfilter, USB, ağ ve ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez, yeniden başlatma gerekir. Seçenek açıkken yeniden başlatmada kilitten ÖNCE yüklenecek modüller (şu an yüklü olanlar + ufw/netfilter + binfmt_misc) /etc/modules-load.d/60-hardening-preload.conf dosyasına yazılır (ufw bunlar olmadan başlamaz ve güvenlik duvarı sessizce kapalı kalırdı). Yeniden başlatmadan sonra ufw status ve systemctl --failed ile doğrulayın. Önce snapshot alın"
     },
     {
       "name": "hardening_ufw_log_martians",
@@ -588,6 +588,8 @@
       "name": "hardening_auditd_backlog_limit",
       "type": "int",
       "default": 0,
+      "min": 0,
+      "max": 1048576,
       "description": "0 (varsayılan): dokunulmaz. >0 (önerilen 8192): GRUB_CMDLINE_LINUX'a audit_backlog_limit=N yazılır ve update-grub çalışır (CIS 6.2.1). Etkisi YENİDEN BAŞLATMADAN sonra başlar ve geri alma güvenlik ağı kapsamında DEĞİLDİR; /etc/default/grub yoksa (Raspberry Pi, LXC) dokunulmaz. Önce snapshot alın"
     },
     {
@@ -607,6 +609,8 @@
       "name": "hardening_ssh_max_sessions",
       "type": "int",
       "default": 4,
+      "min": 1,
+      "max": 10,
       "description": "sshd MaxSessions (1-10; CIS en çok 10 ister). Varsayılan 4: Ansible oturum çoklaması (ControlMaster) bir bağlantıda birden çok oturum açar. Lynis SSH-7408 2 ister; 2'de çoklama 'channel open failed: administratively prohibited' ile kırılabilir. sshpocket'te denenmeden düşürmeyin"
     },
     {

@@ -1,0 +1,4 @@
+# Yeni SSH bağlantısı doğrulamasına eklenecek ssh bağımsız değişkenleri (liste). Kontrol makinesinin ssh-agent'ında 3'ten fazla anahtar varsa sertleştirme (MaxAuthTries 3) sonrası
+# doğrulama "Too many authentication failures" ile düşer: tek anahtar belirtin, örn. ["-o", "IdentitiesOnly=yes", "-i", "/yol/anahtar"]. Anahtar dosyası zaten
+# ansible_ssh_private_key_file / ansible_private_key_file ile verildiyse (IdentitiesOnly=yes otomatik eklenir) ve ansible_ssh_common_args ile verilen bağımsız değişkenler de kullanılır.
+hardening_verify_access_ssh_extra_args: []

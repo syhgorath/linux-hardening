@@ -11,3 +11,27 @@ hardening_kernel_extra_sysctl: true
 # false (varsayılan, warn_if): true iken kernel.modules_disabled=1 yazılır (Lynis KRNL-6000). YENİDEN BAŞLATMAYA KADAR GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez
 # (Docker overlay/br_netfilter, USB, ağ/ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez; yeniden başlatma gerekir.
 hardening_kernel_modules_disabled: false
+# hardening_kernel_modules_disabled=true iken, şu an yüklü modüllere EK olarak önyüklemede kilitten önce yüklenecek modüller (ufw/netfilter ve binfmt_misc). ufw bunlar olmadan
+# yeniden başlatmada BAŞLAMAZ ve güvenlik duvarı sessizce kapalı kalır (gerçek Ubuntu VM'inde görüldü). Yeniden başlatmadan sonra `ufw status` ve `systemctl --failed` ile doğrulayın.
+hardening_kernel_preload_modules:
+  - nf_tables
+  - nfnetlink
+  - nf_conntrack
+  - nf_defrag_ipv4
+  - nf_defrag_ipv6
+  - nf_log_syslog
+  - nf_reject_ipv4
+  - nf_reject_ipv6
+  - nft_compat
+  - nft_limit
+  - x_tables
+  - xt_addrtype
+  - xt_conntrack
+  - xt_hl
+  - xt_limit
+  - xt_LOG
+  - xt_tcpudp
+  - ipt_REJECT
+  - ip6t_REJECT
+  - ip6t_rt
+  - binfmt_misc
