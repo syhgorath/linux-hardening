@@ -69,7 +69,7 @@ check("usb-storage hala base rolunde", True, "usb-storage" in (ROOT / "roles/har
 t = task("hardening_ufw", "Default policies")
 expr = t["loop"]
 for val in (True, False):
-    rc, out = play([{"ansible.builtin.debug": {"msg": "{{ (" + expr.strip("{} ").strip() + ") | to_json }}"}}], {"hardening_ufw_routed_deny": val})
+    rc, out = play([{"ansible.builtin.debug": {"msg": "{{ (" + expr.strip("{} ").strip() + ") | to_json }}"}}], {"hardening_ufw_routed_deny": val, "hardening_ufw_outgoing_deny": False})
     items = []
     for line in out.splitlines():
         if '"msg"' in line:

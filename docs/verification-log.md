@@ -224,6 +224,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **59. auditd/AIDE Level 2 seçenekleri, Colima Ubuntu 26.04 (2026-10-24).** `hl-t-ub`: `harden.yml --tags auditd,aide` ile beş seçenek açık: 1. koşu `ok=32 changed=5`, 2. koşu `changed=1` (yalnızca `Load audit rules`: konteynerde çekirdek denetimi yok, `auditctl -l` başarısız, bu görev her koşuda çalışır; mevcut davranış, VM'de değil); kapatınca `-e 2` dosyası ve AIDE kuralı silinir, `auditd.conf` değerleri (keep_logs, halt...) geri alınmaz (belgelendi). Kilit algılama (`auditctl -s` çıktısı `enabled 2`) ve GRUB `replace` mantığı gerçek Ansible ile birim testinde denendi; `-e 2` kilidinin gerçek çekirdekte davranışı, GRUB ve AIDE kuralının gerçekten uygulandığı VM'de DENENMEDİ.
 
+**60. Erişim/ağ seçenekleri, Colima Ubuntu 26.04 (2026-10-24).** `hl-t-ub`: `harden.yml --tags ufw,ssh,files,apparmor` ile `hardening_ufw_outgoing_deny`, `hardening_ssh_max_sessions=2`, `hardening_restrict_compilers`, `hardening_apparmor_enforce` açık: 1. koşu `changed=4`, 2. koşu `changed=0`, kapatma 1. `changed=2`, 2. `changed=0`. Açıkken: `ufw status verbose` giden varsayılan `deny`, 53/123-udp/80/443 için v4 ve v6 `ALLOW OUT` kuralları, SSH oturumu düşmedi; `sshd -T` `maxsessions 2` ve Mac'ten Ansible koşuları 2 oturum sınırıyla hatasız çalıştı (sshpocket'in bağlantı biçimi DENENMEDİ); kapatınca varsayılan `allow`, `ALLOW OUT` kuralları kalır. Derleyici kısıtı: konteynerde gcc yok (birim testi geçici dizinde gerçek chmod ile). AppArmor: çekirdekte etkin değil, rol NOT verip bırakıyor. Gerçek VM'de DENENMEDİ.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

@@ -10,6 +10,13 @@
       hardening_ssh_permit_root_login no|prohibit-password (string) olmalı
       (YAML'da 'no' tırnaksız bool'a dönüşür: "no" yazın).
 
+- name: Validate MaxSessions (CIS allows at most 10)
+  ansible.builtin.assert:
+    that:
+      - hardening_ssh_max_sessions is integer
+      - hardening_ssh_max_sessions >= 1 and hardening_ssh_max_sessions <= 10
+    fail_msg: "hardening_ssh_max_sessions 1 ile 10 arasında bir tam sayı olmalı (CIS en çok 10 ister)."
+
 - name: Validate the SSH access lists (CIS 5.1.5)
   ansible.builtin.assert:
     that:

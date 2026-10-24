@@ -18,3 +18,6 @@ hardening_ssh_permit_root_login: "no"
 # rol hiçbir şey yazmadan DURUR (kendi erişimini kesmeyi önler). Yalnızca basit adlar: harf, rakam, _ ve -; joker, @ ve ! desteklenmez.
 hardening_ssh_allow_users: []
 hardening_ssh_allow_groups: []
+# sshd MaxSessions (CIS: en çok 10). Varsayılan 4: Ansible oturum çoklaması (ControlMaster) bir bağlantıda birden çok oturum açar. Lynis SSH-7408 2 ister; 2'de çoklama
+# "channel open failed: administratively prohibited" ile kırılabilir. sshpocket'te denenmeden düşürmeyin.
+hardening_ssh_max_sessions: 4

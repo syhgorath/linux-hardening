@@ -1,3 +1,24 @@
+# Derleyiciler (Lynis HRDN-7222; hardening_restrict_compilers, varsayılan KAPALI): "diğer" erişimi kaldırılır. Sembolik bağlar çözülür (follow). Yalnızca var olan yollar.
+- name: Restrict compilers to root and its group (Lynis HRDN-7222)
+  when: hardening_restrict_compilers | bool
+  block:
+    - name: Stat the compiler binaries
+      ansible.builtin.stat:
+        path: "{{ hardening_files_root }}{{ item }}"
+        follow: true
+      loop: "{{ hardening_restrict_compilers_paths }}"
+      register: hardening_files_compiler_stat
+
+    - name: Remove other access from the compiler binaries
+      ansible.builtin.file:
+        path: "{{ hardening_files_root }}{{ item.item }}"
+        mode: "o-rwx"
+        follow: true
+      loop: "{{ hardening_files_compiler_stat.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: item.stat.exists and item.stat.isreg
+
 # Dosya izinleri (CIS 7.1.x, 5.1.1-5.1.4, 2.4.x, 1.4.2, 1.6.6). Yalnızca fazla izni kaldırır (sembolik modlar), mevcut dosyalara dokunur, yenisini oluşturmaz.
 # Geri alma güvenlik ağı bunları geri almaz (izinler yalnızca sıkılaşır). Kapsam: docs/cis-esleme.md.
 - name: File permissions (CIS)
