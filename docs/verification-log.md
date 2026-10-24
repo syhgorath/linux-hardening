@@ -226,6 +226,8 @@ puan, Lynis'in o anki paket durumuna da bağlıdır. (Bu çıkarım Lynis günl�
 
 **60. Erişim/ağ seçenekleri, Colima Ubuntu 26.04 (2026-10-24).** `hl-t-ub`: `harden.yml --tags ufw,ssh,files,apparmor` ile `hardening_ufw_outgoing_deny`, `hardening_ssh_max_sessions=2`, `hardening_restrict_compilers`, `hardening_apparmor_enforce` açık: 1. koşu `changed=4`, 2. koşu `changed=0`, kapatma 1. `changed=2`, 2. `changed=0`. Açıkken: `ufw status verbose` giden varsayılan `deny`, 53/123-udp/80/443 için v4 ve v6 `ALLOW OUT` kuralları, SSH oturumu düşmedi; `sshd -T` `maxsessions 2` ve Mac'ten Ansible koşuları 2 oturum sınırıyla hatasız çalıştı (sshpocket'in bağlantı biçimi DENENMEDİ); kapatınca varsayılan `allow`, `ALLOW OUT` kuralları kalır. Derleyici kısıtı: konteynerde gcc yok (birim testi geçici dizinde gerçek chmod ile). AppArmor: çekirdekte etkin değil, rol NOT verip bırakıyor. Gerçek VM'de DENENMEDİ.
 
+**61. `hardening_malware_scanner=rkhunter`, Colima Ubuntu 26.04 (2026-10-24).** Lynis HRDN-7230 yalnızca bir tarayıcının kurulu olmasına bakar (3/3, yoksa 1/3). Tek kullanımlık konteynerde `rkhunter -C` yapılandırma kontrolü temiz, `rkhunter --propupd` 182 dosyadan 171'ini bulup veritabanını üretti, `rkhunter --check` çalıştı (konteyner uyarıları: modül dizini, sistem günlük servisi yok). `hl-t-ub`: `harden.yml --tags base -e hardening_malware_scanner=rkhunter` 1. koşu `changed=2` (kurulum, ayar), 2. koşu `changed=0`; veritabanı paket kurulumunda zaten oluşmuştu (`creates:` nedeniyle `propupd` çalışmadı). Gerçek VM'de günlük kontrolün yanlış alarm oranı ve e-posta teslimi DENENMEDİ.
+
 ## Yolda bulunan ve düzeltilenler
 | Bulgu | Düzeltme |
 |---|---|

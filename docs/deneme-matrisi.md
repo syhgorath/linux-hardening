@@ -22,3 +22,4 @@ Sonuç: ✅ sorunsuz | ⚠️ sorunlu (nasıl) | 💥 bozdu (nasıl) | ⏳ denen
 | `hardening_ufw_outgoing_deny` | KAPALI | ✅ giden varsayılan deny, SSH düşmedi, kapatınca allow | ⏳ | — (ufw yok) | ⏳ | izin listesi dışı yeni giden bağlantılar kesilir |
 | `hardening_restrict_compilers` | KAPALI | ⏳ konteynerde gcc yok (birim testi gerçek chmod) | ⏳ | ⏳ | ⏳ | root olmayan derleme bozulur |
 | `hardening_apparmor_enforce` | KAPALI | ⏳ konteynerde AppArmor kapalı (NOT verir) | ⏳ | ⏳ (LXC profilleri) | ⏳ | Docker/LXC etkisi VM'de bakılacak |
+| `hardening_malware_scanner` (rkhunter) | none | ✅ kurulur, ayar yazılır, 2. koşu `changed=0`, `rkhunter -C` temiz | ⏳ | ⏳ | ⏳ | günlük kontrolün yanlış alarmı sshpocket'te izlenmeli |

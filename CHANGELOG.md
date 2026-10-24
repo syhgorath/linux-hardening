@@ -6,6 +6,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_malware_scanner` (`none` varsayılan | `rkhunter`): `rkhunter` kurulur (Lynis HRDN-7230), `CRON_DAILY_RUN="true"` ve `APT_AUTOGEN="true"` yazılır, ilk veritabanı yoksa `rkhunter --propupd` ile üretilir. AIDE ve auditd'in yerini tutmaz. **ClamAV bilerek yok**: dosya yükleme/işleme servisine aittir. `none`'a dönmek rkhunter'ı kaldırmaz. `test_malware_scanner.py` (mutasyon doğrulaması); Colima Ubuntu 26.04: 2. koşu `changed=0`
+
+### Eklendi
 - **Erişim/ağ seçenekleri** (Lynis SSH-7408, HRDN-7222; CIS 4.1.4 Level 2, 1.3): `hardening_ssh_max_sessions` (1-10, varsayılan **4** = davranış değişmez; Lynis 2 ister), `hardening_ufw_outgoing_deny` (varsayılan **KAPALI**, `warn_if`; giden trafik DROP + `hardening_ufw_outgoing_allow` izin listesi: 53, 123/udp, 80/tcp, 443/tcp; izin kuralları varsayılan değişmeden ÖNCE eklenir), `hardening_restrict_compilers` (varsayılan **KAPALI**, `warn_if`; `as`, `cc`, `c++`, `gcc`, `g++`, `clang`, `clang++` için `o-rwx`, sembolik bağlar çözülür), yeni rol `hardening_apparmor` + `hardening_apparmor_enforce` (varsayılan **KAPALI**, `warn_if`; complain kipindeki profiller `aa-enforce`, korumasız süreçler UYARI; AppArmor çekirdekte etkin değilse NOT). Kapatınca derleyici izinleri, AppArmor kipi ve `ALLOW OUT` kuralları geri alınmaz. `test_erisim_ag_secenekleri.py` (gerçek Ansible; mutasyon doğrulaması)
 
 ### Eklendi

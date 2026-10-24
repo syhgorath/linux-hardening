@@ -31,6 +31,10 @@ hardening_process_accounting: true
 # false (varsayılan, warn_if): true iken her koşuda `apt-get upgrade` çalışır (dist-upgrade DEĞİL; paket kaldırmaz). Servisler yeniden başlayabilir (Docker/MySQL/nginx dahil), yeni çekirdek
 # yeniden başlatma ister (yeniden başlatılmaz; /var/run/reboot-required varsa UYARI). Lynis PKGS-7392 bekleyen güvenlik güncellemesi için en ağır puan kalemidir (25 puan).
 hardening_apt_upgrade: false
+# none (varsayılan) | rkhunter: rkhunter kurulur (Lynis HRDN-7230), günlük kontrol (cron.daily) ve apt sonrası özet veritabanı güncellemesi açılır, ilk veritabanı üretilir.
+# Sonuç /var/log/rkhunter.log dosyasındadır. Kendi başına bütünlük/rootkit izi taraması yapar; AIDE ve auditd'in yerini tutmaz. ClamAV bu pakette YOKTUR (dosya yükleme servisine aittir).
+# none'a dönmek rkhunter'ı KALDIRMAZ (kurulu paket ve ayarlar kalır).
+hardening_malware_scanner: none
 # journald günlük döndürme/sınırları (CIS 6.1.1.1.5), varsayılan KAPALI: true iken /etc/systemd/journald.conf.d/61-hardening-rotation.conf yazılır
 # (SystemMaxUse, RuntimeMaxUse, MaxFileSec). Sınırı aşan ESKİ günlükler silinir (saklama süresi kısalır). false: dosya silinir, systemd varsayılanı geçerli olur.
 # Boyutlar: sayı + K|M|G|T (örn. 1G, 200M); MaxFileSec: sayı + s|min|h|day|week|month|year (örn. 1month).

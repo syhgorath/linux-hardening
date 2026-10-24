@@ -631,6 +631,12 @@
       "description": "false (varsayılan): dokunulmaz. true: AppArmor profilleri enforce kipine alınır (CIS 1.3; aa-enforce /etc/apparmor.d/*). Complain kipindeki profiller ihlalleri artık yalnızca kaydetmez, ENGELLER: servisler (Docker/LXC dahil) beklenmedik şekilde erişimini kaybedebilir. Kapatınca kip GERİ ALINMAZ. AppArmor çekirdekte etkin değilse (konteyner) hiçbir şey yapılmaz. Profili olup korumasız süreçler için yalnızca uyarı verilir. Önce snapshot alın"
     },
     {
+      "name": "hardening_malware_scanner",
+      "type": "string",
+      "default": "none",
+      "description": "none (varsayılan) | rkhunter: rkhunter kurulur (Lynis HRDN-7230), günlük kontrol (cron.daily) ve apt sonrası özet veritabanı güncellemesi açılır, ilk veritabanı üretilir; sonuç /var/log/rkhunter.log ve root'a e-posta. Bilinen rootkit izleri, gizli dosyalar, şüpheli portlar ve dosya özetlerine bakar; AIDE ve auditd'in yerini tutmaz, yanlış alarm üretebilir. ClamAV bu pakette yok (dosya yükleme servisine aittir). none'a dönmek rkhunter'ı kaldırmaz"
+    },
+    {
       "name": "hardening_motd_disable_scripts",
       "type": "list[string]",
       "default": [],
