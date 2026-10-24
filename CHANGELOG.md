@@ -5,6 +5,10 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.8.1] - 2026-10-24
+
+v0.8.0'dan sonra, sshpocket 3.6.10 gerçek VM turunun bulguları. **Önemli:** `hardening_kernel_modules_disabled=true` iken ufw yeniden başlatmada AÇILMIYORDU (güvenlik duvarı sessizce kapalı kalıyordu); bu seçeneği deneyecekseniz bu sürümü kullanın ve yeniden başlattıktan sonra `ufw status` ile doğrulayın. Kırıcı değişiklik yok; seçeneğin varsayılanı hâlâ KAPALI.
+
 ### Düzeltildi
 - **`hardening_kernel_modules_disabled=true` ile ufw yeniden başlatmada AÇILMIYORDU** (sshpocket 3.6.10 gerçek Ubuntu VM'i; güvenlik duvarı SESSİZCE kapalı kalıyordu): `kernel.modules_disabled=1` önyüklemede erken uygulanınca netfilter modülleri yüklenemiyordu. Seçenek açıkken şu an yüklü TÜM modüller + `hardening_kernel_preload_modules` (ufw/netfilter ve `binfmt_misc`) `/etc/modules-load.d/60-hardening-preload.conf` ile kilitten ÖNCE yüklenir; kapalıyken dosya silinir. Yeniden başlatmadan sonra `ufw status` ve `systemctl --failed` ile doğrulayın. `test_modul_onyukleme.py`
 - `hardening_verify_access`: yeni SSH doğrulaması `ansible_private_key_file` takma adını da tanır (`-i` + `IdentitiesOnly=yes`), `hardening_verify_access_ssh_extra_args` ile ek ssh bağımsız değişkeni alır ve "Too many authentication failures" hatasında ipucu verir (ssh-agent'ta 3'ten fazla anahtar + `MaxAuthTries 3`)
@@ -270,7 +274,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.8.0...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/syhgorath/linux-hardening/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/syhgorath/linux-hardening/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/syhgorath/linux-hardening/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/syhgorath/linux-hardening/compare/v0.5.0...v0.6.0
