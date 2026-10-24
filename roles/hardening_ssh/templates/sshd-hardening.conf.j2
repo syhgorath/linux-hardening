@@ -8,7 +8,7 @@ AuthenticationMethods publickey,keyboard-interactive
 {% endif %}
 PubkeyAuthentication yes
 MaxAuthTries 3
-MaxSessions 4
+MaxSessions {{ hardening_ssh_max_sessions }}
 LoginGraceTime 60
 LogLevel VERBOSE
 X11Forwarding no

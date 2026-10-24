@@ -157,9 +157,25 @@
       ufw etkinleştirilmedi.
   when: hardening_ufw_prune_ssh | bool and not ansible_check_mode
 
+# Giden trafik varsayılanı DROP (CIS 4.1.4, Level 2; hardening_ufw_outgoing_deny, varsayılan KAPALI): önce izin listesi, SONRA varsayılan değişir (yoksa DNS/apt/NTP anında kesilir).
+- name: Validate the outgoing allow list
+  ansible.builtin.assert:
+    that:
+      - hardening_ufw_outgoing_allow is sequence and hardening_ufw_outgoing_allow is not string
+      - hardening_ufw_outgoing_allow | map('string') | reject('match', '^[0-9]{1,5}(:[0-9]{1,5})?(/(tcp|udp))?$') | list | length == 0
+    fail_msg: 'hardening_ufw_outgoing_allow geçersiz: "53", "443/tcp" ya da "8000:8010/udp" biçiminde girdiler olmalı.'
+  when: hardening_ufw_outgoing_deny | bool
+
+- name: Allow outgoing traffic before denying the rest
+  ansible.builtin.command: "ufw allow out {{ item }}"
+  loop: "{{ hardening_ufw_outgoing_allow }}"
+  register: hardening_ufw_outgoing_rules
+  changed_when: "'Skipping' not in hardening_ufw_outgoing_rules.stdout"
+  when: hardening_ufw_outgoing_deny | bool
+
 - name: Default policies
   ansible.builtin.command: "ufw default {{ item.value }} {{ item.key }}"
-  loop: "{{ [{'key': 'incoming', 'value': 'deny'}, {'key': 'outgoing', 'value': 'allow'}] + ([{'key': 'routed', 'value': 'deny'}] if hardening_ufw_routed_deny | bool else []) }}"
+  loop: "{{ [{'key': 'incoming', 'value': 'deny'}, {'key': 'outgoing', 'value': ('deny' if hardening_ufw_outgoing_deny | bool else 'allow')}] + ([{'key': 'routed', 'value': 'deny'}] if hardening_ufw_routed_deny | bool else []) }}"
   changed_when: false
 
 - name: Read ufw current state

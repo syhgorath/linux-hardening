@@ -6,6 +6,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- **Erişim/ağ seçenekleri** (Lynis SSH-7408, HRDN-7222; CIS 4.1.4 Level 2, 1.3): `hardening_ssh_max_sessions` (1-10, varsayılan **4** = davranış değişmez; Lynis 2 ister), `hardening_ufw_outgoing_deny` (varsayılan **KAPALI**, `warn_if`; giden trafik DROP + `hardening_ufw_outgoing_allow` izin listesi: 53, 123/udp, 80/tcp, 443/tcp; izin kuralları varsayılan değişmeden ÖNCE eklenir), `hardening_restrict_compilers` (varsayılan **KAPALI**, `warn_if`; `as`, `cc`, `c++`, `gcc`, `g++`, `clang`, `clang++` için `o-rwx`, sembolik bağlar çözülür), yeni rol `hardening_apparmor` + `hardening_apparmor_enforce` (varsayılan **KAPALI**, `warn_if`; complain kipindeki profiller `aa-enforce`, korumasız süreçler UYARI; AppArmor çekirdekte etkin değilse NOT). Kapatınca derleyici izinleri, AppArmor kipi ve `ALLOW OUT` kuralları geri alınmaz. `test_erisim_ag_secenekleri.py` (gerçek Ansible; mutasyon doğrulaması)
+
+### Eklendi
 - **auditd/AIDE Level 2 seçenekleri**, hepsi varsayılan **KAPALI**: `hardening_auditd_conf_cis` (`auditd.conf`: `max_log_file`, `keep_logs`, `space_left_action=email`, `admin_space_left_action=single`; `warn_if`), `hardening_auditd_disk_full_halt` (disk dolunca/hata verince `halt`; `warn_if`), `hardening_auditd_backlog_limit` (GRUB'a `audit_backlog_limit=N`, önerilen 8192; yeniden başlatmada etkili), `hardening_auditd_immutable` (`-e 2`; `warn_if`; kilitliyken kural yüklemesi atlanır ve UYARILIR), `hardening_aide_audit_tools` (audit araçları için AIDE sha512 + öznitelik kuralı, CIS 6.3.3). Kapatınca `auditd.conf` değerleri ve GRUB satırı geri ALINMAZ. `test_auditd_secenekleri.py` (gerçek Ansible, geçici dosyalar; mutasyon doğrulaması). Colima Ubuntu 26.04'te açma/kapama koşuldu (konteynerde çekirdek denetimi yok: `Load audit rules` her koşuda `changed` görünür, VM'de değil)
 
 ### Düzeltildi

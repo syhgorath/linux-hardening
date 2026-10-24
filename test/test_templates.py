@@ -42,6 +42,7 @@ CASES = [
      {"hardening_ssh_allow_tcp_forwarding": "local"}),
     ("sshd-hardening.pw-yes.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2",
      {"hardening_ssh_disable_password": False}),
+    ("sshd-hardening.maxsessions.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2", {"hardening_ssh_max_sessions": 2}),
     ("sshd-hardening.rootkey.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2", {"hardening_ssh_permit_root_login": "prohibit-password"}),
     ("sysctl.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {}),
     ("sysctl.pve.conf", "roles/hardening_kernel/templates/sysctl.conf.j2", {"hardening_platform_relaxed": True}),

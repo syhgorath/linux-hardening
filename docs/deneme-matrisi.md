@@ -18,3 +18,7 @@ Sonuç: ✅ sorunsuz | ⚠️ sorunlu (nasıl) | 💥 bozdu (nasıl) | ⏳ denen
 | `hardening_auditd_backlog_limit` | 0 | ✅ GRUB yok uyarısı (konteyner) | ⏳ | ⏳ | ⏳ | yeniden başlatma gerekir |
 | `hardening_auditd_immutable` | KAPALI | ✅ dosya yazılır/silinir; kilit davranışı VM'de denenmeli | ⏳ | ⏳ | ⏳ | `-e 2`: yeniden başlatmaya kadar kural değişmez |
 | `hardening_aide_audit_tools` | KAPALI | ✅ dosya yazılır/silinir; AIDE'nin kuralı gerçekten uyguladığı VM'de denenmeli | ⏳ | ⏳ | ⏳ | |
+| `hardening_ssh_max_sessions` (2) | 4 | ✅ Mac'ten `MaxSessions 2` ile 4 koşu sorunsuz | ⏳ | ⏳ | ⏳ | sshpocket'in bağlantı biçimiyle denenmeli |
+| `hardening_ufw_outgoing_deny` | KAPALI | ✅ giden varsayılan deny, SSH düşmedi, kapatınca allow | ⏳ | — (ufw yok) | ⏳ | izin listesi dışı yeni giden bağlantılar kesilir |
+| `hardening_restrict_compilers` | KAPALI | ⏳ konteynerde gcc yok (birim testi gerçek chmod) | ⏳ | ⏳ | ⏳ | root olmayan derleme bozulur |
+| `hardening_apparmor_enforce` | KAPALI | ⏳ konteynerde AppArmor kapalı (NOT verir) | ⏳ | ⏳ (LXC profilleri) | ⏳ | Docker/LXC etkisi VM'de bakılacak |

@@ -68,3 +68,16 @@ hardening_tmp_report: true
 hardening_tmp_noexec: true
 # true: /dev/shm'ye `nodev,nosuid,noexec` uygulanır (/etc/fstab satırı + anında remount; satır zaten varsa üstüne yazılmaz). Sorun olursa false yapın.
 hardening_shm_noexec: true
+
+# false (varsayılan, warn_if): true iken derleyici/assembler ikili dosyalarında "diğer" erişimi kaldırılır (o-rwx; Lynis HRDN-7222). Yalnızca root ve grup üyeleri derleyebilir.
+# Sembolik bağlar çözülür (gerçek dosyanın izni değişir). Bedeli: root olmayan kullanıcılar derleme yapamaz (pip/npm yerel eklentileri, make, CI/yapı işleri bozulabilir).
+# Kapatınca izinler GERİ ALINMAZ (eski izin tutulmaz). Yalnızca VAR olan yollara dokunulur.
+hardening_restrict_compilers: false
+hardening_restrict_compilers_paths:
+  - /usr/bin/as
+  - /usr/bin/cc
+  - /usr/bin/c++
+  - /usr/bin/gcc
+  - /usr/bin/g++
+  - /usr/bin/clang
+  - /usr/bin/clang++

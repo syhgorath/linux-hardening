@@ -22,3 +22,13 @@ hardening_ufw_routed_deny: true
 # true (varsayılan): ufw'nin kendi /etc/ufw/sysctl.conf dosyasında net/ipv4/conf/{all,default}/log_martians=1 yapılır ve canlı değer düzeltilir (CIS 3.3.1).
 # ufw dosyası aksi halde değeri 0'a çeker ve sysctl.d'deki 1'i ezer. Hatalı kaynak adresli paketler günlüğe yazılır (gürültülü ağlarda günlük şişebilir). false: dokunulmaz.
 hardening_ufw_log_martians: true
+# false (varsayılan, warn_if): true iken giden trafik varsayılanı DROP olur (CIS 4.1.4, Level 2). Yalnızca hardening_ufw_outgoing_allow listesindeki giden bağlantılar geçer;
+# listede olmayan her şey (yeni giden bağlantılar: ek paket indirme, DNS, NTP, e-posta, harici API) kesilir. Gelen bağlantıların yanıtları etkilenmez (SSH bağlantınız düşmez).
+# ufw geri alma güvenlik ağı ufw dosyalarını geri yazar.
+hardening_ufw_outgoing_deny: false
+# Giden izin listesi (yalnızca hardening_ufw_outgoing_deny=true iken): DNS, NTP, apt (http/https). Port ya da port/proto yazılır.
+hardening_ufw_outgoing_allow:
+  - "53"
+  - "123/udp"
+  - "80/tcp"
+  - "443/tcp"

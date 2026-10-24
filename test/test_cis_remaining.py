@@ -89,7 +89,7 @@ check("journald dosya icerigi: SystemMaxUse=1G, RuntimeMaxUse=200M, MaxFileSec=1
 sd = load("roles/hardening_ssh/defaults/main.yml")
 check("ssh erisim listeleri varsayilan BOS (kisit yok)", sd["hardening_ssh_allow_users"] == [] and sd["hardening_ssh_allow_groups"] == [])
 sb = {"hardening_ssh_permit_root_login": "no", "hardening_ssh_disable_password": True, "hardening_ssh_kbdinteractive": False, "hardening_ssh_allow_tcp_forwarding": "no",
-      "hardening_ssh_allow_users": [], "hardening_ssh_allow_groups": []}
+      "hardening_ssh_allow_users": [], "hardening_ssh_allow_groups": [], "hardening_ssh_max_sessions": 4}
 t = render("roles/hardening_ssh/templates/sshd-hardening.conf.j2", sb)
 check("ssh sablon varsayilan: AllowUsers/AllowGroups YAZILMAZ", "AllowUsers" not in t and "AllowGroups" not in t, t)
 t = render("roles/hardening_ssh/templates/sshd-hardening.conf.j2", {**sb, "hardening_ssh_allow_users": ["ali", "veli"], "hardening_ssh_allow_groups": ["ssh-users"]})
