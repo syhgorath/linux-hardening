@@ -39,10 +39,11 @@
               '-o', 'ConnectTimeout=8', '-o', 'PreferredAuthentications=publickey']
              + (['-p', (hostvars[inventory_hostname]['ansible_port'] | string)]
                 if hostvars[inventory_hostname]['ansible_port'] is defined else [])
-             + (['-i', hostvars[inventory_hostname]['ansible_ssh_private_key_file'], '-o', 'IdentitiesOnly=yes']
-                if hostvars[inventory_hostname]['ansible_ssh_private_key_file'] is defined else [])
+             + (['-i', (hostvars[inventory_hostname]['ansible_ssh_private_key_file'] | default(hostvars[inventory_hostname]['ansible_private_key_file'] | default(''))), '-o', 'IdentitiesOnly=yes']
+                if (hostvars[inventory_hostname]['ansible_ssh_private_key_file'] | default(hostvars[inventory_hostname]['ansible_private_key_file'] | default(''))) != '' else [])
              + (hostvars[inventory_hostname]['ansible_ssh_common_args'].split()
                 if hostvars[inventory_hostname]['ansible_ssh_common_args'] is defined else [])
+             + (hardening_verify_access_ssh_extra_args | default([]))
              + [(hostvars[inventory_hostname]['ansible_user'] | default(hardening_verify_access_user.stdout))
                 ~ '@' ~ (hostvars[inventory_hostname]['ansible_host'] | default(inventory_hostname)),
                 'true'] }}
@@ -108,6 +109,7 @@
           Yeni SSH bağlantısı doğrulanamadı; ÖNCEKİ DURUMA DÖNÜLDÜ: sshd drop-in, ufw (kurallar ve aktif/pasif
           durumu) ve Proxmox cluster.fw değişiklikten önceki yedekten geri yüklendi. GERİ ALINMADI: kurulan paketler, sysctl, auditd,
           fail2ban, AIDE ve diğer roller. Erişimi elle doğrulayın; gerekirse Proxmox konsolu/snapshot kullanın.
+          {{ 'İPUCU: bağlantı hatası "Too many authentication failures" ise kontrol makinesinin ssh-agent\'ında 3\'ten fazla anahtar var (sertleştirme MaxAuthTries 3 yapar, doğrulayan ssh agent\'taki tüm anahtarları sırayla dener). Tek anahtar belirtin: ansible_ssh_private_key_file ya da ansible_ssh_common_args (örn. "-o IdentitiesOnly=yes -i <anahtar>").' if 'Too many authentication failures' in (hardening_verify_access_new_connection.stderr | default('')) else '' }}
       when: hardening_rollback_enabled | default(true) | bool and hardening_verify_access_rollback_script.stat.exists
 
     - name: Stop with a clear message (eski davranış)

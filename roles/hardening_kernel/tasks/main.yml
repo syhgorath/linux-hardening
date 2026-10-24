@@ -33,6 +33,38 @@
       blacklist {{ m }}
       {% endfor %}
 
+# kernel.modules_disabled=1 (hardening_kernel_modules_disabled, varsayılan KAPALI) önyüklemede erken uygulanır; ondan SONRA hiçbir modül yüklenemez. Gerekli modüller bu kilitten ÖNCE
+# systemd-modules-load tarafından yüklensin diye /etc/modules-load.d/ altına yazılır: (1) şu an yüklü TÜM modüller (donanım/sanal sürücüler, Docker overlay/br_netfilter...),
+# (2) hardening_kernel_preload_modules (netfilter/ufw ve binfmt_misc: ufw bunlar olmadan başlamaz, güvenlik duvarı SESSİZCE kapalı kalırdı; gerçek VM'de görüldü).
+- name: Read the loaded kernel modules (read-only)
+  ansible.builtin.shell:
+    cmd: "set -o pipefail; lsmod | awk 'NR > 1 {print $1}'"
+    executable: /bin/bash
+  register: hardening_kernel_lsmod
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: hardening_kernel_modules_disabled | bool
+
+- name: Preload the modules before the module lock (kernel.modules_disabled)
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/60-hardening-preload.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir: kernel.modules_disabled=1 kilidinden ÖNCE yüklenecek modüller (şu an yüklü olanlar + ufw/netfilter + binfmt_misc).
+      {% for m in ((hardening_kernel_lsmod.stdout_lines | default([])) + hardening_kernel_preload_modules) | map('trim') | reject('equalto', '') | unique | sort %}
+      {{ m }}
+      {% endfor %}
+  when: hardening_kernel_modules_disabled | bool
+
+- name: Remove the module preload file (option off)
+  ansible.builtin.file:
+    path: /etc/modules-load.d/60-hardening-preload.conf
+    state: absent
+  when: not (hardening_kernel_modules_disabled | bool)
+
 # core dump kapatma (varsayılan KAPALI): kullanıcı sınırı + systemd-coredump. fs.suid_dumpable=0 zaten sysctl şablonunda.
 - name: Disable core dumps (limits)
   ansible.builtin.copy:
