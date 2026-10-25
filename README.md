@@ -170,6 +170,22 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_vars_defined.py` | `group_vars` olmadan değişkenler tanımlı, güvenli varsayılanlar |
 | `test_consistency.sh` | `VERSION`/`component.yml`/destek matrisi tutarlılığı (kasıtlı bozmalar yakalanır) |
 | `test_rollback_script.sh` | geri alma betiği: arm/disarm/restore (önceki içeriği geri yükler, silmez), sahte komutlarla |
+| `test_lynis_paketler.py` | Lynis paket seçenekleri: `debsums` (+`CRON_CHECK`), `apt-show-versions`, `acct`, boş `jail.local` (varsayılan açık) ve `apt_upgrade` (varsayılan kapalı, `dist-upgrade` değil) |
+| `test_ufw_log_martians.py` | `log_martians` ufw etkinken `/etc/ufw/sysctl.conf` tarafından 0'a çekiliyordu: dosya hizalama ve canlı değer düzeltmesi (gerçek `lineinfile`, idempotens) |
+| `test_auditd_secenekleri.py` | auditd/AIDE Level 2 seçenekleri (hepsi kapalı): `auditd.conf`, disk dolunca durdur, GRUB `audit_backlog_limit`, `-e 2` (kilitliyken yükleme atlanır), AIDE audit araçları |
+| `test_auditd_l2.py` | CIS Level 2 auditd kural üreticisi (`audit_l2_rules.py`): varsayılan kapalı, tekrarlanan kural yok, var olmayan yola kural yok, 32 bit yalnızca 32 bit mimaride |
+| `test_erisim_ag_secenekleri.py` | Erişim/ağ seçenekleri: `MaxSessions` (1-10), ufw giden DROP + izin listesi, derleyici kısıtı (gerçek `chmod`), AppArmor enforce (`aa-status --json` ayrıştırma) |
+| `test_malware_scanner.py` | `hardening_malware_scanner` (`none` \| `rkhunter`): kurulum, günlük kontrol ayarı, ilk veritabanı; ClamAV yok |
+| `test_modul_onyukleme.py` | `kernel.modules_disabled` önyükleme modül listesi (yüklü modüller + netfilter + `binfmt_misc`), Proxmox'ta reddi, `verify_access` tek anahtar/ek bağımsız değişken/ipucu |
+| `test_proxmox_web_jail.py` | Proxmox web arayüzü fail2ban jail'i: filtre regex'i örnek günlük satırlarında, kapı koşulları, kaldırma |
+| `test_pveproxy_siniri.py` | `pveproxy` erişim sınırı: karar betiği (kontrol makinesi, kullanıcı satırı koruması), yazma/geri yükleme/kaldırma, 8006 doğrulaması |
+| `test_proxmox_guard.py` | Preflight platform ve Proxmox koruması: gerçek `stat`/`set_fact`/`fail`, `hardening_allow_unsupported` atlatamaz |
+| `test_platform_wiring.py` | Platform bağlantısı: `hardening_platform=proxmox-host` iken hangi roller/görevler ne yapar (`when` ifadeleri gerçek Ansible ile) |
+| `test_debian_support.py` | Debian 13 desteği (yapısal): alt sürüm anahtarı, Debian'a özgü farklar |
+| `test_cron_order.py` | `cron` kurulumu `hardening_files`'tan önce (minimal imajda cron izinlerinin ilk koşuda sıkılaşması) |
+| `test_rollback_wiring.py` | Geri alma ağının playbook/rol bağlantısı: arm sırası, başarıda disarm, hatada restore |
+| `test_rollback_playbook.sh` | `playbooks/rollback.yml`: varsayılan yalnızca status; disarm/now yalnızca `--tags` ile; armed iken `changed=1`, değilken `changed=0` |
+| `test_rollback_role.sh` | `hardening_rollback` arm görevleri: zaman aşımı doğrulaması, kapalıyken uyarı, `--check`'te atlanma |
 | `test_release_script.sh` | `scripts/release.sh`: gerçek imzalama/doğrulama, reddedilme senaryoları |
 | `test_repo_hygiene.sh`, `test_ip_addresses.py` | Anahtar/token/IP sızıntısı, paket içeriği |
 

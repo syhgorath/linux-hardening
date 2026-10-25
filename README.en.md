@@ -173,6 +173,22 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_handlers.py` | every `notify` is bound to a handler |
 | `test_vars_defined.py` | variables defined without `group_vars`, safe defaults |
 | `test_consistency.sh` | `VERSION`/`component.yml`/support-matrix consistency (deliberate breakages are caught) |
+| `test_lynis_paketler.py` | Lynis package options: `debsums` (+`CRON_CHECK`), `apt-show-versions`, `acct`, empty `jail.local` (default on) and `apt_upgrade` (default off, not `dist-upgrade`) |
+| `test_ufw_log_martians.py` | `log_martians` was reset to 0 by `/etc/ufw/sysctl.conf` while ufw was active: file alignment and live value fix (real `lineinfile`, idempotency) |
+| `test_auditd_secenekleri.py` | auditd/AIDE Level 2 options (all off): `auditd.conf`, halt when disk full, GRUB `audit_backlog_limit`, `-e 2` (reload skipped while locked), AIDE audit tools |
+| `test_auditd_l2.py` | CIS Level 2 auditd rule generator (`audit_l2_rules.py`): default off, no repeated rules, no rules for missing paths, 32-bit only on 32-bit architectures |
+| `test_erisim_ag_secenekleri.py` | Access/network options: `MaxSessions` (1-10), ufw outgoing DROP + allow list, compiler restriction (real `chmod`), AppArmor enforce (`aa-status --json` parsing) |
+| `test_malware_scanner.py` | `hardening_malware_scanner` (`none` \| `rkhunter`): install, daily check setting, first database; no ClamAV |
+| `test_modul_onyukleme.py` | `kernel.modules_disabled` boot-time module list (loaded modules + netfilter + `binfmt_misc`), refusal on Proxmox, `verify_access` single key/extra arguments/hint |
+| `test_proxmox_web_jail.py` | Proxmox web UI fail2ban jail: filter regex on sample log lines, gate conditions, removal |
+| `test_pveproxy_siniri.py` | `pveproxy` access limit: decision script (controller address, user line protection), write/restore/removal, 8006 verification |
+| `test_proxmox_guard.py` | Preflight platform and Proxmox guard: real `stat`/`set_fact`/`fail`, `hardening_allow_unsupported` cannot bypass |
+| `test_platform_wiring.py` | Platform wiring: what roles/tasks do when `hardening_platform=proxmox-host` (`when` expressions evaluated by real Ansible) |
+| `test_debian_support.py` | Debian 13 support (structural): minor-version key, Debian-specific differences |
+| `test_cron_order.py` | `cron` is installed before `hardening_files` (cron permissions tighten on the first run on a minimal image) |
+| `test_rollback_wiring.py` | Rollback safety net wiring: arm order, disarm on success, restore on failure |
+| `test_rollback_playbook.sh` | `playbooks/rollback.yml`: default is status only; disarm/now only with `--tags`; `changed=1` when armed, `changed=0` when not |
+| `test_rollback_role.sh` | `hardening_rollback` arm tasks: timeout validation, warning when disabled, skipped in `--check` |
 | `test_release_script.sh` | `scripts/release.sh`: real signing/verification, rejection cases |
 | `test_repo_hygiene.sh`, `test_ip_addresses.py` | key/token/IP leaks, package contents |
 

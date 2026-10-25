@@ -1,4 +1,4 @@
-# ISKELET (islevsiz). harden.yml bu role BAGLI DEGIL. Tasarim ve acik sorular: docs/design/proxmox-host.md
+# ISKELET (islevsiz, KULLANILMIYOR). harden.yml bu role BAGLI DEGIL; amaci baska yerde karsilandi (hardening_preflight, hardening_ssh_permit_root_login, hardening_pve_pveproxy). Tasarim ve acik sorular: docs/design/proxmox-host.md
 # Ubuntu rollerinin root/SSH kurallari Proxmox hostunda cakisabilir; bu yuzden ayri rol.
 - name: Stop because the Proxmox access role is not implemented yet
   ansible.builtin.fail:

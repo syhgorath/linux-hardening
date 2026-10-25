@@ -1,4 +1,4 @@
-# ISKELET (islevsiz). main.yml bu dosyayi CAGIRMIYOR. Tasarim: docs/design/proxmox-host.md
+# ISKELET (islevsiz, KULLANILMIYOR). main.yml bu dosyayi CAGIRMIYOR; platform dogrulamasi main.yml'de yapiliyor. Tasarim: docs/design/proxmox-host.md
 # Amac (ileride): operatorun sectigi platform ile sunucunun gercek platformu uyusmuyorsa DURMAK
 # (ornegin 'normal sunucu' secili ama /etc/pve var, ya da 'proxmox hostu' secili ama yok).
 # Platform degiskeni henuz TANIMLI DEGIL (karar bekliyor); adi tasarim notunda.

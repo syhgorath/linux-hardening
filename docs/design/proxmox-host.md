@@ -1,9 +1,9 @@
-# Proxmox VE hostu (iskelet, işlevsiz)
+# Proxmox VE hostu (tasarım notu ve uygulama durumu)
 
 > **Koruma YAPILDI (v0.4.0 sonrası):** `hardening_preflight` artık Proxmox hostunda (`/etc/pve` ya da `/usr/bin/pveversion`) `hardening_allow_unsupported` dahil HİÇBİR bayrakla atlatılamayacak şekilde durur. Proxmox hostunu SERTLEŞTİRME hâlâ yok ve aşağıdaki açık sorular cevaplanmadan yazılmaz.
 >
-> **Durum: tasarım notu + boş iskelet.** Burada hiçbir sertleştirme yazılı değil ve `harden.yml` bu dosyalara bağlı değil.
-> Amaç, Proxmox hostu desteği eklendiğinde dosyaların nereye geleceğini önceden görmek. Karar bekleyen konular aşağıda.
+> **Durum (v0.8.2): UYGULANDI (tek düğüm).** `hardening_platform=proxmox-host` + `hardening_pve_apply=true` ile tam `harden.yml`, `pve-firewall` yönetimi (`playbooks/pve-firewall*.yml`), web arayüzü için `hardening_fail2ban_pve_web` ve `hardening_pve_pveproxy_allow_from`. Aşağıdaki "Dosya haritası", "Açık sorular" ve "Uygulama sırası" bölümleri TARİHSEL tasarım notudur (ilk iskelet); güncel durum "Aşama 2/3/5" bölümlerinde ve `docs/verification-log.md` madde 40-65'te.
+> **Kullanılmayan iskelet:** `roles/hardening_pve_access/` ve `roles/hardening_preflight/tasks/platform.yml` `harden.yml`'e bağlı DEĞİL ve çağrılırsa bilerek hata verir. Amaçları başka yerde karşılandı: platform doğrulaması `hardening_preflight/tasks/main.yml`'de, kök SSH ve küme koruması `hardening_ssh_permit_root_login` + preflight'ta, web arayüzü erişimi `hardening_pve_pveproxy`'de. Gerekirse silinebilir.
 
 ## Kapsam
 - **Kapsam içi:** Proxmox VE'nin **kendisi** (hipervizör hostu).
@@ -19,16 +19,16 @@
 sshpocket profili yalnızca `os-release` `ID-VERSION_ID`'den algılar; `proxmox` bir profil kimliği olarak **algılanamaz**.
 Bu yüzden platform bir profil değil, **paket değişkeni** olur (**karar verildi**, bkz. "Açık sorular" 5).
 
-## Dosya haritası (bu dalda oluşturulanlar)
+## Dosya haritası (TARİHSEL: ilk iskelet; güncel roller `roles/hardening_pve_*`)
 ```
 docs/design/proxmox-host.md                       # bu not
-roles/hardening_pve_firewall/                     # ufw yerine pve-firewall (iskelet)
+roles/hardening_pve_firewall/                     # ufw yerine pve-firewall (sonra UYGULANDI)
   defaults/main.yml
   tasks/main.yml
-roles/hardening_pve_access/                       # root/SSH/küme erişimi: Ubuntu kuralları burada çakışır (iskelet)
+roles/hardening_pve_access/                       # root/SSH/küme erişimi (iskelet olarak KALDI, kullanılmıyor)
   defaults/main.yml
   tasks/main.yml
-roles/hardening_preflight/tasks/platform.yml      # "gerçekten Proxmox mu?" denetimi (iskelet; main.yml'den ÇAĞRILMIYOR)
+roles/hardening_preflight/tasks/platform.yml      # "gerçekten Proxmox mu?" denetimi (iskelet olarak KALDI; denetim main.yml'de yapılıyor)
 ```
 İleride gelecekler (henüz yok): `vars/debian-<surum>.yml`, `hardening_platform` değişkeni (`component.yml` `vars` + rol `defaults`),
 `harden.yml`'de `when: hardening_platform == 'proxmox-host'` ile platform rolleri, `ufw` rolünün Proxmox'ta çalışmaması için koruma.
