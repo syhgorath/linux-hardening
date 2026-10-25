@@ -305,6 +305,41 @@
     creates: /var/lib/rkhunter/db/rkhunter.dat
   when: hardening_malware_scanner == 'rkhunter'
 
+# --- Postfix SMTP banner'ı yazılım adını sızdırmasın (Lynis MAIL-8818; hardening_postfix_banner, varsayılan AÇIK) ---
+# Yalnızca postfix kuruluysa (Proxmox VE'de pve-manager bir MTA'ya bağımlıdır, postfix kalır; Ubuntu'da MTA dma ile değişir ve bu görev atlanır).
+- name: Look for postfix
+  ansible.builtin.stat:
+    path: /usr/sbin/postconf
+  register: hardening_postfix_postconf
+  check_mode: false
+  when: hardening_postfix_banner | bool
+
+- name: Read the postfix SMTP banner (read-only)
+  ansible.builtin.command: postconf -h smtpd_banner
+  register: hardening_postfix_banner_now
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: hardening_postfix_banner | bool and hardening_postfix_postconf.stat.exists | default(false)
+
+- name: Hide the software name in the postfix SMTP banner
+  ansible.builtin.command:
+    argv: [postconf, -e, "smtpd_banner = $myhostname ESMTP"]
+  register: hardening_postfix_banner_set
+  changed_when: true
+  when:
+    - hardening_postfix_banner | bool
+    - hardening_postfix_postconf.stat.exists | default(false)
+    - hardening_postfix_banner_now.rc | default(1) == 0
+    - hardening_postfix_banner_now.stdout | trim != '$myhostname ESMTP'
+
+- name: Reload postfix so the new banner is used
+  ansible.builtin.systemd:
+    name: postfix
+    state: reloaded
+  failed_when: false
+  when: hardening_postfix_banner_set is changed and not ansible_check_mode
+
 # --- Bekleyen paket güncellemeleri (varsayılan KAPALI) ---
 - name: Upgrade the installed packages (apt-get upgrade)
   ansible.builtin.apt:
