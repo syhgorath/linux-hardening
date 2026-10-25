@@ -49,6 +49,58 @@
     mode: "0644"
   notify: Restart fail2ban
 
+# Proxmox VE web arayüzü jail'i (hardening_fail2ban_pve_web, varsayılan KAPALI; yalnızca hardening_platform=proxmox-host). 8006'ya yönelik parola denemelerini banlar; bu savunma
+# pve-firewall'dan bağımsızdır. Yapılandırma `fail2ban-client -t` ile doğrulanır; geçersizse iki dosya silinir ve rol durur (sshd jail'i bozulmasın).
+- name: Say that the Proxmox web jail needs a Proxmox VE host
+  ansible.builtin.debug:
+    msg: "NOT (fail2ban): hardening_fail2ban_pve_web=true ama bu bir Proxmox VE hostu değil (hardening_platform=proxmox-host gerekir); Proxmox web jail'i yazılmadı."
+  when: hardening_fail2ban_pve_web | bool and hardening_platform | default('generic') != 'proxmox-host'
+
+- name: Proxmox VE web login jail (pvedaemon authentication failures)
+  when: hardening_fail2ban_pve_web | bool and hardening_platform | default('generic') == 'proxmox-host'
+  block:
+    - name: Write the Proxmox web filter
+      ansible.builtin.template:
+        src: proxmox-web.filter.j2
+        dest: /etc/fail2ban/filter.d/proxmox-web.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart fail2ban
+
+    - name: Write the Proxmox web jail
+      ansible.builtin.template:
+        src: proxmox-web.local.j2
+        dest: /etc/fail2ban/jail.d/proxmox-web.local
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart fail2ban
+
+    - name: Check the whole fail2ban configuration
+      ansible.builtin.command: fail2ban-client -t
+      changed_when: false
+      check_mode: false
+      when: not ansible_check_mode
+  rescue:
+    - name: Remove the Proxmox web jail files after a failed configuration check
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: [/etc/fail2ban/jail.d/proxmox-web.local, /etc/fail2ban/filter.d/proxmox-web.conf]
+
+    - name: Stop after the failed fail2ban configuration check
+      ansible.builtin.fail:
+        msg: "fail2ban yapılandırma denetimi (fail2ban-client -t) Proxmox web jail'iyle başarısız oldu; jail ve filtre dosyaları silindi. Ayrıntı için `fail2ban-client -t` çalıştırın."
+
+- name: Remove the Proxmox web jail (option off)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: [/etc/fail2ban/jail.d/proxmox-web.local, /etc/fail2ban/filter.d/proxmox-web.conf]
+  notify: Restart fail2ban
+  when: not (hardening_fail2ban_pve_web | bool)
+
 - name: Enable and start fail2ban
   ansible.builtin.systemd:
     name: fail2ban

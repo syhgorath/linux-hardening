@@ -641,6 +641,13 @@
       "description": "none (varsayılan) | rkhunter: rkhunter kurulur (Lynis HRDN-7230), günlük kontrol (cron.daily) ve apt sonrası özet veritabanı güncellemesi açılır, ilk veritabanı üretilir; sonuç /var/log/rkhunter.log ve root'a e-posta. Bilinen rootkit izleri, gizli dosyalar, şüpheli portlar ve dosya özetlerine bakar; AIDE ve auditd'in yerini tutmaz, yanlış alarm üretebilir. ClamAV bu pakette yok (dosya yükleme servisine aittir). none'a dönmek rkhunter'ı kaldırmaz"
     },
     {
+      "name": "hardening_fail2ban_pve_web",
+      "type": "bool",
+      "default": false,
+      "warn_if": true,
+      "description": "false (varsayılan): yazılmaz. true (yalnızca hardening_platform=proxmox-host): Proxmox VE web arayüzü/API için ek bir fail2ban jail'i (proxmox-web) yazılır: 8006'ya yönelik başarısız oturum açmalar (pvedaemon günlüğü) maxretry kadar tekrarlanırsa IP banlanır (bantime ve ignoreip sshd ile ortak; kontrol makinesi muaf). pve-firewall'dan bağımsız bir savunmadır. Yönetici yanlış parolayı üst üste girerse web arayüzünden banlanır. Yapılandırma fail2ban-client -t ile doğrulanır, geçersizse dosyalar silinir ve rol durur. Günlük biçimi gerçek Proxmox VE 9'da DENENMEDİ. Önce snapshot alın"
+    },
+    {
       "name": "hardening_motd_disable_scripts",
       "type": "list[string]",
       "default": [],

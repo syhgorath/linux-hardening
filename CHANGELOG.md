@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_fail2ban_pve_web` (varsayılan **KAPALI**, `warn_if`; yalnızca `hardening_platform=proxmox-host`): Proxmox VE web arayüzü/API için `proxmox-web` fail2ban jail'i (8006'ya yönelik başarısız oturum açmalar, `pvedaemon` günlüğü; `pve-firewall`'dan bağımsız ikinci savunma). Yapılandırma `fail2ban-client -t` ile doğrulanır, geçersizse dosyalar silinir ve rol durur; Proxmox olmayan hostta NOT verir; kapatınca dosyalar silinir. Eski bir kişisel Proxmox aracı incelenirken fark edilen bir boşluktu (kod kopyalanmadı). `test_proxmox_web_jail.py`; konteynerde gerçek `fail2ban-regex` ve `fail2ban-client -t` temiz; gerçek Proxmox VE 9 günlüğünde DENENMEDİ
+
 ### Düzeltildi
 - **`hardening_kernel_modules_disabled=true` Proxmox VE hostunda artık REDDEDİLİR** (sshpocket 3.6.11, gerçek Proxmox VM'i, v0.8.1): önyükleme modül listesi yalnızca kilit anında yüklü modülleri kapsar; hiç misafir çalışmamış bir hipervizörde veth/tun/bridge/KVM modülleri yoktur (`ip link add type veth`: "Unknown device type", LXC ağı kurulamaz) ve proxmox-kernel kara listesi softdog'u `systemd-modules-load`'a rağmen engeller (`watchdog-mux` FAILED, HA düğümü fence edemez). Rol hiçbir şey yazmadan durur ve nedenini söyler (`--check`'te de). Ubuntu'da v0.8.1 düzeltmesi gerçek VM'de doğrulandı. `test_modul_onyukleme.py`
 

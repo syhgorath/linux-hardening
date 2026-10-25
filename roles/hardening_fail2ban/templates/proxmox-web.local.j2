@@ -1,0 +1,7 @@
+# Ansible tarafından yönetilir (Proxmox VE web arayüzü). [DEFAULT] değerleri (ignoreip, bantime, maxretry) sshd.local içindedir.
+[proxmox-web]
+enabled = true
+filter = proxmox-web
+port = 8006
+backend = systemd
+journalmatch = SYSLOG_IDENTIFIER=pvedaemon

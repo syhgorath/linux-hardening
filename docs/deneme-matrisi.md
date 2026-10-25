@@ -27,6 +27,7 @@ Sonuç: ✅ sorunsuz | ⚠️ sorunlu (nasıl) | 💥 bozdu (nasıl) | ⏳ denen
 | `hardening_restrict_compilers` | KAPALI | ⏳ (gcc yok) | ✅ HRDN-7222 kapandı (yalnız `/usr/bin/as` vardı; gerçek gcc/clang iş yükü DENENMEDİ) | ⏳ | ⏳ | root olmayan derleme bozulur |
 | `hardening_apparmor_enforce` | KAPALI | ⏳ (konteynerde AppArmor kapalı) | ✅ complain→enforce; DNS, NTP, https, ssh sağlam | ⏳ (LXC profilleri) | ⏳ | Docker/LXC etkisi iş yüküyle denenmeli |
 | `hardening_malware_scanner` (rkhunter) | none | ✅ | ✅ HRDN-7230 kapandı | ⏳ | ⏳ | günlük kontrolün yanlış alarmı izlenmedi |
+| `hardening_fail2ban_pve_web` | KAPALI | ✅ `fail2ban-regex` (2 eşleşme, başarılı giriş ve sshd satırı eşleşmez), `fail2ban-client -t` temiz | — | ⏳ günlük biçimi ve ban davranışı gerçek PVE 9'da denenmeli; `pve-firewall` ile birlikte | — | yanlış parolayla 3-5 deneme sonrası 8006 banı; kontrol makinesi muaf |
 | `pve_firewall_preview` / `pve_firewall_apply` | — | — | — | ✅ önizleme `apply=true` ile `changed=0`; uygulama: cluster.fw yazıldı, ssh, 8006, ping sağlam, FIRE-4512 kapandı | ⏳ | kümeli Proxmox denenmedi |
 
 ## Lynis hardening index (sshpocket 3.6.10)
