@@ -6,8 +6,8 @@ Girdi (argv[1], JSON): pveversion (`pveversion` ilk satırı), clustered (bool),
 qemu_count, lxc_count (int), enterprise_repo_enabled, no_subscription_repo (bool), subscription (`pvesubscription get` durum alanı).
 Çıktı (stdout, JSON): status (ok|warn|unknown), summary, warnings, notes, version, error.
 
-Amaç: bu paket Proxmox VE hostunu henüz SERTLEŞTİRMEZ (hardening_preflight reddeder); bu rapor, ileride sertleştirme yazılırken Ubuntu kurallarının nerede ÇAKIŞACAĞINI ve host'un
-bugünkü açık yönlerini gösterir. Uyarı (warn): bugün gerçek bir açık ya da bozuk durum. Not (note): sertleştirme tasarımı için bilgi. Python 3.9+ (yalnızca stdlib).
+Amaç: Proxmox VE hostunun durumunu sertleştirmeden ÖNCE ve sonra göstermek: host'un bugünkü açık yönleri ve Ubuntu kurallarının Proxmox'ta nerede ÇAKIŞTIĞI. Sertleştirme ayrı çalışır
+(hardening_platform=proxmox-host ve hardening_pve_apply=true); bu rapor ondan bağımsız ve salt okunurdur. Uyarı (warn): bugün gerçek bir açık ya da bozuk durum. Not (note): sertleştirme tasarımı için bilgi. Python 3.9+ (yalnızca stdlib).
 """
 import json
 import re

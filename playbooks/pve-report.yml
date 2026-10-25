@@ -1,4 +1,4 @@
-# Proxmox VE host durumu raporu (SALT OKUNUR). harden.yml'den AYRIDIR: bu paket Proxmox hostunu henüz SERTLEŞTİRMEZ, yalnızca durumunu okur.
+# Proxmox VE host durumu raporu (SALT OKUNUR). harden.yml'den AYRIDIR: yalnızca durumu okur, hiçbir şeyi değiştirmez (sertleştirme için hardening_platform=proxmox-host + hardening_pve_apply=true).
 #   ansible-playbook -i envanter.yml playbooks/pve-report.yml
 # Hedef bir Proxmox VE hostu DEĞİLSE (/etc/pve yok) DURUR. Hiçbir şeyi değiştirmez; `--check`'te de aynı çıktıyı verir.
 - name: Proxmox VE host report (read-only)

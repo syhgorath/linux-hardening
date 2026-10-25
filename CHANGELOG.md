@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Belgeler
+- Kapsamlı "tamam ama tamam değil" denetimi: `README.md`/`README.en.md` test tablosuna 16 eksik test dosyası eklendi; `docs/design/proxmox-host.md` başlığı ve durum bloğu güncellendi ("iskelet, işlevsiz" yanlıştı, Proxmox sertleştirmesi v0.6.0'dan beri var); `pve_report.py` ve `playbooks/pve-report.yml` yorumlarındaki "henüz sertleştirmez" ifadesi düzeltildi; kullanılmayan iskelet roller (`hardening_pve_access`, `hardening_preflight/tasks/platform.yml`) "KULLANILMIYOR" olarak işaretlendi (silinmedi). Kod davranışı değişmedi
+
 ## [0.8.2] - 2026-10-25
 
 v0.8.1'den sonra, **Proxmox VE** tarafı: sshpocket 3.6.11 gerçek Proxmox turunun bulgusu ve eski bir kişisel Proxmox aracının incelenmesinden çıkan iki yeni KAPALI seçenek. `component.yml` `vars` listesi 100'dan 102'e çıktı (+2). Kırıcı değişiklik yok: yeni seçeneklerin hepsi varsayılan KAPALI/BOŞ.
