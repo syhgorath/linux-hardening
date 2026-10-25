@@ -186,6 +186,9 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_rollback_wiring.py` | Geri alma ağının playbook/rol bağlantısı: arm sırası, başarıda disarm, hatada restore |
 | `test_rollback_playbook.sh` | `playbooks/rollback.yml`: varsayılan yalnızca status; disarm/now yalnızca `--tags` ile; armed iken `changed=1`, değilken `changed=0` |
 | `test_rollback_role.sh` | `hardening_rollback` arm görevleri: zaman aşımı doğrulaması, kapalıyken uyarı, `--check`'te atlanma |
+| `test_apt_secenekleri.py` | apt seçenekleri (varsayılan kapalı): kademeli (phased) güncellemeler dahil `upgrade` (`dist-upgrade` değil) ve yalnızca Debian'da `apt-listbugs` (kanca `-y`, apt'yi bloklamaz) |
+| `test_lynis_son_kalemler.py` | Postfix SMTP banner (yalnızca postfix kuruluysa) ve `/proc` `hidepid=2` (grup, logind drop-in, fstab, yeniden bağlama koşulu) |
+| `test_release_publish.sh` | `scripts/release-publish.sh`: `--dry-run`, ret koşulları (kirli ağaç, CI, HEAD, Release var, Python), gerçek imza ile tam koşu, sahte `gh` ile özet doğrulaması |
 | `test_release_script.sh` | `scripts/release.sh`: gerçek imzalama/doğrulama, reddedilme senaryoları |
 | `test_repo_hygiene.sh`, `test_ip_addresses.py` | Anahtar/token/IP sızıntısı, paket içeriği |
 

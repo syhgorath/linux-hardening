@@ -476,6 +476,24 @@ vars:
     type: list[string]
     default: []
     description: "hardening_proc_hidepid=true iken 'proc' grubuna eklenecek kullanıcılar: root dışında çalışan ve tüm süreçleri görmesi gereken izleme/denetim araçlarının (örn. bir izleme ajanı) kullanıcıları. Boş (varsayılan): kimse eklenmez"
+  - name: hardening_apt_upgrade_phased
+    type: bool
+    default: false
+    warn_if: true                      # Ubuntu'nun kademeli dağıtım güvenlik önlemini atlar
+    description: "false (varsayılan): Ubuntu'nun kademeli (phased) güncellemeleri yükseltilmez (apt'nin kendi davranışı; bu güncellemeler listede kalır ve Lynis PKGS-7392/PKGS-7394 puanını engelleyebilir). true (yalnızca hardening_apt_upgrade=true iken): bunlar da yükseltilir (APT::Get::Always-Include-Phased-Updates). Kademeli dağıtım kötü bir güncellemeyi az sayıda makineye ulaştırmak için bilerek yapılır; atlamak o korumadan vazgeçmektir. Önce snapshot alın"
+  - name: hardening_apt_listbugs
+    type: bool
+    default: false
+    description: "false (varsayılan): kurulmaz. true (yalnızca Debian ailesi: Debian, Proxmox VE, Raspberry Pi OS; Ubuntu 26.04'te paket yok): apt-listbugs kurulur ve kancası `-y` ile yazılır, yani apt'yi ASLA bloklamaz (varsayılan kancası bugs.debian.org'a ulaşılamazsa apt'yi bloklar, ölçüldü). Her apt işleminde Debian hata veritabanını sorgular (ağ gerekir, hata satırları basabilir); Proxmox'un kendi paketleri veritabanında olmadığından yalnızca Debian paketlerinin kritik hatalarını gösterir. Kapatınca paket ve ayar kaldırılmaz"
+  - name: hardening_pve_web_allow_from
+    type: list[cidr]
+    default: []
+    description: "Boş (varsayılan): Proxmox web arayüzü (8006) yalnızca yönetim ağlarından (hardening_ssh_allow_from) açılır, çıktı değişmez. Dolu: bu ağlar (örn. ters vekil/NPM IP'si) yönetim ağlarına EK olarak 8006'ya erişir ([IPSET web]); SSH, ping ve ek portlar yönetim ağlarında kalır. Yalnızca pve_firewall_* eylemleri ve hardening_pve_apply=true ile yazılır. Gerçek Proxmox VE 9'da DENENMEDİ"
+  - name: hardening_pve_web_exclusive
+    type: bool
+    default: false
+    warn_if: true                      # yönetim ağlarından 8006 KAPANIR
+    description: "false (varsayılan). true: 8006 YALNIZCA hardening_pve_web_allow_from'dan açılır, yönetim ağlarından kapanır (SSH, ping ve ek portlar yönetim ağlarında kalır). Liste boşsa ya da kontrol makinesinin adresi listede değilse hiçbir şey yazılmaz (erişim doğrulaması 8006'yı kontrol makinesinden dener). Yanlış liste web arayüzünü keser (SSH açık kalır). Gerçek Proxmox VE 9'da DENENMEDİ. Önce snapshot alın"
   - name: hardening_motd_disable_scripts
     type: list[string]
     default: []

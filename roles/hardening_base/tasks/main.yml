@@ -340,6 +340,29 @@
   failed_when: false
   when: hardening_postfix_banner_set is changed and not ansible_check_mode
 
+# --- apt-listbugs (Debian ailesi: Debian, Proxmox VE, Raspberry Pi OS; Ubuntu'da paket yok; hardening_apt_listbugs, varsayılan KAPALI) ---
+# Varsayılan kancası bugs.debian.org'a ulaşılamazsa apt'yi BLOKLAR (apt çıkış kodu 100; Debian 13 konteynerinde ölçüldü); `-y` ile bloklamaz (hata satırları basar, apt devam eder).
+- name: Say that apt-listbugs is only for Debian
+  ansible.builtin.debug:
+    msg: "NOT (apt-listbugs): hardening_apt_listbugs=true ama bu bir Debian ailesi sistemi değil (apt-listbugs Ubuntu 26.04 depolarında yok); atlandı."
+  when: hardening_apt_listbugs | bool and ansible_facts['distribution'] | default('') != 'Debian'
+
+- name: Install apt-listbugs (never blocks apt)
+  when: hardening_apt_listbugs | bool and ansible_facts['distribution'] | default('') == 'Debian'
+  block:
+    - name: Install apt-listbugs
+      ansible.builtin.apt:
+        name: apt-listbugs
+        state: present
+      register: hardening_apt_listbugs_install
+
+    - name: Make the apt-listbugs hook assume yes (so it never blocks apt)
+      ansible.builtin.lineinfile:
+        path: "{{ hardening_apt_listbugs_conf }}"
+        regexp: '^DPkg::Pre-Install-Pkgs \{"/usr/bin/apt-listbugs( -y)? apt";\};$'
+        line: 'DPkg::Pre-Install-Pkgs {"/usr/bin/apt-listbugs -y apt";};'
+      when: not (ansible_check_mode and hardening_apt_listbugs_install is changed)
+
 # --- Bekleyen paket güncellemeleri (varsayılan KAPALI) ---
 - name: Upgrade the installed packages (apt-get upgrade)
   ansible.builtin.apt:
@@ -347,7 +370,24 @@
     update_cache: true
     cache_valid_time: 3600
   register: hardening_apt_upgrade_result
-  when: hardening_apt_upgrade | bool
+  when: hardening_apt_upgrade | bool and not (hardening_apt_upgrade_phased | bool)
+
+# Ubuntu kademeli (phased) güncellemeleri: apt bunları yükseltmez (güncelleme listede kalır, Lynis PKGS-7392/PKGS-7394 puanını engelleyebilir). hardening_apt_upgrade_phased=true
+# bunları da dahil eder; Ubuntu'nun kademeli dağıtımı bilerek bir güvenlik önlemidir, atlanır. `dist-upgrade` DEĞİL, paket kaldırmaz.
+- name: Refresh the apt package lists (phased upgrade)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: hardening_apt_upgrade | bool and hardening_apt_upgrade_phased | bool
+
+- name: Upgrade the installed packages including phased updates (apt-get upgrade)
+  ansible.builtin.command:
+    argv: [apt-get, -y, -o, Dpkg::Options::=--force-confdef, -o, Dpkg::Options::=--force-confold, -o, APT::Get::Always-Include-Phased-Updates=true, upgrade]
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  register: hardening_apt_upgrade_phased_result
+  changed_when: hardening_apt_upgrade_phased_result.stdout is search('(?m)^[1-9][0-9]* upgraded,')
+  when: hardening_apt_upgrade | bool and hardening_apt_upgrade_phased | bool
 
 - name: Look for a pending reboot after the upgrade
   ansible.builtin.stat:

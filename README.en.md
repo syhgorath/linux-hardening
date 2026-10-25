@@ -189,6 +189,9 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_rollback_wiring.py` | Rollback safety net wiring: arm order, disarm on success, restore on failure |
 | `test_rollback_playbook.sh` | `playbooks/rollback.yml`: default is status only; disarm/now only with `--tags`; `changed=1` when armed, `changed=0` when not |
 | `test_rollback_role.sh` | `hardening_rollback` arm tasks: timeout validation, warning when disabled, skipped in `--check` |
+| `test_apt_secenekleri.py` | apt options (default off): `upgrade` including phased updates (not `dist-upgrade`) and Debian-only `apt-listbugs` (hook `-y`, never blocks apt) |
+| `test_lynis_son_kalemler.py` | Postfix SMTP banner (only if postfix is installed) and `/proc` `hidepid=2` (group, logind drop-in, fstab, remount condition) |
+| `test_release_publish.sh` | `scripts/release-publish.sh`: `--dry-run`, refusal conditions (dirty tree, CI, HEAD, existing Release, Python), full run with a real signature, digest verification with a fake `gh` |
 | `test_release_script.sh` | `scripts/release.sh`: real signing/verification, rejection cases |
 | `test_repo_hygiene.sh`, `test_ip_addresses.py` | key/token/IP leaks, package contents |
 

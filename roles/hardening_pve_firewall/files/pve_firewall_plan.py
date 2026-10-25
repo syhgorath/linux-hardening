@@ -2,7 +2,8 @@
 """Proxmox VE güvenlik duvarı (datacenter `cluster.fw`) planı: YALNIZCA karar verir, hiçbir şeyi yazmaz.
 
 Girdi (argv[1], JSON): clustered (bool), allow_from (liste: ağ/CIDR), client_ip (kontrol makinesinin sunucuya görünen adresi), existing (str ya da null:
-mevcut cluster.fw içeriği; dosya yoksa null), extra_ports (liste: "443/tcp", "8000:8010/udp"), ssh_port (int, varsayılan 22), web_port (int, varsayılan 8006).
+mevcut cluster.fw içeriği; dosya yoksa null), extra_ports (liste: "443/tcp", "8000:8010/udp"), ssh_port (int, varsayılan 22), web_port (int, varsayılan 8006),
+web_allow_from (liste: web arayüzüne ayrıca izin verilen ağlar, örn. ters vekil; varsayılan boş), web_exclusive (bool: true ise web portu YALNIZCA web_allow_from'dan açılır, yönetim ağlarından kapanır).
 Çıktı (stdout, JSON): status (apply|noop|refuse), reasons (liste), content (enable: 1 ile tam dosya), content_disabled (aynı dosya, enable: 0), error.
 
 Güvenlik: küme, boş/geçersiz allow_from, kontrol makinesini kapsamayan allow_from ve kullanıcının kendi cluster.fw dosyası (işaretimiz yok) durumlarında HİÇBİR ŞEY yazılmaz
@@ -20,16 +21,20 @@ def valid_port(p):
     return 1 <= p <= 65535
 
 
-def build(allow_nets, extra, ssh_port, web_port, enable):
+def build(allow_nets, extra, ssh_port, web_port, enable, web_nets=(), web_exclusive=False):
     # Proxmox, `management` kümesine düğümün otomatik algıladığı yerel ağı (alias local_network) HER ZAMAN ekler; alias'ı biz tanımlarsak yalnızca bizim ağımız kalır
     # (iç içe Proxmox 9.2'de görüldü). Alias tek bir CIDR alır: IPv4 ağlar öne alınır.
     alias_net = sorted(allow_nets, key=lambda n: (n.version, str(n)))[0]
     lines = [MARKER, "[OPTIONS]", "enable: %d" % enable, "policy_in: DROP", "policy_out: ACCEPT", "", "[ALIASES]", "local_network %s" % alias_net, "", "[IPSET management]"]
     lines += [str(n) for n in allow_nets]
-    lines += ["", "[RULES]",
-              "IN ACCEPT -p tcp -dport %d -source +management" % ssh_port,
-              "IN ACCEPT -p tcp -dport %d -source +management" % web_port,
-              "IN ACCEPT -p icmp -source +management"]
+    if web_nets:
+        lines += ["", "[IPSET web]"] + [str(n) for n in web_nets]
+    web_rules = []
+    if not web_exclusive:
+        web_rules.append("IN ACCEPT -p tcp -dport %d -source +management" % web_port)
+    if web_nets:
+        web_rules.append("IN ACCEPT -p tcp -dport %d -source +web" % web_port)
+    lines += ["", "[RULES]", "IN ACCEPT -p tcp -dport %d -source +management" % ssh_port] + web_rules + ["IN ACCEPT -p icmp -source +management"]
     for proto_port in extra:
         port, proto = proto_port.split("/")
         lines.append("IN ACCEPT -p %s -dport %s -source +management" % (proto, port))
@@ -68,6 +73,27 @@ def decide(cfg):
             refuse("Kontrol makinesinin adresi (%s) hardening_ssh_allow_from içinde değil: güvenlik duvarı bu bağlantıyı keserdi." % client)
     except ValueError:
         refuse("Kontrol makinesinin adresi okunamadı (SSH dışı bağlantı?): erişimin korunduğu doğrulanamadı.")
+    web_nets = []
+    web_allow = cfg.get("web_allow_from") or []
+    web_exclusive = bool(cfg.get("web_exclusive"))
+    if not isinstance(web_allow, list):
+        refuse("hardening_pve_web_allow_from bir liste olmalı.")
+        web_allow = []
+    for a in web_allow:
+        try:
+            web_nets.append(ipaddress.ip_network(str(a), strict=False))
+        except ValueError:
+            refuse("hardening_pve_web_allow_from içinde geçersiz ağ: %r." % (str(a)[:60],))
+    if web_exclusive:
+        if not web_nets:
+            refuse("hardening_pve_web_exclusive=true ama hardening_pve_web_allow_from boş: web arayüzü hiçbir yerden açılmazdı.")
+        else:
+            try:
+                wclient = ipaddress.ip_address(str(cfg.get("client_ip", "")))
+                if not any(wclient in n for n in web_nets if n.version == wclient.version):
+                    refuse("hardening_pve_web_exclusive=true iken kontrol makinesinin adresi (%s) hardening_pve_web_allow_from içinde olmalı: aksi halde web arayüzü (8006) bu bağlantıya kapanır ve erişim doğrulaması başarısız olurdu." % wclient)
+            except ValueError:
+                refuse("Kontrol makinesinin adresi okunamadı: web arayüzü erişiminin korunduğu doğrulanamadı.")
     extra = []
     for e in cfg.get("extra_ports") or []:
         m = PORT_RE.match(str(e))
@@ -87,8 +113,8 @@ def decide(cfg):
         refuse("/etc/pve/firewall/cluster.fw kullanıcıya ait kurallar içeriyor (bu rolün işareti yok): DOKUNULMADI. Kendi kurallarınıza yönetim ağı kuralını elle ekleyin.")
     if res["status"] == "refuse":
         return res
-    res["content"] = build(nets, extra, ssh_port, web_port, 1)
-    res["content_disabled"] = build(nets, extra, ssh_port, web_port, 0)
+    res["content"] = build(nets, extra, ssh_port, web_port, 1, web_nets, web_exclusive)
+    res["content_disabled"] = build(nets, extra, ssh_port, web_port, 0, web_nets, web_exclusive)
     if existing is not None and existing.rstrip("\n") == res["content"].rstrip("\n"):
         res["status"] = "noop"
         res["reasons"].append("cluster.fw zaten istenen içerikte.")
