@@ -60,6 +60,9 @@ check("liste degisince eski blok DEGISTIRILIR (cogaltilmaz)", o["status"] == "ap
 # kaldirma
 o = plan({"remove": True, "existing": "# a\n" + mine + "LISTEN_IP=\"x\"\n"})
 check("remove: yalniz bu rolun blogu kalkar, kullanicinin satirlari korunur", o["status"] == "apply" and BEGIN not in o["content"] and o["content"] == "# a\nLISTEN_IP=\"x\"\n", str(o))
+o = plan({"remove": True, "existing": mine})
+check("remove: blok tek basinaysa dosya SILINMELI (delete true)", o["status"] == "apply" and o["delete"] is True and o["content"].strip() == "", str(o))
+check("remove: kullanicinin satiri varsa dosya SILINMEZ (delete false)", plan({"remove": True, "existing": "# a\n" + mine})["delete"] is False and plan({"remove": True, "existing": mine + 'LISTEN_IP="x"\n'})["delete"] is False)
 check("remove: blok yoksa noop", plan({"remove": True, "existing": "# a\n"})["status"] == "noop" and plan({"remove": True, "existing": None})["status"] == "noop")
 check("bozuk girdi: RED", plan("{")["status"] == "refuse")
 
@@ -74,7 +77,8 @@ check("karar betigi SALT OKUNUR (check_mode false), --check'te yalniz onizleme",
 apply_blk = inner["Apply the pveproxy access limit and verify the web UI"]
 ib = {t["name"]: t for t in apply_blk["block"]}
 check("yazma yalniz plan apply iken ve --check degilken", "== 'apply'" in apply_blk["when"] and "not ansible_check_mode" in apply_blk["when"])
-check("sira: yaz -> yeniden baslat -> kontrol makinesinden 8006 dogrula", list(ib) == ["Write the pveproxy defaults file", "Restart pveproxy", "Verify the web UI from the controller (a NEW connection to the web port)"])
+check("sira: (blok tek basinaysa sil) -> yaz -> yeniden baslat -> kontrol makinesinden 8006 dogrula", list(ib) == ["Remove the pveproxy defaults file (only this role's block was in it)", "Write the pveproxy defaults file", "Restart pveproxy", "Verify the web UI from the controller (a NEW connection to the web port)"])
+check("silme ve yazma birbirini DISLAR (delete bayragi)", "plan.delete | bool" in str(ib["Remove the pveproxy defaults file (only this role's block was in it)"]["when"]) and "not (hardening_pve_pveproxy_plan.delete" in str(ib["Write the pveproxy defaults file"]["when"]))
 vf = ib["Verify the web UI from the controller (a NEW connection to the web port)"]
 check("dogrulama kontrol makinesinden (delegate_to localhost), 8006, HTTP 200", vf["delegate_to"] == "localhost" and ":8006/" in vf["ansible.builtin.uri"]["url"] and vf["ansible.builtin.uri"]["status_code"] == 200)
 rs = {t["name"]: t for t in apply_blk["rescue"]}
@@ -106,6 +110,8 @@ rc, out, txt4 = run_role({"hardening_pve_pveproxy_allow_from": ["192.0.2.0/24"]}
 check("kullanicinin ALLOW_FROM'u -> rol DURUR, dosya DEGISMEZ", rc != 0 and txt4 == 'ALLOW_FROM="10.0.0.0/8"\n', out[-300:])
 rc, out, txt5 = run_role({"hardening_pve_pveproxy_allow_from": []}, "# a\n" + mine + "LISTEN_IP=\"x\"\n")
 check("liste bosalinca blok kaldirilir, kullanicinin satirlari korunur", rc == 0 and BEGIN not in txt5 and 'LISTEN_IP="x"' in txt5, out[-300:])
+rc, out, txt5b = run_role({"hardening_pve_pveproxy_allow_from": []}, mine)
+check("liste bosalinca blok TEK BASINAYSA dosya SILINIR (bos dosya birakilmaz; sshpocket 0.8.2 notu)", rc == 0 and txt5b is None, out[-300:])
 rc, out, txt6 = run_role({"hardening_pve_pveproxy_allow_from": []}, "# a\n")
 check("liste bos ve blok yok: hicbir sey degismez (changed=0)", rc == 0 and "changed=0" in out and txt6 == "# a\n", out[-200:])
 rc, out, txt7 = run_role({"hardening_platform": "generic", "hardening_pve_pveproxy_allow_from": ["192.0.2.0/24"]}, None)

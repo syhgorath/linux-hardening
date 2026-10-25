@@ -5,6 +5,12 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- `hardening_pve_pveproxy_allow_from` liste boşaltılınca (kaldırma) bu rolün bloğu dışında içerik yoksa `/etc/default/pveproxy` artık SİLİNİR (sshpocket 3.6.12 gerçek Proxmox turunda dosya boş kalıyordu; zararsızdı). Dosyada başka içerik varsa dosya korunur, yalnızca blok kalkar. Önizleme "dosya silinirdi" der. `test_pveproxy_siniri.py`
+
+### Belgeler
+- sshpocket 3.6.12 gerçek Proxmox VE 9 turu (tek düğüm, boş VM) işlendi: `hardening_kernel_modules_disabled` reddi, `hardening_fail2ban_pve_web` (ban doğrulandı, `pve-firewall` açıkken banlı IP'den 8006 reddi) ve `hardening_pve_pveproxy_allow_from` (`::1/128` kabul edildi, kontrol makinesi koruması, kullanıcı satırı koruması) ✅. Lynis Proxmox 83. Misafirli Proxmox, Docker, Pi, HA denenmedi
+
 ### Belgeler
 - Kapsamlı "tamam ama tamam değil" denetimi: `README.md`/`README.en.md` test tablosuna 16 eksik test dosyası eklendi; `docs/design/proxmox-host.md` başlığı ve durum bloğu güncellendi ("iskelet, işlevsiz" yanlıştı, Proxmox sertleştirmesi v0.6.0'dan beri var); `pve_report.py` ve `playbooks/pve-report.yml` yorumlarındaki "henüz sertleştirmez" ifadesi düzeltildi; kullanılmayan iskelet roller (`hardening_pve_access`, `hardening_preflight/tasks/platform.yml`) "KULLANILMIYOR" olarak işaretlendi (silinmedi). Kod davranışı değişmedi
 
