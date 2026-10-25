@@ -1,0 +1,118 @@
+# Proxmox VE web arayüzü (pveproxy) erişim sınırı. Karar mantığı files/pveproxy_plan.py (salt okunur, --check'te de çalışır). Yalnızca hardening_platform=proxmox-host.
+# Yazma sırası: eski içeriği belleğe al -> yaz -> pveproxy'yi yeniden başlat -> kontrol makinesinden 8006'yı doğrula; doğrulanamazsa ESKİ içerik geri yazılır, pveproxy yeniden başlar ve rol durur.
+- name: Say that the pveproxy access limit needs a Proxmox VE host
+  ansible.builtin.debug:
+    msg: "NOT (pveproxy): hardening_pve_pveproxy_allow_from dolu ama bu bir Proxmox VE hostu değil (hardening_platform=proxmox-host gerekir); pveproxy sınırı yazılmadı."
+  when: hardening_pve_pveproxy_allow_from | length > 0 and hardening_platform | default('generic') != 'proxmox-host'
+
+- name: Limit the pveproxy web access
+  when: hardening_platform | default('generic') == 'proxmox-host'
+  block:
+    - name: Look for the pveproxy defaults file
+      ansible.builtin.stat:
+        path: "{{ hardening_pve_pveproxy_file }}"
+      register: hardening_pve_pveproxy_stat
+      check_mode: false
+
+    - name: Read the pveproxy defaults file
+      ansible.builtin.slurp:
+        src: "{{ hardening_pve_pveproxy_file }}"
+      register: hardening_pve_pveproxy_slurp
+      when: hardening_pve_pveproxy_stat.stat.exists
+      check_mode: false
+
+    - name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
+      ansible.builtin.command: printenv SSH_CONNECTION
+      become: false
+      register: hardening_pve_pveproxy_conn
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Decide what to write (read-only)
+      ansible.builtin.script:
+        cmd: "pveproxy_plan.py {{ hardening_pve_pveproxy_input | to_json | quote }}"
+        executable: python3
+      vars:
+        hardening_pve_pveproxy_input:
+          allow_from: "{{ hardening_pve_pveproxy_allow_from }}"
+          remove: "{{ hardening_pve_pveproxy_allow_from | length == 0 }}"
+          client_ip: "{{ (hardening_pve_pveproxy_conn.stdout | default('')).split() | first | default('') }}"
+          existing: "{{ (hardening_pve_pveproxy_slurp.content | b64decode) if hardening_pve_pveproxy_stat.stat.exists else none }}"
+      register: hardening_pve_pveproxy_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the pveproxy plan
+      ansible.builtin.set_fact:
+        hardening_pve_pveproxy_plan: "{{ hardening_pve_pveproxy_raw.stdout | from_json }}"
+        hardening_pve_pveproxy_before: "{{ (hardening_pve_pveproxy_slurp.content | b64decode) if hardening_pve_pveproxy_stat.stat.exists else none }}"
+
+    - name: Refuse and write nothing
+      ansible.builtin.fail:
+        msg: "pveproxy erişim sınırı yazılmadı: {{ hardening_pve_pveproxy_plan.reasons | join(' ') }}{{ hardening_pve_pveproxy_plan.error }}"
+      when: hardening_pve_pveproxy_plan.status == 'refuse'
+
+    - name: Show what would be written (--check)
+      ansible.builtin.debug:
+        msg: "pveproxy ÖNİZLEME (yazılmadı), {{ hardening_pve_pveproxy_file }}:\n{{ hardening_pve_pveproxy_plan.content }}"
+      when: hardening_pve_pveproxy_plan.status == 'apply' and ansible_check_mode
+
+    - name: Apply the pveproxy access limit and verify the web UI
+      when: hardening_pve_pveproxy_plan.status == 'apply' and not ansible_check_mode
+      block:
+        - name: Write the pveproxy defaults file
+          ansible.builtin.copy:
+            dest: "{{ hardening_pve_pveproxy_file }}"
+            content: "{{ hardening_pve_pveproxy_plan.content }}"
+            owner: "{{ hardening_pve_pveproxy_owner }}"
+            group: "{{ hardening_pve_pveproxy_group }}"
+            mode: "0644"
+
+        - name: Restart pveproxy
+          ansible.builtin.systemd:
+            name: pveproxy
+            state: restarted
+          when: hardening_pve_pveproxy_restart | bool
+
+        - name: Verify the web UI from the controller (a NEW connection to the web port)
+          delegate_to: localhost
+          become: false
+          ansible.builtin.uri:
+            url: "https://{{ hostvars[inventory_hostname]['ansible_host'] | default(inventory_hostname) }}:8006/"
+            validate_certs: false
+            status_code: 200
+            timeout: 10
+          register: hardening_pve_pveproxy_check
+          retries: 3
+          delay: 3
+          until: hardening_pve_pveproxy_check.status | default(0) == 200
+          when: hardening_pve_pveproxy_verify | bool
+      rescue:
+        - name: Restore the previous pveproxy defaults file
+          ansible.builtin.copy:
+            dest: "{{ hardening_pve_pveproxy_file }}"
+            content: "{{ hardening_pve_pveproxy_before }}"
+            owner: "{{ hardening_pve_pveproxy_owner }}"
+            group: "{{ hardening_pve_pveproxy_group }}"
+            mode: "0644"
+          when: hardening_pve_pveproxy_before is not none
+
+        - name: Remove the pveproxy defaults file (it did not exist before)
+          ansible.builtin.file:
+            path: "{{ hardening_pve_pveproxy_file }}"
+            state: absent
+          when: hardening_pve_pveproxy_before is none
+
+        - name: Restart pveproxy with the previous settings
+          ansible.builtin.systemd:
+            name: pveproxy
+            state: restarted
+          failed_when: false
+          when: hardening_pve_pveproxy_restart | bool
+
+        - name: Stop after the failed web UI verification
+          ansible.builtin.fail:
+            msg: >-
+              pveproxy erişim sınırı sonrası web arayüzü (8006) kontrol makinesinden doğrulanamadı; /etc/default/pveproxy ESKİ HALİNE döndürüldü ve pveproxy yeniden başlatıldı.
+              Kontrol makinesinin adresinin hardening_pve_pveproxy_allow_from içinde olduğundan emin olun.
