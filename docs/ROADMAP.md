@@ -18,7 +18,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.7.0 yayını | Yayımlandı (Proxmox güvenlik duvarı için `pve_firewall_preview`/`pve_firewall_apply` eylemleri, CIS Level 1 Server'da kalan son 3 madde, opt-in `hardening_auditd_cis_l2`, `hardening_motd_disable_scripts`) |
 | v0.7.1 | Yayımlanmadı: içeriği v0.8.0'a katıldı |
 | v0.8.0 yayını | Yayımlandı (Lynis puanı için seçenekler, `log_martians` ve `pve_firewall_preview` düzeltmeleri, CIS Level 2 seçenekleri: auditd/AIDE, ufw giden DROP, AppArmor, derleyici kısıtı, rkhunter; `docs/deneme-matrisi.md`) |
-| v0.8.1 yayını | Hazırlandı (`kernel_modules_disabled` + ufw önyükleme modül listesi, `verify_access` ssh-agent ipucu ve ek bağımsız değişken, manifest sınırları, deneme matrisi) |
+| v0.8.1 yayını | Yayımlandı (`kernel_modules_disabled` + ufw önyükleme modül listesi, `verify_access` ssh-agent ipucu ve ek bağımsız değişken, manifest sınırları, deneme matrisi) |
+| v0.8.2 yayını | Hazırlandı (Proxmox'ta `kernel_modules_disabled` reddi, `hardening_fail2ban_pve_web`, `hardening_pve_pveproxy_allow_from`) |
 
 ## Orta
 | İş | Not |
