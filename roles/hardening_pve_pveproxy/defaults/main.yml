@@ -1,0 +1,11 @@
+# Proxmox VE web arayüzü (pveproxy) erişim sınırı (/etc/default/pveproxy: DENY_FROM="all", ALLOW_FROM=<liste>, POLICY="allow"). Varsayılan BOŞ = hiçbir şey yazılmaz
+# (daha önce yazılmış blok varsa kaldırılır). Dolu iken yalnızca bu IP/CIDR'ler (ve yerel döngü) 8006'ya bağlanabilir; pve-firewall'dan BAĞIMSIZ bir savunmadır (firewall kapalı/bozuk
+# olsa bile uygular). Kontrol makinesinin adresi listede olmalıdır, değilse hiçbir şey yazılmaz. Yazdıktan sonra pveproxy yeniden başlatılır ve kontrol makinesinden 8006 doğrulanır;
+# doğrulanamazsa dosya eski haline döner ve pveproxy yeniden başlatılır. Yalnızca hardening_platform=proxmox-host. Ters vekil (reverse proxy) kullanıyorsanız vekilin IP'sini de yazın.
+hardening_pve_pveproxy_allow_from: []
+# İç ayarlar (testlerde değiştirilir).
+hardening_pve_pveproxy_file: /etc/default/pveproxy
+hardening_pve_pveproxy_restart: true
+hardening_pve_pveproxy_verify: true
+hardening_pve_pveproxy_owner: root
+hardening_pve_pveproxy_group: root

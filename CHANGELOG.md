@@ -6,6 +6,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_pve_pveproxy_allow_from` (varsayılan **BOŞ** = hiçbir şey yazmaz; yeni rol `hardening_pve_pveproxy`, `pveproxy` etiketi, yalnızca `hardening_platform=proxmox-host`): `/etc/default/pveproxy`'ye `DENY_FROM="all"`, `ALLOW_FROM=<liste + yerel döngü>`, `POLICY="allow"` yazar; `pve-firewall`'dan bağımsız ikinci savunma. Kontrol makinesi listede değilse, liste geçersizse ya da kullanıcının kendi `ALLOW_FROM`/`DENY_FROM`/`POLICY` satırları varsa HİÇBİR ŞEY yazılmaz (karar betiği `pveproxy_plan.py`, salt okunur); yazdıktan sonra `pveproxy` yeniden başlatılır ve kontrol makinesinden 8006 doğrulanır, doğrulanamazsa eski içerik geri yazılır (dosya yoksa silinir) ve rol durur; liste boşalınca blok kaldırılır. Eski bir kişisel Proxmox aracı incelenirken fark edilen boşluk (kod kopyalanmadı). `test_pveproxy_siniri.py`; gerçek Proxmox VE 9'da DENENMEDİ
+
+### Eklendi
 - `hardening_fail2ban_pve_web` (varsayılan **KAPALI**, `warn_if`; yalnızca `hardening_platform=proxmox-host`): Proxmox VE web arayüzü/API için `proxmox-web` fail2ban jail'i (8006'ya yönelik başarısız oturum açmalar, `pvedaemon` günlüğü; `pve-firewall`'dan bağımsız ikinci savunma). Yapılandırma `fail2ban-client -t` ile doğrulanır, geçersizse dosyalar silinir ve rol durur; Proxmox olmayan hostta NOT verir; kapatınca dosyalar silinir. Eski bir kişisel Proxmox aracı incelenirken fark edilen bir boşluktu (kod kopyalanmadı). `test_proxmox_web_jail.py`; konteynerde gerçek `fail2ban-regex` ve `fail2ban-client -t` temiz; gerçek Proxmox VE 9 günlüğünde DENENMEDİ
 
 ### Düzeltildi
