@@ -19,6 +19,87 @@
         label: "{{ item.item }}"
       when: item.stat.exists and item.stat.isreg
 
+# /proc hidepid=2 (Lynis FILE-6344; hardening_proc_hidepid, varsayılan KAPALI). Sıra: grup -> kullanıcılar -> systemd-logind drop-in (+ yeniden başlatma) -> fstab -> yeniden bağlama.
+# logind CAP_SYS_PTRACE taşımaz, hidepid=2 altında oturumları izleyemezdi: gruba eklenir ve yeniden bağlamadan ÖNCE yeniden başlatılır.
+- name: Hide other users' processes in /proc (hidepid=2)
+  when: hardening_proc_hidepid | bool
+  block:
+    - name: Create the group that may still see all processes
+      ansible.builtin.group:
+        name: "{{ hardening_proc_hidepid_group }}"
+        system: true
+        state: present
+
+    - name: Add the listed users to that group
+      ansible.builtin.user:
+        name: "{{ item }}"
+        groups: "{{ hardening_proc_hidepid_group }}"
+        append: true
+      loop: "{{ hardening_proc_hidepid_users }}"
+
+    - name: Make sure the systemd-logind drop-in directory exists
+      ansible.builtin.file:
+        path: /etc/systemd/system/systemd-logind.service.d
+        state: directory
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "0755"
+
+    - name: Let systemd-logind see all processes (drop-in)
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/systemd-logind.service.d/60-hardening-hidepid.conf
+        owner: "{{ hardening_files_owner }}"
+        group: "{{ hardening_files_group }}"
+        mode: "0644"
+        content: |
+          # Ansible tarafından yönetilir: /proc hidepid=2 iken logind tüm süreçleri görebilsin.
+          [Service]
+          SupplementaryGroups={{ hardening_proc_hidepid_group }}
+      register: hardening_proc_logind_dropin
+
+    - name: Reload systemd and restart systemd-logind
+      ansible.builtin.systemd:
+        name: systemd-logind
+        state: restarted
+        daemon_reload: true
+      when: hardening_proc_logind_dropin is changed and not ansible_check_mode
+
+    - name: Find the group id
+      ansible.builtin.getent:
+        database: group
+        key: "{{ hardening_proc_hidepid_group }}"
+      when: not ansible_check_mode
+
+    - name: Make the /proc mount options persistent (/etc/fstab)
+      ansible.builtin.lineinfile:
+        path: "{{ hardening_proc_fstab }}"
+        regexp: '^\s*proc\s+/proc\s'
+        line: "proc /proc proc defaults,hidepid=2,gid={{ ansible_facts['getent_group'][hardening_proc_hidepid_group][1] }} 0 0"
+      when: not ansible_check_mode
+
+    - name: Read the current /proc mount options (read-only)
+      ansible.builtin.command: findmnt -no OPTIONS /proc
+      register: hardening_proc_options
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Remount /proc with hidepid=2
+      ansible.builtin.command: "mount -o remount,hidepid=2,gid={{ ansible_facts['getent_group'][hardening_proc_hidepid_group][1] }} /proc"  # noqa: command-instead-of-module
+      register: hardening_proc_remount
+      changed_when: true
+      failed_when: false
+      when:
+        - not ansible_check_mode
+        - not (hardening_proc_options.stdout is search('hidepid=(2|invisible)')) or not (hardening_proc_options.stdout is search('gid=' ~ ansible_facts['getent_group'][hardening_proc_hidepid_group][1] ~ '(,|$)'))
+
+    - name: Warn that /proc could not be remounted
+      ansible.builtin.debug:
+        msg: >-
+          UYARI (proc): /proc hidepid=2 ile yeniden bağlanamadı ({{ (hardening_proc_remount.stderr | default('')) | trim }}). Konteyner/LXC içinde ya da yetersiz yetkide olabilir;
+          /etc/fstab satırı yazıldı, yeniden başlatmada uygulanır.
+      when: hardening_proc_remount is not skipped and hardening_proc_remount.rc | default(0) != 0
+
 # Dosya izinleri (CIS 7.1.x, 5.1.1-5.1.4, 2.4.x, 1.4.2, 1.6.6). Yalnızca fazla izni kaldırır (sembolik modlar), mevcut dosyalara dokunur, yenisini oluşturmaz.
 # Geri alma güvenlik ağı bunları geri almaz (izinler yalnızca sıkılaşır). Kapsam: docs/cis-esleme.md.
 - name: File permissions (CIS)

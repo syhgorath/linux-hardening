@@ -81,3 +81,12 @@ hardening_restrict_compilers_paths:
   - /usr/bin/g++
   - /usr/bin/clang
   - /usr/bin/clang++
+
+# false (varsayılan, warn_if): true iken /proc `hidepid=2` ile bağlanır (Lynis FILE-6344, +3 puan): kullanıcılar başkalarının süreçlerini GÖRMEZ (root görür). Süreçleri okuması gereken
+# hizmetler için bir grup (hardening_proc_hidepid_group) açılır ve `gid=` ile bağlanır: o gruptakiler tüm süreçleri görür. systemd-logind bu gruba drop-in ile eklenir (CAP_SYS_PTRACE'i yoktur).
+# İzleme/denetim aracı olarak root dışında çalışan hizmetlerin kullanıcılarını hardening_proc_hidepid_users listesine yazın. Kalıcılık /etc/fstab satırıyla. Kapatınca geri alınmaz
+# (satırı silip `mount -o remount,hidepid=0 /proc`). Konteyner/LXC içinde /proc yeniden bağlanamazsa UYARI verir.
+hardening_proc_hidepid: false
+hardening_proc_hidepid_group: proc
+hardening_proc_hidepid_users: []
+hardening_proc_fstab: /etc/fstab

@@ -5,6 +5,10 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_postfix_banner` (varsayılan **AÇIK**; yalnızca postfix kuruluysa): SMTP banner'ı `$myhostname ESMTP` yapılır (Lynis MAIL-8818 uyarısı; Proxmox VE'de postfix kalır). Ubuntu'da (MTA `dma`) atlanır
+- `hardening_proc_hidepid` + `hardening_proc_hidepid_users` (varsayılan **KAPALI**, `warn_if`): `/proc` `hidepid=2` (Lynis FILE-6344, +3 puan). `proc` grubu + `gid=`, `systemd-logind` için drop-in (logind `CAP_SYS_PTRACE` taşımaz; yeniden bağlamadan ÖNCE yeniden başlatılır), `/etc/fstab` satırı, `mount -o remount`; konteynerde yeniden bağlama başarısızsa UYARI. Ayrıcalıklı Ubuntu 26.04 konteynerinde gerçek davranış ölçüldü; yeniden başlatma sonrası kalıcılık ve Proxmox'ta DENENMEDİ. `test_lynis_son_kalemler.py`
+
 ### Düzeltildi
 - `hardening_pve_pveproxy_allow_from` liste boşaltılınca (kaldırma) bu rolün bloğu dışında içerik yoksa `/etc/default/pveproxy` artık SİLİNİR (sshpocket 3.6.12 gerçek Proxmox turunda dosya boş kalıyordu; zararsızdı). Dosyada başka içerik varsa dosya korunur, yalnızca blok kalkar. Önizleme "dosya silinirdi" der. `test_pveproxy_siniri.py`
 
