@@ -1,3 +1,16 @@
+# kernel.modules_disabled=1 bir hipervizörde KULLANILAMAZ (sshpocket 0.8.1 turu, gerçek Proxmox VM'i): LXC (veth, overlay), KVM/vhost, bridge/tun gibi modüller konteyner/VM başlarken
+# istek üzerine yüklenir ve kilitten sonra yüklenemez ("ip link add type veth: Unknown device type"); proxmox-kernel kara listesi softdog'u da engeller (watchdog-mux FAILED, HA düğümü
+# fence edemez). Önyükleme modül listesi yalnızca kilit anında yüklü olanları kapsar. Bu yüzden Proxmox'ta seçenek REDDEDİLİR (hiçbir şey yazılmaz).
+- name: Refuse the module lock on a Proxmox VE host
+  ansible.builtin.assert:
+    that: >-
+      not (hardening_kernel_modules_disabled | bool
+      and (hardening_platform | default('generic') == 'proxmox-host' or hardening_is_proxmox | default(false) | bool))
+    fail_msg: >-
+      hardening_kernel_modules_disabled=true Proxmox VE hostunda DESTEKLENMEZ ve hiçbir şey yazılmadı: LXC (veth, overlay), KVM/vhost, bridge/tun gibi modüller konteyner/VM başlarken
+      yüklenir ve kilitten sonra yüklenemez; proxmox-kernel kara listesi softdog'u da engeller (HA düğümü fence edemez). Seçeneği false bırakın.
+    quiet: true
+
 - name: Apply sysctl hardening
   ansible.builtin.template:
     src: sysctl.conf.j2

@@ -11,6 +11,7 @@ hardening_kernel_extra_sysctl: true
 # false (varsayılan, warn_if): true iken kernel.modules_disabled=1 yazılır (Lynis KRNL-6000). YENİDEN BAŞLATMAYA KADAR GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez
 # (Docker overlay/br_netfilter, USB, ağ/ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez; yeniden başlatma gerekir.
 hardening_kernel_modules_disabled: false
+# Proxmox VE hostunda (hardening_platform=proxmox-host) true REDDEDİLİR: LXC/KVM/bridge/softdog modülleri istek üzerine yüklenir ve kilitten sonra yüklenemez.
 # hardening_kernel_modules_disabled=true iken, şu an yüklü modüllere EK olarak önyüklemede kilitten önce yüklenecek modüller (ufw/netfilter ve binfmt_misc). ufw bunlar olmadan
 # yeniden başlatmada BAŞLAMAZ ve güvenlik duvarı sessizce kapalı kalır (gerçek Ubuntu VM'inde görüldü). Yeniden başlatmadan sonra `ufw status` ve `systemctl --failed` ile doğrulayın.
 hardening_kernel_preload_modules:
