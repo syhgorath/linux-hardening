@@ -5,14 +5,18 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
-### Eklendi
-- `hardening_pve_pveproxy_allow_from` (varsayılan **BOŞ** = hiçbir şey yazmaz; yeni rol `hardening_pve_pveproxy`, `pveproxy` etiketi, yalnızca `hardening_platform=proxmox-host`): `/etc/default/pveproxy`'ye `DENY_FROM="all"`, `ALLOW_FROM=<liste + yerel döngü>`, `POLICY="allow"` yazar; `pve-firewall`'dan bağımsız ikinci savunma. Kontrol makinesi listede değilse, liste geçersizse ya da kullanıcının kendi `ALLOW_FROM`/`DENY_FROM`/`POLICY` satırları varsa HİÇBİR ŞEY yazılmaz (karar betiği `pveproxy_plan.py`, salt okunur); yazdıktan sonra `pveproxy` yeniden başlatılır ve kontrol makinesinden 8006 doğrulanır, doğrulanamazsa eski içerik geri yazılır (dosya yoksa silinir) ve rol durur; liste boşalınca blok kaldırılır. Eski bir kişisel Proxmox aracı incelenirken fark edilen boşluk (kod kopyalanmadı). `test_pveproxy_siniri.py`; gerçek Proxmox VE 9'da DENENMEDİ
+## [0.8.2] - 2026-10-25
 
-### Eklendi
-- `hardening_fail2ban_pve_web` (varsayılan **KAPALI**, `warn_if`; yalnızca `hardening_platform=proxmox-host`): Proxmox VE web arayüzü/API için `proxmox-web` fail2ban jail'i (8006'ya yönelik başarısız oturum açmalar, `pvedaemon` günlüğü; `pve-firewall`'dan bağımsız ikinci savunma). Yapılandırma `fail2ban-client -t` ile doğrulanır, geçersizse dosyalar silinir ve rol durur; Proxmox olmayan hostta NOT verir; kapatınca dosyalar silinir. Eski bir kişisel Proxmox aracı incelenirken fark edilen bir boşluktu (kod kopyalanmadı). `test_proxmox_web_jail.py`; konteynerde gerçek `fail2ban-regex` ve `fail2ban-client -t` temiz; gerçek Proxmox VE 9 günlüğünde DENENMEDİ
+v0.8.1'den sonra, **Proxmox VE** tarafı: sshpocket 3.6.11 gerçek Proxmox turunun bulgusu ve eski bir kişisel Proxmox aracının incelenmesinden çıkan iki yeni KAPALI seçenek. `component.yml` `vars` listesi 100'dan 102'e çıktı (+2). Kırıcı değişiklik yok: yeni seçeneklerin hepsi varsayılan KAPALI/BOŞ.
+**Önemli:** `hardening_kernel_modules_disabled=true` artık Proxmox VE hostunda REDDEDİLİR (v0.8.1'de Proxmox'ta LXC ağı kurulamıyor ve `watchdog-mux` düşüyordu). Ubuntu'da davranış değişmedi.
+**Denenmeyenler:** `hardening_fail2ban_pve_web` ve `hardening_pve_pveproxy_allow_from` gerçek Proxmox VE 9'da denenmedi; ayrıca `modules_disabled` reddinin gerçek Proxmox'ta `--check` ile çalıştığı. Denenme durumu `docs/deneme-matrisi.md`'dedir.
 
 ### Düzeltildi
 - **`hardening_kernel_modules_disabled=true` Proxmox VE hostunda artık REDDEDİLİR** (sshpocket 3.6.11, gerçek Proxmox VM'i, v0.8.1): önyükleme modül listesi yalnızca kilit anında yüklü modülleri kapsar; hiç misafir çalışmamış bir hipervizörde veth/tun/bridge/KVM modülleri yoktur (`ip link add type veth`: "Unknown device type", LXC ağı kurulamaz) ve proxmox-kernel kara listesi softdog'u `systemd-modules-load`'a rağmen engeller (`watchdog-mux` FAILED, HA düğümü fence edemez). Rol hiçbir şey yazmadan durur ve nedenini söyler (`--check`'te de). Ubuntu'da v0.8.1 düzeltmesi gerçek VM'de doğrulandı. `test_modul_onyukleme.py`
+
+### Eklendi
+- `hardening_pve_pveproxy_allow_from` (varsayılan **BOŞ** = hiçbir şey yazmaz; yeni rol `hardening_pve_pveproxy`, `pveproxy` etiketi, yalnızca `hardening_platform=proxmox-host`): `/etc/default/pveproxy`'ye `DENY_FROM="all"`, `ALLOW_FROM=<liste + yerel döngü>`, `POLICY="allow"` yazar; `pve-firewall`'dan bağımsız ikinci savunma. Kontrol makinesi listede değilse, liste geçersizse ya da kullanıcının kendi `ALLOW_FROM`/`DENY_FROM`/`POLICY` satırları varsa HİÇBİR ŞEY yazılmaz (karar betiği `pveproxy_plan.py`, salt okunur); yazdıktan sonra `pveproxy` yeniden başlatılır ve kontrol makinesinden 8006 doğrulanır, doğrulanamazsa eski içerik geri yazılır (dosya yoksa silinir) ve rol durur; liste boşalınca blok kaldırılır. Eski bir kişisel Proxmox aracı incelenirken fark edilen boşluk (kod kopyalanmadı). `test_pveproxy_siniri.py`; gerçek Proxmox VE 9'da DENENMEDİ
+- `hardening_fail2ban_pve_web` (varsayılan **KAPALI**, `warn_if`; yalnızca `hardening_platform=proxmox-host`): Proxmox VE web arayüzü/API için `proxmox-web` fail2ban jail'i (8006'ya yönelik başarısız oturum açmalar, `pvedaemon` günlüğü; `pve-firewall`'dan bağımsız ikinci savunma). Yapılandırma `fail2ban-client -t` ile doğrulanır, geçersizse dosyalar silinir ve rol durur; Proxmox olmayan hostta NOT verir; kapatınca dosyalar silinir. Eski bir kişisel Proxmox aracı incelenirken fark edilen bir boşluktu (kod kopyalanmadı). `test_proxmox_web_jail.py`; konteynerde gerçek `fail2ban-regex` ve `fail2ban-client -t` temiz; gerçek Proxmox VE 9 günlüğünde DENENMEDİ
 
 ## [0.8.1] - 2026-10-24
 
@@ -283,7 +287,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.8.1...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/syhgorath/linux-hardening/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/syhgorath/linux-hardening/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/syhgorath/linux-hardening/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/syhgorath/linux-hardening/compare/v0.6.0...v0.7.0
