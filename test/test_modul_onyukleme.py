@@ -107,6 +107,15 @@ for stderr, want in (("Received disconnect: Too many authentication failures", T
 rc, out = play([{"ansible.builtin.debug": {"msg": "OUT=" + fm}}], vars_={})
 check("new_connection tanimsizken (baska hata) mesaj yine uretilir", rc == 0 and "ÖNCEKİ DURUMA DÖNÜLDÜ" in out, out[-200:])
 
+# ---- Proxmox'ta modul kilidi REDDEDILIR (sshpocket 0.8.1 turu: veth/KVM/bridge/softdog yuklenemez) ----
+ref = by["Refuse the module lock on a Proxmox VE host"]
+check("Proxmox reddi: sysctl yazilmadan ONCE", names.index("Refuse the module lock on a Proxmox VE host") < names.index("Apply sysctl hardening"))
+for platform, is_pve, lock, ok in (("generic", False, True, True), ("generic", False, False, True), ("proxmox-host", True, False, True), ("proxmox-host", True, True, False), ("raspberry-pi", False, True, True), ("generic", True, True, False)):
+    rc, out = play([ref], extra={"hardening_platform": platform, "hardening_is_proxmox": is_pve, "hardening_kernel_modules_disabled": lock})
+    check(f"platform={platform} proxmox={is_pve} modul_kilidi={lock} -> {'kabul' if ok else 'RED'}", (rc == 0) == ok, out[-200:])
+rc, out = play([ref], extra={"hardening_platform": "proxmox-host", "hardening_kernel_modules_disabled": True})
+check("ret mesaji veth/softdog nedenini ve 'hicbir sey yazilmadi'yi soyler", rc != 0 and "softdog" in out and "veth" in out and "hiçbir şey yazılmadı" in out, out[-300:])
+
 comp = load("component.yml")
 cv = {v["name"]: v for v in comp["vars"] if isinstance(v, dict)}
 check("component.yml: hardening_ssh_max_sessions min 1 max 10", (cv["hardening_ssh_max_sessions"].get("min"), cv["hardening_ssh_max_sessions"].get("max")) == (1, 10))

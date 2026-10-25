@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **`hardening_kernel_modules_disabled=true` Proxmox VE hostunda artık REDDEDİLİR** (sshpocket 3.6.11, gerçek Proxmox VM'i, v0.8.1): önyükleme modül listesi yalnızca kilit anında yüklü modülleri kapsar; hiç misafir çalışmamış bir hipervizörde veth/tun/bridge/KVM modülleri yoktur (`ip link add type veth`: "Unknown device type", LXC ağı kurulamaz) ve proxmox-kernel kara listesi softdog'u `systemd-modules-load`'a rağmen engeller (`watchdog-mux` FAILED, HA düğümü fence edemez). Rol hiçbir şey yazmadan durur ve nedenini söyler (`--check`'te de). Ubuntu'da v0.8.1 düzeltmesi gerçek VM'de doğrulandı. `test_modul_onyukleme.py`
+
 ## [0.8.1] - 2026-10-24
 
 v0.8.0'dan sonra, sshpocket 3.6.10 gerçek VM turunun bulguları. **Önemli:** `hardening_kernel_modules_disabled=true` iken ufw yeniden başlatmada AÇILMIYORDU (güvenlik duvarı sessizce kapalı kalıyordu); bu seçeneği deneyecekseniz bu sürümü kullanın ve yeniden başlattıktan sonra `ufw status` ile doğrulayın. Kırıcı değişiklik yok; seçeneğin varsayılanı hâlâ KAPALI.

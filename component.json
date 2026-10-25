@@ -257,7 +257,7 @@
       "type": "bool",
       "default": false,
       "warn_if": true,
-      "description": "false (varsayılan): yazılmaz. true: kernel.modules_disabled=1 (Lynis KRNL-6000). Yeniden başlatmaya kadar GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez (Docker overlay/br_netfilter, USB, ağ ve ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez, yeniden başlatma gerekir. Seçenek açıkken yeniden başlatmada kilitten ÖNCE yüklenecek modüller (şu an yüklü olanlar + ufw/netfilter + binfmt_misc) /etc/modules-load.d/60-hardening-preload.conf dosyasına yazılır (ufw bunlar olmadan başlamaz ve güvenlik duvarı sessizce kapalı kalırdı). Yeniden başlatmadan sonra ufw status ve systemctl --failed ile doğrulayın. Önce snapshot alın"
+      "description": "false (varsayılan): yazılmaz. true: kernel.modules_disabled=1 (Lynis KRNL-6000). Yeniden başlatmaya kadar GERİ ALINAMAZ: bundan sonra HİÇBİR çekirdek modülü yüklenemez (Docker overlay/br_netfilter, USB, ağ ve ses sürücüleri, ufw'nin ihtiyaç duyduğu modüller). Ayarı sonradan false yapmak canlı değeri değiştirmez, yeniden başlatma gerekir. Seçenek açıkken yeniden başlatmada kilitten ÖNCE yüklenecek modüller (şu an yüklü olanlar + ufw/netfilter + binfmt_misc) /etc/modules-load.d/60-hardening-preload.conf dosyasına yazılır (ufw bunlar olmadan başlamaz ve güvenlik duvarı sessizce kapalı kalırdı). Yeniden başlatmadan sonra ufw status ve systemctl --failed ile doğrulayın. Proxmox VE hostunda (hardening_platform=proxmox-host) REDDEDİLİR: LXC (veth, overlay), KVM/vhost, bridge/tun ve softdog (HA) modülleri istek üzerine yüklenir ve kilitten sonra yüklenemez. Önce snapshot alın"
     },
     {
       "name": "hardening_ufw_log_martians",
