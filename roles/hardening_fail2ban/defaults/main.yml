@@ -6,3 +6,7 @@ hardening_fail2ban_maxretry: 5
 hardening_fail2ban_bantime: 1h
 # true (varsayılan): boş bir /etc/fail2ban/jail.local oluşturulur (Lynis DEB-0880; var olan dosyaya dokunulmaz). Davranışı değiştirmez.
 hardening_fail2ban_jail_local: true
+# false (varsayılan, warn_if): true iken (yalnızca hardening_platform=proxmox-host) Proxmox VE web arayüzü/API için ek bir fail2ban jail'i (proxmox-web) yazılır: 8006'ya yönelik
+# başarısız oturum açmalar (pvedaemon günlüğü) maxretry kadar tekrarlanırsa IP banlanır (bantime, ignoreip sshd ile ortak). pve-firewall'dan bağımsız bir savunmadır. Bir yönetici
+# yanlış parolayı üst üste girerse web arayüzünden banlanır (kontrol makinesi ignoreip'te muaftır). Günlük biçimi gerçek Proxmox VE 9'da DENENMEDİ.
+hardening_fail2ban_pve_web: false
