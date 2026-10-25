@@ -55,13 +55,20 @@
 
     - name: Show what would be written (--check)
       ansible.builtin.debug:
-        msg: "pveproxy ÖNİZLEME (yazılmadı), {{ hardening_pve_pveproxy_file }}:\n{{ hardening_pve_pveproxy_plan.content }}"
+        msg: "pveproxy ÖNİZLEME (yazılmadı), {{ hardening_pve_pveproxy_file }}:\n{{ ('(dosya silinirdi)' if hardening_pve_pveproxy_plan.delete | bool else hardening_pve_pveproxy_plan.content) }}"
       when: hardening_pve_pveproxy_plan.status == 'apply' and ansible_check_mode
 
     - name: Apply the pveproxy access limit and verify the web UI
       when: hardening_pve_pveproxy_plan.status == 'apply' and not ansible_check_mode
       block:
+        - name: Remove the pveproxy defaults file (only this role's block was in it)
+          ansible.builtin.file:
+            path: "{{ hardening_pve_pveproxy_file }}"
+            state: absent
+          when: hardening_pve_pveproxy_plan.delete | bool
+
         - name: Write the pveproxy defaults file
+          when: not (hardening_pve_pveproxy_plan.delete | bool)
           ansible.builtin.copy:
             dest: "{{ hardening_pve_pveproxy_file }}"
             content: "{{ hardening_pve_pveproxy_plan.content }}"

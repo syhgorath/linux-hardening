@@ -3,7 +3,7 @@
 
 Girdi (argv[1], JSON): allow_from (liste: IP/CIDR), client_ip (kontrol makinesinin sunucuya görünen adresi), existing (str ya da null: /etc/default/pveproxy içeriği),
 remove (bool, varsayılan false: true ise bu rolün bloğu kaldırılır, diğer girdiler yok sayılır).
-Çıktı (stdout, JSON): status (apply|noop|refuse), reasons (liste), allow_value ("a,b,..." ALLOW_FROM değeri), content (dosyanın TAMAM yeni içeriği), error.
+Çıktı (stdout, JSON): status (apply|noop|refuse), reasons (liste), allow_value ("a,b,..." ALLOW_FROM değeri), content (dosyanın TAMAM yeni içeriği), delete (bool: true ise dosya silinmeli; yalnızca remove kipinde ve bu rolün bloğundan başka içerik kalmadıysa), error.
 
 Güvenlik: boş/geçersiz allow_from, kontrol makinesini kapsamayan allow_from ve bu rolün işareti dışında kullanıcının kendi ALLOW_FROM/DENY_FROM/POLICY satırları
 durumunda HİÇBİR ŞEY yazılmaz (status refuse). Yerel döngü (127.0.0.0/8, ::1) her zaman eklenir. Python 3.9+ (yalnızca stdlib). Tasarım: docs/design/proxmox-host.md."""
@@ -28,7 +28,7 @@ def strip_block(text):
 
 
 def decide(cfg):
-    res = {"status": "apply", "reasons": [], "allow_value": "", "content": "", "error": ""}
+    res = {"status": "apply", "reasons": [], "allow_value": "", "content": "", "delete": False, "error": ""}
     if cfg.get("remove"):
         existing = cfg.get("existing")
         if existing is None or BEGIN not in existing:
@@ -36,6 +36,7 @@ def decide(cfg):
             res["reasons"].append("Bu rolün bloğu yok: kaldırılacak bir şey yok.")
         else:
             res["content"] = strip_block(existing)
+            res["delete"] = res["content"].strip() == ""
         return res
 
     def refuse(why):
@@ -88,7 +89,7 @@ def main(argv):
         if not isinstance(cfg, dict):
             raise ValueError("nesne değil")
     except (IndexError, ValueError) as exc:
-        print(json.dumps({"status": "refuse", "reasons": [], "allow_value": "", "content": "", "error": "girdi okunamadı: %s" % exc}))
+        print(json.dumps({"status": "refuse", "reasons": [], "allow_value": "", "content": "", "delete": False, "error": "girdi okunamadı: %s" % exc}))
         return 0
     print(json.dumps(decide(cfg), sort_keys=True, ensure_ascii=False))
     return 0
