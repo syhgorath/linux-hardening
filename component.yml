@@ -467,6 +467,10 @@ vars:
     type: bool
     default: true
     description: "true (varsayılan): postfix kuruluysa SMTP banner'ı `$myhostname ESMTP` yapılır (Lynis MAIL-8818: banner yazılım/işletim sistemi adını sızdırmasın) ve postfix yeniden yüklenir. Postfix kurulu değilse (Ubuntu'da MTA dma ile değişir) hiçbir şey yapılmaz; Proxmox VE'de postfix kalır, uyarı oradan gelir. Yalnızca banner metnini değiştirir. false: dokunulmaz (eski banner geri yazılmaz)"
+  - name: hardening_pve_keep_banner
+    type: bool
+    default: true
+    description: "true (varsayılan, yalnızca hardening_platform=proxmox-host): Proxmox'un pvebanner.service'i her açılışta /etc/issue'yu yeniden yazıp yasal uyarıyı ezer (Lynis BANN-7126 her yeniden başlatmadan sonra geri gelir). systemd drop-in'i ile pvebanner'dan sonra /etc/issue.net'teki yasal uyarı /etc/issue'ya geri yazılır. pvebanner.service yoksa hiçbir şey yapılmaz. false: drop-in silinir (pvebanner /etc/issue'yu yine ezer). Konsol girişinde Proxmox'un adres satırı yerine yasal uyarı görünür"
   - name: hardening_proc_hidepid
     type: bool
     default: false
@@ -493,7 +497,7 @@ vars:
     type: bool
     default: false
     warn_if: true                      # yönetim ağlarından 8006 KAPANIR
-    description: "false (varsayılan). true: 8006 YALNIZCA hardening_pve_web_allow_from'dan açılır, yönetim ağlarından kapanır (SSH, ping ve ek portlar yönetim ağlarında kalır). Liste boşsa ya da kontrol makinesinin adresi listede değilse hiçbir şey yazılmaz (erişim doğrulaması 8006'yı kontrol makinesinden dener). Yanlış liste web arayüzünü keser (SSH açık kalır). Gerçek Proxmox VE 9'da DENENMEDİ. Önce snapshot alın"
+    description: "false (varsayılan). true: 8006 YALNIZCA hardening_pve_web_allow_from'dan açılır, yönetim ağlarından kapanır (SSH, ping ve ek portlar yönetim ağlarında kalır). Liste boşsa ya da kontrol makinesinin adresi listede değilse hiçbir şey yazılmaz (erişim doğrulaması 8006'yı kontrol makinesinden dener). Yanlış liste web arayüzünü keser (SSH açık kalır). Gerçek Proxmox VE 9'da (sshpocket 3.6.13) DENENDİ ve ETKİSİZ bulundu: kurallar doğru yazılıyor (8006 yalnızca +web) ve listedeki kontrol makinesi bağlanıyor, AMA listede olmayan, AYNI ALT AĞDAKİ bir istemci 8006'ya (ve kurallarda olmayan 3128'e/SPICE) yine bağlanabiliyor; nedeni bilinmiyor (Proxmox'un yerleşik kuralları ya da yerel ağ takma adı şüphesi). Yani exclusive 8006'yı yönetim ağından KAPATMADIĞINA güvenin; kanıtlanana kadar kullanmayın, gerçek korumayı hardening_pve_pveproxy_allow_from sağlar. Önce snapshot alın"
   - name: hardening_motd_disable_scripts
     type: list[string]
     default: []

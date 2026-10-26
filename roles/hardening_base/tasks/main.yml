@@ -68,6 +68,55 @@
     - /etc/issue
     - /etc/issue.net
 
+# Proxmox VE: pvebanner.service her açılışta /etc/issue'yu yeniden yazar (konsol giriş adresi) ve yasal uyarıyı ezer (Lynis BANN-7126 geri gelir; sshpocket 0.8.3 turunda görüldü).
+# Drop-in: pvebanner çalıştıktan sonra /etc/issue.net'teki uyarı /etc/issue'ya geri kopyalanır. /etc/issue.net'e dokunulmaz.
+- name: Check pvebanner.service (Proxmox)
+  ansible.builtin.stat:
+    path: "{{ hardening_pve_banner_unit }}"
+  register: hardening_pve_banner_stat
+  when: hardening_platform | default('generic') == 'proxmox-host'
+
+- name: Ensure the pvebanner drop-in directory (Proxmox)
+  ansible.builtin.file:
+    path: "{{ hardening_pve_banner_dropin | dirname }}"
+    state: directory
+    owner: "{{ hardening_pve_banner_owner }}"
+    group: "{{ hardening_pve_banner_group }}"
+    mode: "0755"
+  when:
+    - hardening_platform | default('generic') == 'proxmox-host'
+    - hardening_pve_keep_banner | bool
+    - hardening_pve_banner_stat.stat.exists | default(false)
+
+- name: Keep the legal banner after pvebanner.service (Proxmox)
+  ansible.builtin.copy:
+    dest: "{{ hardening_pve_banner_dropin }}"
+    owner: "{{ hardening_pve_banner_owner }}"
+    group: "{{ hardening_pve_banner_group }}"
+    mode: "0644"
+    content: |
+      # Ansible tarafından yönetilir: pvebanner /etc/issue'yu ezdikten sonra yasal uyarıyı geri yazar
+      [Service]
+      ExecStartPost=/usr/bin/install -m 0644 /etc/issue.net /etc/issue
+  register: hardening_pve_banner_written
+  when:
+    - hardening_platform | default('generic') == 'proxmox-host'
+    - hardening_pve_keep_banner | bool
+    - hardening_pve_banner_stat.stat.exists | default(false)
+
+- name: Reload systemd after the pvebanner drop-in  # noqa: no-handler
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: hardening_pve_banner_written is changed
+
+- name: Remove the pvebanner drop-in when disabled (Proxmox)
+  ansible.builtin.file:
+    path: "{{ hardening_pve_banner_dropin }}"
+    state: absent
+  when:
+    - hardening_platform | default('generic') == 'proxmox-host'
+    - not (hardening_pve_keep_banner | bool)
+
 # CIS 6.1.1.1.6 / 6.1.1.1.7: journald kalıcı depolama ve sıkıştırma AÇIKÇA yazılır. `Storage=auto` yalnızca /var/log/journal varsa kalıcıdır (bazı bulut imajlarında yoktur).
 # Veri kaybı yok: günlükler diske yazılır; saklama süresi/boyut ayarlarına dokunulmaz (site politikası).
 - name: Ensure journald drop-in directory
