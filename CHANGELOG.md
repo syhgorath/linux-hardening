@@ -6,6 +6,12 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `hardening_apt_upgrade_phased` (varsayılan **KAPALI**, `warn_if`; `hardening_apt_upgrade=true` ile): Ubuntu'nun kademeli (phased) güncellemeleri de yükseltilir (`APT::Get::Always-Include-Phased-Updates`; `dist-upgrade` değil). Kademeli dağıtım bilerek bir güvenlik önlemidir, atlamak o korumadan vazgeçmektir
+- `hardening_apt_listbugs` (varsayılan **KAPALI**; yalnızca Debian ailesi): `apt-listbugs` kurulur, kanca `-y` ile yazılır, yani `apt`'yi bloklamaz (varsayılan kanca `bugs.debian.org` erişilemezse `apt`'yi bloklar, ölçüldü). Ubuntu'da NOT verir
+- `hardening_pve_web_allow_from` + `hardening_pve_web_exclusive` (varsayılan boş/KAPALI, exclusive `warn_if`): Proxmox 8006 için ayrı kaynak listesi (ters vekil). Boşken `cluster.fw` çıktısı değişmez; exclusive'de kontrol makinesi listede değilse hiçbir şey yazılmaz
+- `scripts/release-publish.sh`: etiket, `release.sh`, GitHub Release ve yüklenen dosyaların özet doğrulamasını tek betikte toplar (`--dry-run`, onay, etiketten önce kontroller; `components.lock`'a dokunmaz). `test_release_publish.sh` (gerçek imza, sahte `gh`, yerel bare origin). `docs/RELEASING.md`
+
+### Eklendi
 - `hardening_postfix_banner` (varsayılan **AÇIK**; yalnızca postfix kuruluysa): SMTP banner'ı `$myhostname ESMTP` yapılır (Lynis MAIL-8818 uyarısı; Proxmox VE'de postfix kalır). Ubuntu'da (MTA `dma`) atlanır
 - `hardening_proc_hidepid` + `hardening_proc_hidepid_users` (varsayılan **KAPALI**, `warn_if`): `/proc` `hidepid=2` (Lynis FILE-6344, +3 puan). `proc` grubu + `gid=`, `systemd-logind` için drop-in (logind `CAP_SYS_PTRACE` taşımaz; yeniden bağlamadan ÖNCE yeniden başlatılır), `/etc/fstab` satırı, `mount -o remount`; konteynerde yeniden bağlama başarısızsa UYARI. Ayrıcalıklı Ubuntu 26.04 konteynerinde gerçek davranış ölçüldü; yeniden başlatma sonrası kalıcılık ve Proxmox'ta DENENMEDİ. `test_lynis_son_kalemler.py`
 

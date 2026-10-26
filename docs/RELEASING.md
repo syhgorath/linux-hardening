@@ -69,3 +69,14 @@ bileşen imzalayıcıları için ayrı bir `allowed_signers` dosyası ve doğrul
 pip-compile --generate-hashes --strip-extras -o requirements.txt requirements.in
 python3 -m venv /tmp/denemevenv && /tmp/denemevenv/bin/pip install --require-hashes -r requirements.txt
 ```
+
+## Tek komutla yayın (isteğe bağlı): `scripts/release-publish.sh`
+Yukarıdaki adım 3-5'i (etiket, paket+imza, GitHub Release, yüklenen dosyaların özet doğrulaması) tek betikte toplar; `components.lock` sshpocket reposunda olduğundan ona **dokunmaz**,
+yalnızca yazılacak SHA-256 ve imzalayıcı satırını yazdırır. Özel imza anahtarı yine yalnızca `LH_SIGNING_KEY` ile `release.sh`'e aktarılır.
+```bash
+LH_SIGNING_KEY=~/.ssh/<anahtar> scripts/release-publish.sh --dry-run   # ne yapacağını gösterir, HİÇBİR ŞEY yapmaz
+LH_SIGNING_KEY=~/.ssh/<anahtar> scripts/release-publish.sh              # onay ister, sonra etiketler, imzalar, Release açar
+```
+Önce şunları denetler ve **herhangi biri tutmazsa durur** (etiket atılmadan ÖNCE): `main` dalında ve temiz mi, `HEAD` `origin/main` ile aynı mı, `CHANGELOG.md` başlığı var mı, Release zaten var mı,
+etiket başka bir commit'i mi gösteriyor, tutarlılık betiği ve `component.json` güncel mi (PyYAML'lı Python: `LH_PYTHON` ya da `.venv`), `main` CI'ı bu commit için yeşil mi (`gh`).
+Sonra etiketi atıp iter, `release.sh`'i çalıştırır, Release'i CHANGELOG'daki `[sürüm]` bölümüyle açar ve GitHub'ın verdiği özetleri yerel dosyalarla karşılaştırır (uyuşmazsa hata verir).

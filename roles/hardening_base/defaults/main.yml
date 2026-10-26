@@ -31,6 +31,14 @@ hardening_process_accounting: true
 # false (varsayılan, warn_if): true iken her koşuda `apt-get upgrade` çalışır (dist-upgrade DEĞİL; paket kaldırmaz). Servisler yeniden başlayabilir (Docker/MySQL/nginx dahil), yeni çekirdek
 # yeniden başlatma ister (yeniden başlatılmaz; /var/run/reboot-required varsa UYARI). Lynis PKGS-7392 bekleyen güvenlik güncellemesi için en ağır puan kalemidir (25 puan).
 hardening_apt_upgrade: false
+# false (varsayılan): Ubuntu'nun kademeli (phased) güncellemeleri yükseltilmez (apt'nin kendi davranışı). true (yalnızca hardening_apt_upgrade=true iken): bunlar da yükseltilir
+# (APT::Get::Always-Include-Phased-Updates). Kademeli dağıtım bilerek bir güvenlik önlemidir (kötü bir güncellemeyi az sayıda makineye ulaştırır); atlamak o koruma yerine puan/güncellik içindir.
+hardening_apt_upgrade_phased: false
+# false (varsayılan): apt-listbugs kurulmaz. true (yalnızca Debian ailesi: Debian, Proxmox VE, Raspberry Pi OS): kurulur ve kancası `-y` ile yazılır, yani apt'yi ASLA bloklamaz.
+# Varsayılan kancası bugs.debian.org'a ulaşılamazsa apt'yi BLOKLAR; `-y` ile bloklamaz ama hata satırları basar. Ubuntu 26.04'te paket yok (NOT verir). Proxmox'un kendi paketleri Debian
+# hata veritabanında olmadığından yalnızca Debian paketlerinin kritik hatalarını gösterir. Kapatınca paket ve ayar kaldırılmaz.
+hardening_apt_listbugs: false
+hardening_apt_listbugs_conf: /etc/apt/apt.conf.d/10apt-listbugs
 # none (varsayılan) | rkhunter: rkhunter kurulur (Lynis HRDN-7230), günlük kontrol (cron.daily) ve apt sonrası özet veritabanı güncellemesi açılır, ilk veritabanı üretilir.
 # Sonuç /var/log/rkhunter.log dosyasındadır. Kendi başına bütünlük/rootkit izi taraması yapar; AIDE ve auditd'in yerini tutmaz. ClamAV bu pakette YOKTUR (dosya yükleme servisine aittir).
 # none'a dönmek rkhunter'ı KALDIRMAZ (kurulu paket ve ayarlar kalır).

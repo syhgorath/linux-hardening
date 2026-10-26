@@ -13,3 +13,9 @@ hardening_pve_fw_write: "{{ hardening_pve_apply | default(false) | bool }}"
 hardening_pve_firewall_file: /etc/pve/firewall/cluster.fw
 hardening_pve_cluster_marker: /etc/pve/corosync.conf
 hardening_pve_rollback_armed_file: /var/lib/hardening-rollback/armed
+# Web arayüzü (8006) için AYRI kaynak listesi (örn. ters vekil/NPM IP'si). Varsayılan boş: 8006 yalnızca yönetim ağlarından (hardening_ssh_allow_from) açılır (değişmez).
+# Dolu: bu ağlar yönetim ağlarına EK olarak 8006'ya erişir (`[IPSET web]`).
+hardening_pve_web_allow_from: []
+# false (varsayılan). true: 8006 YALNIZCA hardening_pve_web_allow_from'dan açılır, yönetim ağlarından kapanır (SSH, ping ve ek portlar yönetim ağlarında kalır). Liste boş ya da kontrol makinesi
+# listede değilse hiçbir şey yazılmaz (erişim doğrulaması 8006'yı kontrol makinesinden dener).
+hardening_pve_web_exclusive: false

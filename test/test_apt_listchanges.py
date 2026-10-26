@@ -37,7 +37,10 @@ conf = by["Configure apt-listchanges (never prompts, no mail)"]
 check("varsayilan: apt-listchanges ACIK", True, load("roles/hardening_base/defaults/main.yml")["hardening_apt_listchanges"])
 check("kurulum: apt, present (kaldirma yok), paket adi dogru", ("apt-listchanges", "present"), (inst["ansible.builtin.apt"]["name"], inst["ansible.builtin.apt"]["state"]))
 check("iki gorev de kendi degiskeniyle kapanir", True, "hardening_apt_listchanges" in str(inst["when"]) and "hardening_apt_listchanges" in str(conf["when"]))
-check("apt-listbugs hicbir gorevde YOK (Ubuntu depolarinda bulunmuyor)", True, "apt-listbugs" not in (ROOT / "roles/hardening_base/tasks/main.yml").read_text(encoding="utf-8").replace("# apt-listbugs", ""))
+_tasks = yaml.safe_load((ROOT / "roles/hardening_base/tasks/main.yml").read_text(encoding="utf-8"))
+_lb = next((t for t in _tasks if isinstance(t, dict) and t.get("name") == "Install apt-listbugs (never blocks apt)"), {})
+_outside = [t for t in _tasks if isinstance(t, dict) and t is not _lb and "apt-listbugs" in str(t.get("ansible.builtin.apt", ""))]
+check("apt-listbugs yalniz Debian'a ozgu opt-in blokta (Ubuntu depolarinda yok); baska hicbir apt gorevinde YOK", True, bool(_lb) and "== 'Debian'" in str(_lb.get("when")) and "hardening_apt_listbugs" in str(_lb.get("when")) and not _outside)
 
 with tempfile.TemporaryDirectory() as d:
     cp = dict(conf["ansible.builtin.copy"]); cp["dest"] = f"{d}/listchanges.conf"; cp.pop("owner"); cp.pop("group")

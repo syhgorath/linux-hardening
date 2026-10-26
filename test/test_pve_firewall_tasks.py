@@ -134,6 +134,31 @@ check("eylemler: pve_firewall_preview (degisiklik yok, onay yok) ve pve_firewall
       acts["pve_firewall_preview"]["effects"] == [] and acts["pve_firewall_preview"]["confirm"] == "none" and acts["pve_firewall_preview"]["cmd"] == "ansible-playbook playbooks/pve-firewall-onizleme.yml --check"
       and acts["pve_firewall_apply"]["confirm"] == "type-server-name" and acts["pve_firewall_apply"]["requires"] == ["pve_firewall_preview"] and acts["pve_firewall_apply"]["cmd"] == "ansible-playbook playbooks/pve-firewall-uygula.yml"
       and "changes-config" in acts["pve_firewall_apply"]["effects"])
+# ---- 8006 icin ayri kaynak listesi rol uzerinden (plan gorevi degiskenleri betige iletir) ----
+def run_web(web, exclusive):
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        pbk = td / "p.yml"
+        pbk.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "tasks": [
+            {"ansible.builtin.include_role": {"name": "hardening_pve_firewall", "tasks_from": "plan"}}]}]), encoding="utf-8")
+        ev = {"hardening_ssh_allow_from": ["192.0.2.0/24"], "hardening_pve_firewall_file": str(td / "cluster.fw"), "hardening_pve_cluster_marker": str(td / "nope"),
+              "hardening_pve_web_allow_from": web, "hardening_pve_web_exclusive": exclusive, "hardening_pve_apply": False}
+        r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pbk), "-e", json.dumps(ev)], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                           env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg"), "ANSIBLE_ROLES_PATH": str(ROOT / "roles"), "SSH_CONNECTION": "192.0.2.10 50000 198.51.100.1 22"})
+        return r.returncode, r.stdout + r.stderr
+
+
+rc, out = run_web(["203.0.113.5/32"], False)
+check("rol: web listesi dolu -> onizlemede [IPSET web] ve 8006 +web", rc == 0 and "[IPSET web]" in out and "-dport 8006 -source +web" in out, out[-300:])
+rc, out = run_web([], False)
+check("rol: web listesi bos -> [IPSET web] YOK (eski cikti)", rc == 0 and "[IPSET web]" not in out and "-dport 8006 -source +management" in out, out[-300:])
+rc, out = run_web(["203.0.113.5/32"], True)
+check("rol: exclusive + kontrol makinesi web listesinde degil -> DURUR, hicbir sey yazilmadi", rc != 0 and "hardening_pve_web_allow_from içinde olmalı" in out and "hiçbir şey yazılmadı" in out, out[-300:])
+rc, out = run_web(["192.0.2.10/32"], True)
+check("rol: exclusive + kontrol makinesi web listesinde -> 8006 yalniz +web", rc == 0 and "-dport 8006 -source +web" in out and "-dport 8006 -source +management" not in out, out[-300:])
+cvv = {v["name"]: v for v in comp["vars"] if isinstance(v, dict)}
+check("component.yml: hardening_pve_web_allow_from [] ve hardening_pve_web_exclusive false (warn_if)", cvv["hardening_pve_web_allow_from"]["default"] == [] and cvv["hardening_pve_web_exclusive"]["default"] is False and cvv["hardening_pve_web_exclusive"].get("warn_if") is True)
+
 # ---- onizleme DAIMA salt okunur (sshpocket turu: pve_firewall_preview apply=true iken yaziyordu) ----
 pv = yaml.safe_load((ROOT / "playbooks/pve-firewall-onizleme.yml").read_text(encoding="utf-8"))[0]
 check("pve-firewall-onizleme.yml: pve-firewall.yml'i hardening_pve_fw_preview_only=true ile iceri alir", pv["ansible.builtin.import_playbook"] == "pve-firewall.yml" and pv["vars"] == {"hardening_pve_fw_preview_only": True})

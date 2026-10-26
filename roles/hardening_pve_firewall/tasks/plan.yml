@@ -38,6 +38,8 @@
       client_ip: "{{ (hardening_pve_fw_conn.stdout.split() | first | default('')) if hardening_pve_fw_conn.rc == 0 else '' }}"
       existing: "{{ (hardening_pve_fw_slurp.content | b64decode) if hardening_pve_fw_stat.stat.exists else none }}"
       extra_ports: "{{ hardening_pve_firewall_extra_ports | default([]) }}"
+      web_allow_from: "{{ hardening_pve_web_allow_from | default([]) }}"
+      web_exclusive: "{{ hardening_pve_web_exclusive | default(false) | bool }}"
   register: hardening_pve_fw_raw
   changed_when: false
   check_mode: false

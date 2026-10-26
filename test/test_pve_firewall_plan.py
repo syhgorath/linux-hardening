@@ -78,5 +78,22 @@ check("sondaki ek bos satir farki noop sayilir (pmxcfs/tee yeni satir ekleyebili
 check("bozuk girdi -> refuse, cokmez", run("{bozuk")["status"] == "refuse" and run("[1]")["status"] == "refuse")
 check("birden cok neden birikir", len(run(with_(clustered=True, allow_from=[]))["reasons"]) >= 2)
 
+# ---- 8006 icin ayri kaynak listesi (ters vekil) ----
+base_content = run(OK)["content"]
+check("web listesi bos + exclusive kapali: cikti ESKIYLE BIREBIR AYNI ([IPSET web] yok, 8006 yalniz management)", "[IPSET web]" not in base_content and "-dport 8006 -source +management" in base_content and "+web" not in base_content)
+r = run(with_(web_allow_from=["203.0.113.5/32"]))
+check("web listesi dolu: [IPSET web] + 8006 hem management hem web'den", r["status"] == "apply" and "[IPSET web]\n203.0.113.5/32" in r["content"] and "IN ACCEPT -p tcp -dport 8006 -source +management" in r["content"] and "IN ACCEPT -p tcp -dport 8006 -source +web" in r["content"], r["content"])
+check("web listesi dolu: SSH ve ping YALNIZ management'ta kalir", "-dport 22 -source +management" in r["content"] and "-dport 22 -source +web" not in r["content"] and "-p icmp -source +web" not in r["content"])
+check("enable 0 surumu de ayni kurallari tasir", "enable: 0" in r["content_disabled"] and "[IPSET web]" in r["content_disabled"])
+r = run(with_(web_allow_from=["192.0.2.10/32"], web_exclusive=True))
+check("exclusive: 8006 YALNIZ web listesinden (management'tan kapali), SSH/ping management'ta", r["status"] == "apply" and "-dport 8006 -source +web" in r["content"] and "-dport 8006 -source +management" not in r["content"] and "-dport 22 -source +management" in r["content"], r["content"])
+for name, cfg in (("exclusive + bos liste", with_(web_exclusive=True, web_allow_from=[])), ("exclusive + kontrol makinesi listede degil", with_(web_exclusive=True, web_allow_from=["203.0.113.5/32"])),
+                  ("exclusive + istemci okunamadi", with_(web_exclusive=True, web_allow_from=["203.0.113.5/32"], client_ip="")), ("gecersiz web agi", with_(web_allow_from=["abc"])), ("web listesi liste degil", with_(web_allow_from="203.0.113.5/32"))):
+    r = run(cfg)
+    check(f"RED ve hicbir sey yazilmaz: {name}", r["status"] == "refuse" and r["content"] == "" and r["reasons"], str(r))
+r1 = run(with_(web_allow_from=["203.0.113.5/32"]))
+check("ayni web listesiyle mevcut icerik -> noop (idempotent)", run(with_(web_allow_from=["203.0.113.5/32"], existing=r1["content"]))["status"] == "noop")
+check("web listesi eklenince eski (listesiz) cluster.fw degistirilir (bu rolun isareti var)", run(with_(web_allow_from=["203.0.113.5/32"], existing=base_content))["status"] == "apply")
+
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)
