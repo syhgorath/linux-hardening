@@ -19,7 +19,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.7.1 | Yayımlanmadı: içeriği v0.8.0'a katıldı |
 | v0.8.0 yayını | Yayımlandı (Lynis puanı için seçenekler, `log_martians` ve `pve_firewall_preview` düzeltmeleri, CIS Level 2 seçenekleri: auditd/AIDE, ufw giden DROP, AppArmor, derleyici kısıtı, rkhunter; `docs/deneme-matrisi.md`) |
 | v0.8.1 yayını | Yayımlandı (`kernel_modules_disabled` + ufw önyükleme modül listesi, `verify_access` ssh-agent ipucu ve ek bağımsız değişken, manifest sınırları, deneme matrisi) |
-| v0.8.2 yayını | Hazırlandı (Proxmox'ta `kernel_modules_disabled` reddi, `hardening_fail2ban_pve_web`, `hardening_pve_pveproxy_allow_from`) |
+| v0.8.2 yayını | Yayımlandı (Proxmox'ta `kernel_modules_disabled` reddi, `hardening_fail2ban_pve_web`, `hardening_pve_pveproxy_allow_from`) |
+| v0.8.3 yayını | Hazırlandı (`hardening_pve_pveproxy` boş dosya düzeltmesi, `hardening_postfix_banner`, `hardening_proc_hidepid`, `apt_upgrade_phased`, `apt_listbugs`, Proxmox 8006 ayrı kaynak listesi, `scripts/release-publish.sh`) |
 
 ## Orta
 | İş | Not |

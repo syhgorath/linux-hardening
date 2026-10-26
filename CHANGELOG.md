@@ -5,23 +5,24 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.8.3] - 2026-10-26
+
+v0.8.2'den sonra, **Ubuntu ve Proxmox'un son Lynis kalemleri ve bilerek ertelenmiş işler**; sshpocket 3.6.12 gerçek Proxmox turu (tek düğüm, boş VM) işlendi. `component.yml` `vars` listesi 102'dan 109'e çıktı (+7). Kırıcı değişiklik yok: yeni seçeneklerin çoğu varsayılan KAPALI/BOŞ; tek yeni varsayılan AÇIK davranış `hardening_postfix_banner` (yalnızca postfix kuruluysa, yani Proxmox'ta).
+**Denenmeyenler:** `hardening_proc_hidepid` yeniden başlatma kalıcılığı, Proxmox'ta `hidepid`/postfix banner/8006 ayrı kaynak listesi/`apt_listbugs`/phased upgrade, Raspberry Pi, misafirli ve kümeli Proxmox, Docker'lı VM, HA, silahlı geri alma, `auditd_disk_full_halt`, `-e 2` çekirdek etkisi. Denenme durumu `docs/deneme-matrisi.md`'dedir.
+
+### Düzeltildi
+- `hardening_pve_pveproxy_allow_from` liste boşaltılınca (kaldırma) bu rolün bloğu dışında içerik yoksa `/etc/default/pveproxy` artık SİLİNİR (sshpocket 3.6.12 gerçek Proxmox turunda dosya boş kalıyordu; zararsızdı). Dosyada başka içerik varsa dosya korunur, yalnızca blok kalkar. Önizleme "dosya silinirdi" der. `test_pveproxy_siniri.py`
+
 ### Eklendi
 - `hardening_apt_upgrade_phased` (varsayılan **KAPALI**, `warn_if`; `hardening_apt_upgrade=true` ile): Ubuntu'nun kademeli (phased) güncellemeleri de yükseltilir (`APT::Get::Always-Include-Phased-Updates`; `dist-upgrade` değil). Kademeli dağıtım bilerek bir güvenlik önlemidir, atlamak o korumadan vazgeçmektir
 - `hardening_apt_listbugs` (varsayılan **KAPALI**; yalnızca Debian ailesi): `apt-listbugs` kurulur, kanca `-y` ile yazılır, yani `apt`'yi bloklamaz (varsayılan kanca `bugs.debian.org` erişilemezse `apt`'yi bloklar, ölçüldü). Ubuntu'da NOT verir
 - `hardening_pve_web_allow_from` + `hardening_pve_web_exclusive` (varsayılan boş/KAPALI, exclusive `warn_if`): Proxmox 8006 için ayrı kaynak listesi (ters vekil). Boşken `cluster.fw` çıktısı değişmez; exclusive'de kontrol makinesi listede değilse hiçbir şey yazılmaz
 - `scripts/release-publish.sh`: etiket, `release.sh`, GitHub Release ve yüklenen dosyaların özet doğrulamasını tek betikte toplar (`--dry-run`, onay, etiketten önce kontroller; `components.lock`'a dokunmaz). `test_release_publish.sh` (gerçek imza, sahte `gh`, yerel bare origin). `docs/RELEASING.md`
-
-### Eklendi
 - `hardening_postfix_banner` (varsayılan **AÇIK**; yalnızca postfix kuruluysa): SMTP banner'ı `$myhostname ESMTP` yapılır (Lynis MAIL-8818 uyarısı; Proxmox VE'de postfix kalır). Ubuntu'da (MTA `dma`) atlanır
 - `hardening_proc_hidepid` + `hardening_proc_hidepid_users` (varsayılan **KAPALI**, `warn_if`): `/proc` `hidepid=2` (Lynis FILE-6344, +3 puan). `proc` grubu + `gid=`, `systemd-logind` için drop-in (logind `CAP_SYS_PTRACE` taşımaz; yeniden bağlamadan ÖNCE yeniden başlatılır), `/etc/fstab` satırı, `mount -o remount`; konteynerde yeniden bağlama başarısızsa UYARI. Ayrıcalıklı Ubuntu 26.04 konteynerinde gerçek davranış ölçüldü; yeniden başlatma sonrası kalıcılık ve Proxmox'ta DENENMEDİ. `test_lynis_son_kalemler.py`
 
-### Düzeltildi
-- `hardening_pve_pveproxy_allow_from` liste boşaltılınca (kaldırma) bu rolün bloğu dışında içerik yoksa `/etc/default/pveproxy` artık SİLİNİR (sshpocket 3.6.12 gerçek Proxmox turunda dosya boş kalıyordu; zararsızdı). Dosyada başka içerik varsa dosya korunur, yalnızca blok kalkar. Önizleme "dosya silinirdi" der. `test_pveproxy_siniri.py`
-
 ### Belgeler
 - sshpocket 3.6.12 gerçek Proxmox VE 9 turu (tek düğüm, boş VM) işlendi: `hardening_kernel_modules_disabled` reddi, `hardening_fail2ban_pve_web` (ban doğrulandı, `pve-firewall` açıkken banlı IP'den 8006 reddi) ve `hardening_pve_pveproxy_allow_from` (`::1/128` kabul edildi, kontrol makinesi koruması, kullanıcı satırı koruması) ✅. Lynis Proxmox 83. Misafirli Proxmox, Docker, Pi, HA denenmedi
-
-### Belgeler
 - Kapsamlı "tamam ama tamam değil" denetimi: `README.md`/`README.en.md` test tablosuna 16 eksik test dosyası eklendi; `docs/design/proxmox-host.md` başlığı ve durum bloğu güncellendi ("iskelet, işlevsiz" yanlıştı, Proxmox sertleştirmesi v0.6.0'dan beri var); `pve_report.py` ve `playbooks/pve-report.yml` yorumlarındaki "henüz sertleştirmez" ifadesi düzeltildi; kullanılmayan iskelet roller (`hardening_pve_access`, `hardening_preflight/tasks/platform.yml`) "KULLANILMIYOR" olarak işaretlendi (silinmedi). Kod davranışı değişmedi
 
 ## [0.8.2] - 2026-10-25
@@ -306,7 +307,8 @@ biçimi `vars` için hâlâ okunur).
 ### Kaldırıldı
 - `hardening_ssh_port` (port değiştirme desteklenmiyor; ufw kuralı gerçekten dinlenen porttan yazılır).
 
-[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.8.2...HEAD
+[Yayımlanmamış]: https://github.com/syhgorath/linux-hardening/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/syhgorath/linux-hardening/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/syhgorath/linux-hardening/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/syhgorath/linux-hardening/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/syhgorath/linux-hardening/compare/v0.7.0...v0.8.0
