@@ -18,4 +18,5 @@ hardening_pve_rollback_armed_file: /var/lib/hardening-rollback/armed
 hardening_pve_web_allow_from: []
 # false (varsayılan). true: 8006 YALNIZCA hardening_pve_web_allow_from'dan açılır, yönetim ağlarından kapanır (SSH, ping ve ek portlar yönetim ağlarında kalır). Liste boş ya da kontrol makinesi
 # listede değilse hiçbir şey yazılmaz (erişim doğrulaması 8006'yı kontrol makinesinden dener).
+# UYARI: gerçek Proxmox VE 9'da (sshpocket 3.6.13) ETKİSİZ bulundu: aynı alt ağdaki listede olmayan istemci 8006'ya (ve 3128'e) yine bağlanabildi. Gerçek koruma için hardening_pve_pveproxy_allow_from kullanın.
 hardening_pve_web_exclusive: false

@@ -5,6 +5,12 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- `hardening_pve_keep_banner` (varsayılan **AÇIK**; yalnızca `proxmox-host`): Proxmox'un `pvebanner.service`'i her açılışta `/etc/issue`'yu ezip yasal uyarıyı siliyordu (Lynis BANN-7126 her yeniden başlatmada geri geliyordu); systemd drop-in'i uyarıyı `/etc/issue.net`'ten geri yazar (sshpocket 3.6.13 turunda bulundu).
+
+### Belgeler
+- sshpocket 3.6.13 ara raporu işlendi (gerçek Proxmox VE 9 + Ubuntu 26.04). `hardening_pve_web_exclusive` gerçek Proxmox'ta **etkisiz** bulundu (aynı alt ağdaki listede olmayan istemci 8006'ya ve 3128'e bağlanabiliyor, neden bilinmiyor): açıklaması, bilinen sorunlar ve deneme matrisi düzeltildi; kullanmayın, `hardening_pve_pveproxy_allow_from` kullanın.
+
 ## [0.8.3] - 2026-10-26
 
 v0.8.2'den sonra, **Ubuntu ve Proxmox'un son Lynis kalemleri ve bilerek ertelenmiş işler**; sshpocket 3.6.12 gerçek Proxmox turu (tek düğüm, boş VM) işlendi. `component.yml` `vars` listesi 102'dan 109'e çıktı (+7). Kırıcı değişiklik yok: yeni seçeneklerin çoğu varsayılan KAPALI/BOŞ; tek yeni varsayılan AÇIK davranış `hardening_postfix_banner` (yalnızca postfix kuruluysa, yani Proxmox'ta).
