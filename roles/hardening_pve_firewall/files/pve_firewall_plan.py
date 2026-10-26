@@ -24,20 +24,27 @@ def valid_port(p):
 def build(allow_nets, extra, ssh_port, web_port, enable, web_nets=(), web_exclusive=False):
     # Proxmox, `management` kümesine düğümün otomatik algıladığı yerel ağı (alias local_network) HER ZAMAN ekler; alias'ı biz tanımlarsak yalnızca bizim ağımız kalır
     # (iç içe Proxmox 9.2'de görüldü). Alias tek bir CIDR alır: IPv4 ağlar öne alınır.
-    alias_net = sorted(allow_nets, key=lambda n: (n.version, str(n)))[0]
+    # Proxmox ayrıca 8006, 3128 (SPICE), 5900-5999 (VNC) ve 22 portlarını `management` kümesine KENDİ yerleşik kurallarıyla açar (iptables-save'de görüldü); bu yüzden 8006'yı
+    # yönetim ağından kapatmanın tek yolu o kümeyi (ve local_network'ü) web listesine daraltmaktır. exclusive: management + local_network = web listesi, SSH/ping/ek portlar `admin` kümesinde.
+    key = lambda n: (n.version, str(n))
+    mgmt_nets = list(web_nets) if web_exclusive else list(allow_nets)
+    alias_net = sorted(mgmt_nets, key=key)[0]
     lines = [MARKER, "[OPTIONS]", "enable: %d" % enable, "policy_in: DROP", "policy_out: ACCEPT", "", "[ALIASES]", "local_network %s" % alias_net, "", "[IPSET management]"]
-    lines += [str(n) for n in allow_nets]
+    lines += [str(n) for n in mgmt_nets]
+    if web_exclusive:
+        lines += ["", "[IPSET admin]"] + [str(n) for n in allow_nets]
     if web_nets:
         lines += ["", "[IPSET web]"] + [str(n) for n in web_nets]
+    adm = "+admin" if web_exclusive else "+management"
     web_rules = []
     if not web_exclusive:
         web_rules.append("IN ACCEPT -p tcp -dport %d -source +management" % web_port)
     if web_nets:
         web_rules.append("IN ACCEPT -p tcp -dport %d -source +web" % web_port)
-    lines += ["", "[RULES]", "IN ACCEPT -p tcp -dport %d -source +management" % ssh_port] + web_rules + ["IN ACCEPT -p icmp -source +management"]
+    lines += ["", "[RULES]", "IN ACCEPT -p tcp -dport %d -source %s" % (ssh_port, adm)] + web_rules + ["IN ACCEPT -p icmp -source %s" % adm]
     for proto_port in extra:
         port, proto = proto_port.split("/")
-        lines.append("IN ACCEPT -p %s -dport %s -source +management" % (proto, port))
+        lines.append("IN ACCEPT -p %s -dport %s -source %s" % (proto, port, adm))
     return "\n".join(lines) + "\n"
 
 

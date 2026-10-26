@@ -5,11 +5,14 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- `hardening_pve_web_exclusive` gerçek Proxmox'ta etkisizdi (0.8.3): Proxmox 8006/3128/VNC/SSH'ı `management` kümesine kendi yerleşik kurallarıyla açar ve o kümeye yerel ağı ekler, bu yüzden yalnızca bizim 8006 kuralımızı daraltmak yetmiyordu. Artık exclusive açıkken `management` kümesi ve `local_network` takma adı web listesine daraltılır, SSH/ping/ek portlar yeni `[IPSET admin]` kümesinden verilir. Varsayılan (KAPALI) çıktı değişmedi. Yan etki: web listesindeki ağlar 3128/VNC/SSH'a da güvenlik duvarı düzeyinde erişir. Nested Proxmox VE 9'da elle doğrulandı; sshpocket gerçek akışıyla henüz denenmedi.
+
 ### Eklendi
 - `hardening_pve_keep_banner` (varsayılan **AÇIK**; yalnızca `proxmox-host`): Proxmox'un `pvebanner.service`'i her açılışta `/etc/issue`'yu ezip yasal uyarıyı siliyordu (Lynis BANN-7126 her yeniden başlatmada geri geliyordu); systemd drop-in'i uyarıyı `/etc/issue.net`'ten geri yazar (sshpocket 3.6.13 turunda bulundu).
 
 ### Belgeler
-- sshpocket 3.6.13 ara raporu işlendi (gerçek Proxmox VE 9 + Ubuntu 26.04). `hardening_pve_web_exclusive` gerçek Proxmox'ta **etkisiz** bulundu (aynı alt ağdaki listede olmayan istemci 8006'ya ve 3128'e bağlanabiliyor, neden bilinmiyor): açıklaması, bilinen sorunlar ve deneme matrisi düzeltildi; kullanmayın, `hardening_pve_pveproxy_allow_from` kullanın.
+- sshpocket 3.6.13 ara raporu işlendi (gerçek Proxmox VE 9 + Ubuntu 26.04). `hardening_pve_web_exclusive` gerçek Proxmox'ta **etkisiz** bulundu (aynı alt ağdaki listede olmayan istemci 8006'ya ve 3128'e bağlanabiliyordu); nedeni bulundu ve yukarıda düzeltildi.
 
 ## [0.8.3] - 2026-10-26
 

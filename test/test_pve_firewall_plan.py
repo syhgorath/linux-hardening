@@ -86,7 +86,26 @@ check("web listesi dolu: [IPSET web] + 8006 hem management hem web'den", r["stat
 check("web listesi dolu: SSH ve ping YALNIZ management'ta kalir", "-dport 22 -source +management" in r["content"] and "-dport 22 -source +web" not in r["content"] and "-p icmp -source +web" not in r["content"])
 check("enable 0 surumu de ayni kurallari tasir", "enable: 0" in r["content_disabled"] and "[IPSET web]" in r["content_disabled"])
 r = run(with_(web_allow_from=["192.0.2.10/32"], web_exclusive=True))
-check("exclusive: 8006 YALNIZ web listesinden (management'tan kapali), SSH/ping management'ta", r["status"] == "apply" and "-dport 8006 -source +web" in r["content"] and "-dport 8006 -source +management" not in r["content"] and "-dport 22 -source +management" in r["content"], r["content"])
+def sect(txt, name):
+    out, on = [], False
+    for l in txt.splitlines():
+        if l.startswith("["):
+            on = l == "[%s]" % name
+            continue
+        if on and l.strip():
+            out.append(l)
+    return out
+
+
+ex = r["content"]
+check("exclusive: 8006 YALNIZ web listesinden, SSH/ping yeni 'admin' kumesinde (management'ta DEGIL)", r["status"] == "apply" and "-dport 8006 -source +web" in ex and "-dport 8006 -source +management" not in ex
+      and "-dport 22 -source +admin" in ex and "-p icmp -source +admin" in ex and "-source +management" not in ex, ex)
+check("exclusive: management kumesi = YALNIZ web listesi (yerlesik 8006/3128/VNC kurallari yonetim agina acilmasin), admin = yonetim aglari",
+      sect(ex, "IPSET management") == ["192.0.2.10/32"] and sect(ex, "IPSET admin") == ["192.0.2.0/24", "198.51.100.7/32"], ex)
+check("exclusive: local_network takma adi da web listesine daraltilir (Proxmox management'a ekler; gercek VM'de dogrulandi)", sect(ex, "ALIASES") == ["local_network 192.0.2.10/32"], ex)
+r2 = run(with_(web_allow_from=["192.0.2.10/32", "198.51.100.0/24"], web_exclusive=True, extra_ports=["443/tcp"]))
+check("exclusive + ek port: ek portlar admin'de; coklu web agi management'ta", "-dport 443 -source +admin" in r2["content"] and sect(r2["content"], "IPSET management") == ["192.0.2.10/32", "198.51.100.0/24"], r2["content"])
+check("exclusive KAPALI: admin kumesi YOK, management = yonetim aglari, alias eskisi gibi", "[IPSET admin]" not in base_content and "+admin" not in base_content)
 for name, cfg in (("exclusive + bos liste", with_(web_exclusive=True, web_allow_from=[])), ("exclusive + kontrol makinesi listede degil", with_(web_exclusive=True, web_allow_from=["203.0.113.5/32"])),
                   ("exclusive + istemci okunamadi", with_(web_exclusive=True, web_allow_from=["203.0.113.5/32"], client_ip="")), ("gecersiz web agi", with_(web_allow_from=["abc"])), ("web listesi liste degil", with_(web_allow_from="203.0.113.5/32"))):
     r = run(cfg)
