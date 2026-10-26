@@ -83,7 +83,8 @@ git push origin "$TAG"
 OUT=$(mktemp)
 trap 'rm -f "$NOTES" "$OUT"' EXIT
 scripts/release.sh | tee "$OUT"
-[ -f "$ARCHIVE" ] && [ -f "$ARCHIVE.sig" ] || die "release.sh paket/imza üretmedi"
+[ -f "$ARCHIVE" ] || die "release.sh paket üretmedi"
+[ -f "$ARCHIVE.sig" ] || die "release.sh imza üretmedi"
 
 gh release create "$TAG" "$ARCHIVE" "$ARCHIVE.sig" --title "$TAG" --notes-file "$NOTES" --verify-tag
 

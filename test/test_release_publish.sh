@@ -29,6 +29,8 @@ case "$1 $2" in
 esac
 GH
 chmod +x "$BIN/gh"
+# CI ortaminda global git kimligi yoktur: etiket (annotated) ve commit icin test kimligi
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 export FAKE_GH_LOG="$TMP/gh.log" FAKE_GH_CREATE="$TMP/gh.create" FAKE_GH_NOTES="$TMP/gh.notes"
 
 fresh() { # temiz depo + yerel bare origin (main, takip ediyor)
