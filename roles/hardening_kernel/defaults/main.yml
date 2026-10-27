@@ -36,3 +36,7 @@ hardening_kernel_preload_modules:
   - ip6t_REJECT
   - ip6t_rt
   - binfmt_misc
+# Koşulsuz çalışan görevler için sunucu başına anahtarlar (sshpocket menüsü). Varsayılan true = davranış DEĞİŞMEZ; false görevi atlar (daha önce yazılmış dosya SİLİNMEZ).
+hardening_sysctl_hardening: true
+hardening_disable_network_protocols: true
+hardening_disable_filesystem_modules: true

@@ -179,6 +179,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_modul_onyukleme.py` | `kernel.modules_disabled` önyükleme modül listesi (yüklü modüller + netfilter + `binfmt_misc`), Proxmox'ta reddi, `verify_access` tek anahtar/ek bağımsız değişken/ipucu |
 | `test_proxmox_web_jail.py` | Proxmox web arayüzü fail2ban jail'i: filtre regex'i örnek günlük satırlarında, kapı koşulları, kaldırma |
 | `test_pveproxy_siniri.py` | `pveproxy` erişim sınırı: karar betiği (kontrol makinesi, kullanıcı satırı koruması), yazma/geri yükleme/kaldırma, 8006 doğrulaması |
+| `test_pve_banner.py` | Proxmox `pvebanner.service` drop-in'i: yasal uyarının her açılışta geri yazılması (yazma, 2. koşu `changed=0`, generic'te/birim yokken yazmama, kapatınca silme) |
+| `test_platform_anahtarlari.py` | sshpocket menü süzmesi (`platform_var`, `platforms`, `group`) ve tutarlılık denetiminin geçersiz platform bilgisini yakalaması; koşulsuz görevlerin sunucu başına anahtarları (false atlar, true davranışı korur) |
 | `test_proxmox_guard.py` | Preflight platform ve Proxmox koruması: gerçek `stat`/`set_fact`/`fail`, `hardening_allow_unsupported` atlatamaz |
 | `test_platform_wiring.py` | Platform bağlantısı: `hardening_platform=proxmox-host` iken hangi roller/görevler ne yapar (`when` ifadeleri gerçek Ansible ile) |
 | `test_debian_support.py` | Debian 13 desteği (yapısal): alt sürüm anahtarı, Debian'a özgü farklar |
