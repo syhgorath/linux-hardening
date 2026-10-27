@@ -157,11 +157,11 @@ for v in comp.get("vars", []):
 # 4b) platforma göre süzme (sshpocket): platform_var, eylem/değişken platforms, group
 PLATFORMS = {"generic", "proxmox-host", "raspberry-pi"}
 pv = comp.get("platform_var")
-var_names = {v.get("name") for v in comp.get("vars", []) if isinstance(v, dict)}
+var_names = {(v.get("name") if isinstance(v, dict) else v) for v in comp.get("vars", [])}   # eski biçim (yalnızca ad listesi) de kabul edilir
 uses_platforms = any(isinstance(v, dict) and "platforms" in v for v in comp.get("vars", [])) or any("platforms" in a for a in comp.get("actions", {}).values())
 if uses_platforms and not pv:
     err("component.yml: platforms kullanılıyor ama platform_var yok")
-if pv and pv not in var_names:
+if pv and pv not in var_names and any(isinstance(v, dict) for v in comp.get("vars", [])):   # eski biçimde (ad listesi) değişken şeması yok
     err(f"component.yml platform_var ({pv}) vars içinde tanımlı değil")
 for v in comp.get("vars", []):
     if not isinstance(v, dict):
