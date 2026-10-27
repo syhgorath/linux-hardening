@@ -17,6 +17,7 @@
     }
   },
   "inventory_group": "hardening",
+  "platform_var": "hardening_platform",
   "profiles": [
     {
       "id": "ubuntu-26.04",
@@ -85,6 +86,9 @@
       ]
     },
     "pve_firewall_preview": {
+      "platforms": [
+        "proxmox-host"
+      ],
       "cmd": "ansible-playbook playbooks/pve-firewall-onizleme.yml --check",
       "effects": [],
       "requires_sudo": true,
@@ -96,6 +100,9 @@
       ]
     },
     "pve_firewall_apply": {
+      "platforms": [
+        "proxmox-host"
+      ],
       "cmd": "ansible-playbook playbooks/pve-firewall-uygula.yml",
       "effects": [
         "changes-config"
@@ -642,6 +649,10 @@
     },
     {
       "name": "hardening_fail2ban_pve_web",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -649,6 +660,10 @@
     },
     {
       "name": "hardening_pve_pveproxy_allow_from",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "list[cidr]",
       "default": [],
       "description": "Boş (varsayılan): hiçbir şey yazılmaz (daha önce yazılmış blok varsa kaldırılır). Dolu (yalnızca hardening_platform=proxmox-host): /etc/default/pveproxy'ye DENY_FROM=\"all\", ALLOW_FROM=<liste + yerel döngü>, POLICY=\"allow\" yazılır; yalnızca bu IP/CIDR'ler 8006'ya bağlanabilir. pve-firewall'dan BAĞIMSIZ bir savunmadır (firewall kapalı/bozuk olsa bile uygular). Kontrol makinesinin adresi listede olmalıdır, değilse hiçbir şey yazılmaz; kullanıcının kendi ALLOW_FROM/DENY_FROM/POLICY satırları varsa dokunulmaz. Yazdıktan sonra pveproxy yeniden başlatılır ve kontrol makinesinden 8006 doğrulanır; doğrulanamazsa dosya eski haline döner. Ters vekil (reverse proxy) kullanıyorsanız vekilin IP'sini de yazın. Gerçek Proxmox VE 9'da (tek düğüm, boş VM) doğrulandı: blok beklenen biçimde, ::1/128 kabul edildi, listede olmayan adres reddedildi, kontrol makinesi çıkarılınca rol yazmadan durdu; misafirli Proxmox denenmedi. Liste boşaltılınca blok tek başınaysa dosya silinir. Önce snapshot alın"
@@ -661,9 +676,55 @@
     },
     {
       "name": "hardening_pve_keep_banner",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan, yalnızca hardening_platform=proxmox-host): Proxmox'un pvebanner.service'i her açılışta /etc/issue'yu yeniden yazıp yasal uyarıyı ezer (Lynis BANN-7126 her yeniden başlatmadan sonra geri gelir). systemd drop-in'i ile pvebanner'dan sonra /etc/issue.net'teki yasal uyarı /etc/issue'ya geri yazılır. pvebanner.service yoksa hiçbir şey yapılmaz. false: drop-in silinir (pvebanner /etc/issue'yu yine ezer). Konsol girişinde Proxmox'un adres satırı yerine yasal uyarı görünür"
+    },
+    {
+      "name": "hardening_sysctl_hardening",
+      "type": "bool",
+      "default": true,
+      "group": "Çekirdek",
+      "description": "Sunucu başına anahtar. true (varsayılan): çekirdek sysctl sertleştirmesi (/etc/sysctl.d/60-hardening.conf) uygulanır. false: bu dosya yazılmaz ve yeniden yüklenmez; daha önce yazılmış dosya SİLİNMEZ (elle silin). Mevcut davranış true ile aynıdır"
+    },
+    {
+      "name": "hardening_disable_network_protocols",
+      "type": "bool",
+      "default": true,
+      "group": "Çekirdek",
+      "description": "Sunucu başına anahtar. true (varsayılan): kullanılmayan ağ protokolleri (atm, can, dccp, rds, sctp, tipc) /etc/modprobe.d/60-hardening-protocols.conf ile yüklenmez. false: dosya yazılmaz; daha önce yazılmış dosya SİLİNMEZ. CAN veya SCTP kullanan bir uygulama için false yapın"
+    },
+    {
+      "name": "hardening_disable_filesystem_modules",
+      "type": "bool",
+      "default": true,
+      "group": "Çekirdek",
+      "description": "Sunucu başına anahtar. true (varsayılan): kullanılmayan dosya sistemi modülleri (cramfs, freevxfs, hfs, hfsplus, jffs2, firewire-core; CIS 1.1.1.x) /etc/modprobe.d/60-hardening-filesystems.conf ile yüklenmez. false: dosya yazılmaz; daha önce yazılmış dosya SİLİNMEZ. Bu dosya sistemlerini bağlamanız gerekiyorsa false yapın"
+    },
+    {
+      "name": "hardening_unattended_upgrades",
+      "type": "bool",
+      "default": true,
+      "group": "Sistem",
+      "description": "Sunucu başına anahtar. true (varsayılan): unattended-upgrades kurulur ve otomatik güvenlik güncellemeleri açılır (/etc/apt/apt.conf.d/20auto-upgrades; otomatik yeniden başlatma YOK). false: ikisi de atlanır; kurulu paket ve yazılmış dosya KALDIRILMAZ. Güncellemeleri kendi araçlarınızla yönetiyorsanız false yapın"
+    },
+    {
+      "name": "hardening_legal_banner",
+      "type": "bool",
+      "default": true,
+      "group": "Sistem",
+      "description": "Sunucu başına anahtar. true (varsayılan): /etc/issue ve /etc/issue.net yasal uyarı metniyle yazılır (SSH Banner /etc/issue.net'i gösterir; Proxmox'ta hardening_pve_keep_banner bu seçeneğe bağlıdır). false: iki dosya da yazılmaz ve Proxmox banner drop-in'i yazılmaz; daha önce yazılmış metin SİLİNMEZ"
+    },
+    {
+      "name": "hardening_journald_persistent",
+      "type": "bool",
+      "default": true,
+      "group": "Sistem",
+      "description": "Sunucu başına anahtar. true (varsayılan): journald kalıcı ve sıkıştırılmış depolamaya alınır (/etc/systemd/journald.conf.d/60-hardening.conf; CIS 6.1.1.1.6) ve journald yeniden başlatılır. false: dosya yazılmaz; daha önce yazılmış dosya SİLİNMEZ. Günlükleri uzak sunucuya gönderip yerelde kalıcı tutmak istemiyorsanız false yapın"
     },
     {
       "name": "hardening_proc_hidepid",
@@ -693,12 +754,20 @@
     },
     {
       "name": "hardening_pve_web_allow_from",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "list[cidr]",
       "default": [],
       "description": "Boş (varsayılan): Proxmox web arayüzü (8006) yalnızca yönetim ağlarından (hardening_ssh_allow_from) açılır, çıktı değişmez. Dolu: bu ağlar (örn. ters vekil/NPM IP'si) yönetim ağlarına EK olarak 8006'ya erişir ([IPSET web]); SSH, ping ve ek portlar yönetim ağlarında kalır. Yalnızca pve_firewall_* eylemleri ve hardening_pve_apply=true ile yazılır. Gerçek Proxmox VE 9'da DENENMEDİ"
     },
     {
       "name": "hardening_pve_web_exclusive",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -785,6 +854,10 @@
     },
     {
       "name": "hardening_pve_strict",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -792,6 +865,10 @@
     },
     {
       "name": "hardening_aide_pve_excludes",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "list[string]",
       "default": [
         "/etc/pve",
@@ -805,6 +882,10 @@
     },
     {
       "name": "hardening_pve_apply",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -812,6 +893,10 @@
     },
     {
       "name": "hardening_pve_firewall_extra_ports",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
       "type": "list[string]",
       "default": [],
       "description": "Proxmox güvenlik duvarında yönetim ağlarına ek açılacak portlar: \"443/tcp\", \"8000:8010/udp\". Varsayılan boş: rpcbind (111) güvenlik duvarı açılınca kapanır; Proxmox 8006, VNC (5900-5999), SPICE (3128), 22 ve taşıma portlarını yönetim ağlarına kendisi açar. Yalnızca hardening_pve_apply=true iken etkili"

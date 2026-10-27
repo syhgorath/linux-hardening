@@ -154,6 +154,36 @@ for v in comp.get("vars", []):
         # sshpocket warn_if değerini "değer buna eşitse uyar ve onay iste" diye yorumlar; varsayılan zaten o değerse HER çalıştırmada gereksiz onay istenir (#74)
         err(f"component.yml vars: {name} warn_if ({meta['warn_if']}) varsayılana eşit: kullanıcı hiçbir şeyi değiştirmediği hâlde her çalıştırmada uyarı/onay çıkar (warn_if'i kaldırın)")
 
+# 4b) platforma göre süzme (sshpocket): platform_var, eylem/değişken platforms, group
+PLATFORMS = {"generic", "proxmox-host", "raspberry-pi"}
+pv = comp.get("platform_var")
+var_names = {(v.get("name") if isinstance(v, dict) else v) for v in comp.get("vars", [])}   # eski biçim (yalnızca ad listesi) de kabul edilir
+uses_platforms = any(isinstance(v, dict) and "platforms" in v for v in comp.get("vars", [])) or any("platforms" in a for a in comp.get("actions", {}).values())
+if uses_platforms and not pv:
+    err("component.yml: platforms kullanılıyor ama platform_var yok")
+if pv and pv not in var_names and any(isinstance(v, dict) for v in comp.get("vars", [])):   # eski biçimde (ad listesi) değişken şeması yok
+    err(f"component.yml platform_var ({pv}) vars içinde tanımlı değil")
+for v in comp.get("vars", []):
+    if not isinstance(v, dict):
+        continue
+    if "platforms" in v:
+        pl = v["platforms"]
+        if not isinstance(pl, list) or not pl or not set(pl) <= PLATFORMS:
+            err(f"component.yml vars: {v['name']} platforms geçersiz: {pl!r} (izinli: {sorted(PLATFORMS)})")
+        if v.get("required"):
+            err(f"component.yml vars: {v['name']} platforms taşıyor ve required: gizlendiğinde yine zorunlu kalır, required yapmayın")
+    if "group" in v and not (isinstance(v["group"], str) and 1 <= len(v["group"]) <= 40):
+        err(f"component.yml vars: {v['name']} group 1-40 karakterlik düz metin olmalı")
+for aname, a in comp.get("actions", {}).items():
+    if "platforms" in a:
+        pl = a["platforms"]
+        if not isinstance(pl, list) or not pl or not set(pl) <= PLATFORMS:
+            err(f"actions.{aname}.platforms geçersiz: {pl!r}")
+    for req in a.get("requires", []):
+        ra = comp["actions"].get(req, {})
+        if "platforms" in ra and not ("platforms" in a and set(a["platforms"]) <= set(ra["platforms"])):
+            err(f"actions.{aname}.requires {req}: önkoşulun platformları ({ra['platforms']}) eylemin tüm platformlarını kapsamalı (sshpocket manifesti reddeder)")
+
 # 5) eylemler
 for name, act in comp.get("actions", {}).items():
     for k in ("cmd", "effects", "requires_sudo"):

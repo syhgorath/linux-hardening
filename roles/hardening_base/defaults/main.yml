@@ -46,6 +46,10 @@ hardening_malware_scanner: none
 # true (varsayılan): postfix kuruluysa SMTP banner'ı `$myhostname ESMTP` yapılır (Lynis MAIL-8818: banner yazılım/işletim sistemi adını sızdırmasın). Yalnızca banner metnini değiştirir.
 # Postfix kurulu değilse (Ubuntu'da MTA dma) hiçbir şey yapılmaz. false: dokunulmaz (eski banner geri yazılmaz).
 hardening_postfix_banner: true
+# Koşulsuz çalışan görevler için sunucu başına anahtarlar (sshpocket menüsü). Varsayılan true = davranış DEĞİŞMEZ; false görevi atlar (daha önce yazılmış dosya SİLİNMEZ, paket kaldırılmaz).
+hardening_unattended_upgrades: true
+hardening_legal_banner: true
+hardening_journald_persistent: true
 # true (varsayılan, yalnızca proxmox-host): pvebanner.service her açılışta /etc/issue'yu ezer; drop-in ile yasal uyarı (/etc/issue.net) ondan sonra /etc/issue'ya geri yazılır (Lynis BANN-7126).
 # false: drop-in silinir (pvebanner /etc/issue'yu yine ezer).
 hardening_pve_keep_banner: true

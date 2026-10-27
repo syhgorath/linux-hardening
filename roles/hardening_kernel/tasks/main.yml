@@ -19,6 +19,7 @@
     group: root
     mode: "0644"
   notify: Reload sysctl
+  when: hardening_sysctl_hardening | bool
 
 - name: Disable unused network protocols
   ansible.builtin.copy:
@@ -32,6 +33,7 @@
       install {{ m }} /bin/false
       blacklist {{ m }}
       {% endfor %}
+  when: hardening_disable_network_protocols | bool
 
 - name: Disable unused filesystem modules (CIS 1.1.1.x)
   ansible.builtin.copy:
@@ -45,6 +47,7 @@
       install {{ m }} /bin/false
       blacklist {{ m }}
       {% endfor %}
+  when: hardening_disable_filesystem_modules | bool
 
 # kernel.modules_disabled=1 (hardening_kernel_modules_disabled, varsayılan KAPALI) önyüklemede erken uygulanır; ondan SONRA hiçbir modül yüklenemez. Gerekli modüller bu kilitten ÖNCE
 # systemd-modules-load tarafından yüklensin diye /etc/modules-load.d/ altına yazılır: (1) şu an yüklü TÜM modüller (donanım/sanal sürücüler, Docker overlay/br_netfilter...),

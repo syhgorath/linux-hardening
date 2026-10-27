@@ -26,6 +26,7 @@
   ansible.builtin.apt:
     name: unattended-upgrades
     state: present
+  when: hardening_unattended_upgrades | bool
 
 - name: Enable automatic security updates (otomatik reboot YOK)
   ansible.builtin.copy:
@@ -36,6 +37,7 @@
     content: |
       APT::Periodic::Update-Package-Lists "1";
       APT::Periodic::Unattended-Upgrade "1";
+  when: hardening_unattended_upgrades | bool
 
 - name: Disable usb-storage
   ansible.builtin.copy:
@@ -67,6 +69,7 @@
   loop:
     - /etc/issue
     - /etc/issue.net
+  when: hardening_legal_banner | bool
 
 # Proxmox VE: pvebanner.service her açılışta /etc/issue'yu yeniden yazar (konsol giriş adresi) ve yasal uyarıyı ezer (Lynis BANN-7126 geri gelir; sshpocket 0.8.3 turunda görüldü).
 # Drop-in: pvebanner çalıştıktan sonra /etc/issue.net'teki uyarı /etc/issue'ya geri kopyalanır. /etc/issue.net'e dokunulmaz.
@@ -86,6 +89,7 @@
   when:
     - hardening_platform | default('generic') == 'proxmox-host'
     - hardening_pve_keep_banner | bool
+    - hardening_legal_banner | bool
     - hardening_pve_banner_stat.stat.exists | default(false)
 
 - name: Keep the legal banner after pvebanner.service (Proxmox)
@@ -102,6 +106,7 @@
   when:
     - hardening_platform | default('generic') == 'proxmox-host'
     - hardening_pve_keep_banner | bool
+    - hardening_legal_banner | bool
     - hardening_pve_banner_stat.stat.exists | default(false)
 
 - name: Reload systemd after the pvebanner drop-in  # noqa: no-handler
@@ -139,6 +144,7 @@
       Storage=persistent
       Compress=yes
   notify: Restart journald
+  when: hardening_journald_persistent | bool
 
 # CIS 6.1.1.1.5: journald döndürme/boyut sınırları. Varsayılan KAPALI (günlük saklama süresini etkiler); kapalıyken yalnızca bu rolün dosyası silinir.
 - name: Validate the journald rotation settings

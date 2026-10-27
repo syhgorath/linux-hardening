@@ -182,6 +182,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_modul_onyukleme.py` | `kernel.modules_disabled` boot-time module list (loaded modules + netfilter + `binfmt_misc`), refusal on Proxmox, `verify_access` single key/extra arguments/hint |
 | `test_proxmox_web_jail.py` | Proxmox web UI fail2ban jail: filter regex on sample log lines, gate conditions, removal |
 | `test_pveproxy_siniri.py` | `pveproxy` access limit: decision script (controller address, user line protection), write/restore/removal, 8006 verification |
+| `test_pve_banner.py` | Proxmox `pvebanner.service` drop-in: the legal banner is restored on every boot (write, 2nd run `changed=0`, no write on generic/missing unit, removal when off) |
+| `test_platform_anahtarlari.py` | sshpocket menu filtering (`platform_var`, `platforms`, `group`) and the consistency check rejecting invalid platform data; per-server switches for unconditional tasks (false skips, true keeps behaviour) |
 | `test_proxmox_guard.py` | Preflight platform and Proxmox guard: real `stat`/`set_fact`/`fail`, `hardening_allow_unsupported` cannot bypass |
 | `test_platform_wiring.py` | Platform wiring: what roles/tasks do when `hardening_platform=proxmox-host` (`when` expressions evaluated by real Ansible) |
 | `test_debian_support.py` | Debian 13 support (structural): minor-version key, Debian-specific differences |
