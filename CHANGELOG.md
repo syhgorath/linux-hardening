@@ -5,14 +5,16 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
-### Eklendi
-- sshpocket menü süzmesi (geriye uyumlu; eski sshpocket yok sayar): üst düzey `platform_var: hardening_platform`; `pve_firewall_preview` ve `pve_firewall_apply` eylemlerinde `platforms: [proxmox-host]`; dokuz Proxmox değişkeninde `platforms: [proxmox-host]` + `group: Proxmox`. `scripts/check-consistency.py` bunları denetler (platform adları, `requires` platform kapsaması, gizlenen değişkenin `required` olmaması). Yeni `test_platform_anahtarlari.py`.
-- Koşulsuz çalışan görevler için sunucu başına anahtarlar (hepsi `bool`, varsayılan **true** = davranış DEĞİŞMEZ; false görevi atlar, daha önce yazılmış dosya/paket kaldırılmaz): `hardening_sysctl_hardening`, `hardening_disable_network_protocols`, `hardening_disable_filesystem_modules`, `hardening_unattended_upgrades`, `hardening_legal_banner`, `hardening_journald_persistent` (116 değişken). `hardening_pve_keep_banner` banner drop-in'i `hardening_legal_banner` kapalıyken yazılmaz.
+## [0.8.4] - 2026-10-28
+
+v0.8.3'ten sonra, **sshpocket menü süzmesi** ve sshpocket 3.6.13 ara raporunun (gerçek Proxmox VE 9 tek düğüm + Ubuntu 26.04) bulguları. `component.yml` `vars` listesi 116 değişken, 8 eylem. **Denenmeyenler:** fiziksel Proxmox, misafirli/kümeli Proxmox, Docker'lı VM, Raspberry Pi, `hardening_pve_web_exclusive`'in yeni küme ayrımının sshpocket'in gerçek apply akışıyla doğrulanması (nested Proxmox'ta elle denendi), `apt_upgrade` + phased (bekleyen güncellemeyle), `auditd_disk_full_halt`, `auditd_immutable` (`-e 2`), silahlı geri alma.
 
 ### Düzeltildi
 - `hardening_pve_web_exclusive` gerçek Proxmox'ta etkisizdi (0.8.3): Proxmox 8006/3128/VNC/SSH'ı `management` kümesine kendi yerleşik kurallarıyla açar ve o kümeye yerel ağı ekler, bu yüzden yalnızca bizim 8006 kuralımızı daraltmak yetmiyordu. Artık exclusive açıkken `management` kümesi ve `local_network` takma adı web listesine daraltılır, SSH/ping/ek portlar yeni `[IPSET admin]` kümesinden verilir. Varsayılan (KAPALI) çıktı değişmedi. Yan etki: web listesindeki ağlar 3128/VNC/SSH'a da güvenlik duvarı düzeyinde erişir. Nested Proxmox VE 9'da elle doğrulandı; sshpocket gerçek akışıyla henüz denenmedi.
 
 ### Eklendi
+- sshpocket menü süzmesi (geriye uyumlu; eski sshpocket yok sayar): üst düzey `platform_var: hardening_platform`; `pve_firewall_preview` ve `pve_firewall_apply` eylemlerinde `platforms: [proxmox-host]`; dokuz Proxmox değişkeninde `platforms: [proxmox-host]` + `group: Proxmox`. `scripts/check-consistency.py` bunları denetler (platform adları, `requires` platform kapsaması, gizlenen değişkenin `required` olmaması). Yeni `test_platform_anahtarlari.py`.
+- Koşulsuz çalışan görevler için sunucu başına anahtarlar (hepsi `bool`, varsayılan **true** = davranış DEĞİŞMEZ; false görevi atlar, daha önce yazılmış dosya/paket kaldırılmaz): `hardening_sysctl_hardening`, `hardening_disable_network_protocols`, `hardening_disable_filesystem_modules`, `hardening_unattended_upgrades`, `hardening_legal_banner`, `hardening_journald_persistent` (116 değişken). `hardening_pve_keep_banner` banner drop-in'i `hardening_legal_banner` kapalıyken yazılmaz.
 - `hardening_pve_keep_banner` (varsayılan **AÇIK**; yalnızca `proxmox-host`): Proxmox'un `pvebanner.service`'i her açılışta `/etc/issue`'yu ezip yasal uyarıyı siliyordu (Lynis BANN-7126 her yeniden başlatmada geri geliyordu); systemd drop-in'i uyarıyı `/etc/issue.net`'ten geri yazar (sshpocket 3.6.13 turunda bulundu).
 
 ### Belgeler
