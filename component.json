@@ -167,23 +167,27 @@
   "vars": [
     {
       "name": "hardening_ssh_allow_from",
+      "group": "SSH",
       "type": "list[cidr]",
       "required": true,
       "description": "SSH'a izin verilen yönetim ağları (CIDR listesi). Sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...): ufw yalnızca bunlardan SSH'a izin verir, yalnızca VPN yazarsan LAN'dan SSH kesilir. Kontrol makinesinin sunucudan görünen adresi de listede olmalı"
     },
     {
       "name": "hardening_scan_dir",
+      "group": "Sistem",
       "type": "path",
       "description": "Lynis raporları ve summary.json buraya yazılır (hassas veri; dizin 0700, dosyalar 0600). Verilmezse kullanıcı klasörü kullanılır (~/.local/share/linux-hardening/scans, XDG_DATA_HOME varsa onun altı), paket klasörü değil"
     },
     {
       "name": "hardening_time_report",
+      "group": "Sistem",
       "type": "bool",
       "default": true,
       "description": "Salt okunur zaman raporu: chrony çalışıyor mu, kaynaklar seçili mi, saat kaynaklara göre kayık mı (snapshot dönüşünde 'synchronized: yes' yanıltıcı olabilir). Saati ya da yapılandırmayı DEĞİŞTİRMEZ; false = rapor çalışmaz"
     },
     {
       "name": "hardening_time_makestep",
+      "group": "Sistem",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -191,6 +195,7 @@
     },
     {
       "name": "hardening_time_max_offset_seconds",
+      "group": "Sistem",
       "type": "int",
       "default": 5,
       "min": 1,
@@ -199,12 +204,14 @@
     },
     {
       "name": "hardening_ufw_extra_allow",
+      "group": "Güvenlik duvarı",
       "type": "list[string]",
       "default": [],
       "description": "Gelen trafikte ek açılacak portlar/kurallar (varsayılan: hepsi kapalı). Biçimler: \"443/tcp\", \"80\", \"8000:8010/tcp\" ya da kaynak kısıtlı \"from 192.0.2.5 to any port 6379 proto tcp\" (kaynak: IP, CIDR ya da any). Geçersiz girdi hiçbir rol çalışmadan reddedilir. Ansible'da sunucuya özel kurallar için hardening_ufw_extra_allow_host (grupla birleşir)"
     },
     {
       "name": "hardening_ufw_prune_ssh",
+      "group": "Güvenlik duvarı",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -212,42 +219,49 @@
     },
     {
       "name": "hardening_apt_listchanges",
+      "group": "Paketler",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): apt-listchanges kurulur ve yükseltmeyi bloklamayacak şekilde ayarlanır (frontend=text, confirm=false, e-posta yok); değişiklik notları apt çıktısında/günlüğünde görünür. Bilgilendirmedir. apt-listbugs Ubuntu'da yoktur ve eklenmez. false: kurulmaz (kurulu paket kaldırılmaz)"
     },
     {
       "name": "hardening_debsums",
+      "group": "Paketler",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): debsums kurulur (Lynis PKGS-7370: paket dosyalarını dpkg'nin bilinen-iyi toplamlarıyla doğrular) ve /etc/default/debsums içinde CRON_CHECK hardening_debsums_cron_check değerine ayarlanır. Zamanlanmış kontrol haftada bir disk okur; sonuç e-postayla gider (MTA yoksa görünmez). false: debsums kurulmaz, CRON_CHECK'e dokunulmaz (kurulu paket kaldırılmaz)"
     },
     {
       "name": "hardening_debsums_cron_check",
+      "group": "Paketler",
       "type": "string",
       "default": "weekly",
       "description": "debsums zamanlaması: daily | weekly (varsayılan) | monthly | never (zamanlama yok; Lynis PKGS-7370 zamanlama puanı verilmez). Yalnızca hardening_debsums=true iken"
     },
     {
       "name": "hardening_apt_show_versions",
+      "group": "Paketler",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): apt-show-versions kurulur (Lynis PKGS-7394: yükseltilebilir paketleri listeler). Salt okunur araç. Lynis'in bu testten puan alması için sistemde yükseltilebilir paket de kalmamalıdır. false: kurulmaz (kurulu paket kaldırılmaz)"
     },
     {
       "name": "hardening_process_accounting",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): acct kurulur ve acct.service etkinleştirilir (Lynis ACCT-9622: süreç muhasebesi, /var/log/account/pacct). Küçük bir günlük yazma bedeli vardır; logrotate paketle gelir. false: kurulmaz/etkinleştirilmez (kurulu paket kaldırılmaz)"
     },
     {
       "name": "hardening_fail2ban_jail_local",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): boş (yalnızca açıklama) bir /etc/fail2ban/jail.local oluşturulur (Lynis DEB-0880: değişiklikler jail.conf yerine jail.local'de tutulmalı). Var olan jail.local'e dokunulmaz. Davranışı değiştirmez. false: oluşturulmaz"
     },
     {
       "name": "hardening_apt_upgrade",
+      "group": "Paketler",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -255,12 +269,14 @@
     },
     {
       "name": "hardening_kernel_extra_sysctl",
+      "group": "Çekirdek",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): dört ek sysctl: kernel.unprivileged_bpf_disabled=1 (ayrıcalıksız eBPF yeniden başlatmaya kadar kalıcı kapalı; Ubuntu varsayılanı 2 zaten kapalı ama root açabiliyor), fs.protected_fifos=2, kernel.sysrq=0 (VM konsolundan SysRq acil yeniden başlatma kullanılamaz), net.core.bpf_jit_harden=2 (eBPF yoğun iş yüklerinde küçük performans bedeli). false: yazılmaz"
     },
     {
       "name": "hardening_kernel_modules_disabled",
+      "group": "Çekirdek",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -268,24 +284,28 @@
     },
     {
       "name": "hardening_ufw_log_martians",
+      "group": "Güvenlik duvarı",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): ufw'nin kendi /etc/ufw/sysctl.conf dosyasında log_martians=1 yapılır ve canlı değer düzeltilir (CIS 3.3.1). ufw dosyası aksi halde log_martians'ı 0'a çekip sysctl.d'deki 1'i eziyordu (gerçek Ubuntu VM'inde Lynis ile görüldü). Hatalı kaynak adresli paketler günlüğe yazılır (gürültülü ağlarda günlük şişebilir). false: dokunulmaz"
     },
     {
       "name": "hardening_pam_tmpdir",
+      "group": "Hesaplar",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): libpam-tmpdir kurulur; her oturum özel 0700 bir geçici dizin (/tmp/user/<uid>) ve $TMPDIR alır. /tmp'i sabit varsayan betikler etkilenebilir. false: kurulmaz (kurulu paket kaldırılmaz)"
     },
     {
       "name": "hardening_aide_scheduled_check",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): aide-common'ın günlük kontrol zamanlayıcısı (dailyaidecheck.timer) açık ve başlatılmış olur (CIS 6.3.2); paket zaten açık kurar, biri kapattıysa geri açılır. Zamanlayıcının işi değişmez (veritabanı kendiliğinden güncellenmez; e-posta teslim edilmez, sonuç /var/log/aide/). false: zamanlayıcıya dokunulmaz"
     },
     {
       "name": "hardening_su_restrict",
+      "group": "Hesaplar",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -293,18 +313,21 @@
     },
     {
       "name": "hardening_su_group",
+      "group": "Hesaplar",
       "type": "string",
       "default": "sugroup",
       "description": "su yapabilecek grup (hardening_su_restrict=true iken). Varsayılan sugroup boş oluşturulur (en sıkı). Mevcut bir gruba (örn. sudo) çevrilirse o grubun üyeleri su yapabilir. Küçük harf, rakam, _ ve -; en çok 32 karakter"
     },
     {
       "name": "hardening_root_env_report",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): root ortamı SALT OKUNUR raporu (CIS 5.4.2: root PATH bütünlüğü ve root umask): PATH'te boş girdi, '.', olmayan ya da yazılabilir dizin ve 027'den gevşek umask uyarılır. Hiçbir şeyi değiştirmez. false: rapor çalışmaz"
     },
     {
       "name": "hardening_tmp_noexec",
+      "group": "Çekirdek",
       "type": "bool",
       "default": true,
       "warn_if": false,
@@ -312,6 +335,7 @@
     },
     {
       "name": "hardening_shm_noexec",
+      "group": "Çekirdek",
       "type": "bool",
       "default": true,
       "warn_if": false,
@@ -319,6 +343,7 @@
     },
     {
       "name": "hardening_tmp_report",
+      "group": "Çekirdek",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): /tmp ve /dev/shm bağlama seçenekleri SALT OKUNUR raporu (CIS 1.1.2: ayrı bağlama, nodev, nosuid, noexec). Hiçbir şeyi değiştirmez; noexec yoksa yalnızca not düşer, nodev/nosuid yoksa, ayrı bağlama değilse ya da Ansible remote_tmp /tmp altındaysa uyarır. false: rapor çalışmaz"
@@ -333,6 +358,7 @@
     },
     {
       "name": "hardening_docker_daemon_manage",
+      "group": "Docker",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -340,6 +366,7 @@
     },
     {
       "name": "hardening_docker_no_new_privileges",
+      "group": "Docker",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -347,6 +374,7 @@
     },
     {
       "name": "hardening_docker_userland_proxy_off",
+      "group": "Docker",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -354,6 +382,7 @@
     },
     {
       "name": "hardening_docker_icc_off",
+      "group": "Docker",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -361,6 +390,7 @@
     },
     {
       "name": "hardening_docker_restart",
+      "group": "Docker",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -368,6 +398,7 @@
     },
     {
       "name": "hardening_docker_allowed_published",
+      "group": "Docker",
       "type": "list[int]",
       "default": [
         80,
@@ -377,6 +408,7 @@
     },
     {
       "name": "hardening_disable_usb_storage",
+      "group": "Çekirdek",
       "type": "bool",
       "default": true,
       "warn_if": false,
@@ -384,6 +416,7 @@
     },
     {
       "name": "hardening_disable_coredump",
+      "group": "Çekirdek",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -391,6 +424,7 @@
     },
     {
       "name": "hardening_remove_legacy_clients",
+      "group": "Paketler",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -398,6 +432,7 @@
     },
     {
       "name": "hardening_shell_timeout_seconds",
+      "group": "Hesaplar",
       "type": "int",
       "default": 0,
       "min": 0,
@@ -406,6 +441,7 @@
     },
     {
       "name": "hardening_pwquality_difok",
+      "group": "Hesaplar",
       "type": "int",
       "default": 0,
       "min": 0,
@@ -414,6 +450,7 @@
     },
     {
       "name": "hardening_pwquality_maxsequence",
+      "group": "Hesaplar",
       "type": "int",
       "default": 0,
       "min": 0,
@@ -422,12 +459,14 @@
     },
     {
       "name": "hardening_pwquality_enforce_for_root",
+      "group": "Hesaplar",
       "type": "bool",
       "default": false,
       "description": "true: parola kalitesi kuralları root'un parola değişikliğine de uygulanır (CIS 5.3.3.2.8, pwquality enforce_for_root). Parolayı betikle ayarlayan otomasyonun zayıf parolası reddedilir. Varsayılan false"
     },
     {
       "name": "hardening_journald_rotation",
+      "group": "Sistem",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -435,48 +474,56 @@
     },
     {
       "name": "hardening_journald_system_max_use",
+      "group": "Sistem",
       "type": "string",
       "default": "1G",
       "description": "journald SystemMaxUse (sayı + K|M|G|T, örn. 1G). Yalnızca hardening_journald_rotation=true iken etkili"
     },
     {
       "name": "hardening_journald_runtime_max_use",
+      "group": "Sistem",
       "type": "string",
       "default": "200M",
       "description": "journald RuntimeMaxUse (sayı + K|M|G|T, örn. 200M). Yalnızca hardening_journald_rotation=true iken etkili"
     },
     {
       "name": "hardening_journald_max_file_sec",
+      "group": "Sistem",
       "type": "string",
       "default": "1month",
       "description": "journald MaxFileSec (sayı + s|min|h|day|week|month|year, örn. 1month). Yalnızca hardening_journald_rotation=true iken etkili"
     },
     {
       "name": "hardening_ssh_allow_users",
+      "group": "SSH",
       "type": "list[string]",
       "default": [],
       "description": "SSH erişim kısıtı (CIS 5.1.5, sshd AllowUsers): yalnızca bu kullanıcılar SSH ile girebilir; boş = kısıt yok (varsayılan). Ansible'ın bağlandığı kullanıcı listede değilse rol hiçbir şey yazmadan durur. Yalnızca basit adlar; joker, @ ve ! desteklenmez. hardening_ssh_allow_groups ile birlikte kullanılırsa VE ile birleşir"
     },
     {
       "name": "hardening_ssh_allow_groups",
+      "group": "SSH",
       "type": "list[string]",
       "default": [],
       "description": "SSH erişim kısıtı (CIS 5.1.5, sshd AllowGroups): yalnızca bu gruplardaki kullanıcılar SSH ile girebilir; boş = kısıt yok (varsayılan). Ansible'ın bağlandığı kullanıcı bu gruplarda değilse rol hiçbir şey yazmadan durur"
     },
     {
       "name": "hardening_report",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): SALT OKUNUR sistem raporu (CIS 3.1.1 IPv6 durumu, 2.1.23 dinleyen servisler, 7.2.11 kullanıcı nokta dizinleri, 5.3.3.4.1 nullok ve boş parolalı hesaplar). Hiçbir şeyi değiştirmez; yalnızca not ve uyarı yazar"
     },
     {
       "name": "hardening_approved_listeners",
+      "group": "Denetim",
       "type": "list[string]",
       "default": [],
       "description": "Onaylı dinleyen portlar (\"22/tcp\", \"123/udp\"). Boş (varsayılan): rapor yalnızca yerel olmayan adreste dinleyen portları not eder. Dolu: listede olmayanlar UYARI olur (CIS 2.1.23); hiçbir servis kapatılmaz. Yalnızca hardening_report=true iken etkili"
     },
     {
       "name": "hardening_ssh_disable_password",
+      "group": "SSH",
       "type": "bool",
       "default": true,
       "warn_if": false,
@@ -484,6 +531,7 @@
     },
     {
       "name": "hardening_ssh_kbdinteractive",
+      "group": "SSH",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -491,12 +539,14 @@
     },
     {
       "name": "hardening_ssh_allow_tcp_forwarding",
+      "group": "SSH",
       "type": "string",
       "default": "no",
       "description": "sshd AllowTcpForwarding: no (varsayılan) | local | remote | yes. ProxyJump/SSH tüneli kullanıyorsanız jump host'ta en az local gerekir; yes gereksiz geniştir. Geçersiz değerde rol hiçbir şey yazmadan durur"
     },
     {
       "name": "hardening_fail2ban_maxretry",
+      "group": "Denetim",
       "type": "int",
       "default": 5,
       "min": 1,
@@ -505,18 +555,21 @@
     },
     {
       "name": "hardening_fail2ban_bantime",
+      "group": "Denetim",
       "type": "string",
       "default": "1h",
       "description": "fail2ban sshd jail ban süresi (fail2ban zaman biçimi: 10m, 1h, 1d; varsayılan 1h)"
     },
     {
       "name": "hardening_fail2ban_ignoreip",
+      "group": "Denetim",
       "type": "string",
       "default": "127.0.0.1/8 ::1",
       "description": "fail2ban'ın asla banlamayacağı adresler (boşlukla ayrılmış). Ansible'ın bağlandığı kontrol makinesinin sunucunun GÖRDÜĞÜ adresi buna otomatik eklenir. Tüm yönetim ağını yazmak önerilmez (içerideki biri bile banlanmaz)"
     },
     {
       "name": "hardening_pass_max_days",
+      "group": "Hesaplar",
       "type": "int",
       "default": 365,
       "min": 1,
@@ -525,6 +578,7 @@
     },
     {
       "name": "hardening_pass_min_days",
+      "group": "Hesaplar",
       "type": "int",
       "default": 1,
       "min": 0,
@@ -533,6 +587,7 @@
     },
     {
       "name": "hardening_pass_warn_age",
+      "group": "Hesaplar",
       "type": "int",
       "default": 7,
       "min": 0,
@@ -541,12 +596,14 @@
     },
     {
       "name": "hardening_umask",
+      "group": "Hesaplar",
       "type": "string",
       "default": "027",
       "description": "Varsayılan umask (login.defs UMASK; CIS 027 ya da daha kısıtlı). YENİ dosyaların izinlerini etkiler; 027 grup yazma ve diğer erişimi kapatır"
     },
     {
       "name": "hardening_pwquality_minlen",
+      "group": "Hesaplar",
       "type": "int",
       "default": 14,
       "min": 8,
@@ -555,24 +612,28 @@
     },
     {
       "name": "hardening_ufw_extra_allow_host",
+      "group": "Güvenlik duvarı",
       "type": "list[string]",
       "default": [],
       "description": "Yalnızca BU sunucuya özel ek ufw kuralları (hardening_ufw_extra_allow ile BİRLEŞTİRİLİR, tekrarlar atılır). Biçimler: \"443/tcp\", \"80\", \"8000:8010/tcp\" ya da kaynak kısıtlı \"from 192.0.2.5 to any port 6379 proto tcp\". Geçersiz girdide ufw'ye dokunulmadan durur"
     },
     {
       "name": "hardening_auditd_docker_rules",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): Docker kuruluysa Docker dosyaları/dizinleri için denetim kuralı eklenir (CIS Docker 1.1.x); yalnızca VAR OLAN yollar için yazılır. false: Docker audit kuralı eklenmez"
     },
     {
       "name": "hardening_sudo_logfile",
+      "group": "Hesaplar",
       "type": "path",
       "default": "/var/log/sudo.log",
       "description": "sudo günlük dosyası (CIS 5.2.3). Ubuntu 26.04'te varsayılan sudo-rs dosya günlüğünü desteklemez, orada olaylar journald'e gider ve bu değer kullanılmaz"
     },
     {
       "name": "hardening_auditd_cis_l2",
+      "group": "Denetim",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -580,6 +641,7 @@
     },
     {
       "name": "hardening_auditd_conf_cis",
+      "group": "Denetim",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -587,6 +649,7 @@
     },
     {
       "name": "hardening_auditd_disk_full_halt",
+      "group": "Denetim",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -594,14 +657,16 @@
     },
     {
       "name": "hardening_auditd_backlog_limit",
+      "group": "Denetim",
       "type": "int",
       "default": 0,
       "min": 0,
       "max": 1048576,
-      "description": "0 (varsayılan): dokunulmaz. >0 (önerilen 8192): GRUB_CMDLINE_LINUX'a audit_backlog_limit=N yazılır ve update-grub çalışır (CIS 6.2.1). Etkisi YENİDEN BAŞLATMADAN sonra başlar ve geri alma güvenlik ağı kapsamında DEĞİLDİR; /etc/default/grub yoksa (Raspberry Pi, LXC) dokunulmaz. Önce snapshot alın"
+      "description": "0 (varsayılan): dokunulmaz. >0 (önerilen 8192): GRUB_CMDLINE_LINUX'a audit_backlog_limit=N yazılır ve update-grub çalışır (CIS 6.2.1). Etkisi YENİDEN BAŞLATMADAN sonra başlar ve geri alma güvenlik ağı kapsamında DEĞİLDİR; /etc/default/grub yoksa (Raspberry Pi, LXC) dokunulmaz. hardening_auditd_immutable (-e 2) ile etkileşim: kural kilitliyken (-e 2) GRUB satırı yine yazılır ama çalışan çekirdeğe uygulanmaz (yalnızca yeniden başlatma sonrası); kural yükleme zaten atlanır ve uyarı verilir. Önce snapshot alın"
     },
     {
       "name": "hardening_auditd_immutable",
+      "group": "Denetim",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -609,12 +674,14 @@
     },
     {
       "name": "hardening_aide_audit_tools",
+      "group": "Denetim",
       "type": "bool",
       "default": false,
       "description": "false (varsayılan): yazılmaz. true: audit araçları (auditctl, auditd, ausearch, aureport, autrace, augenrules) AIDE'de sha512 özet ve öznitelik denetimiyle izlenir (CIS 6.3.3, Level 2). AIDE veritabanı bu kuraldan önce üretildiyse aide --update gerekir; araçlar paketle güncellenince günlük kontrol 'değişti' der (beklenen)"
     },
     {
       "name": "hardening_ssh_max_sessions",
+      "group": "SSH",
       "type": "int",
       "default": 4,
       "min": 1,
@@ -623,6 +690,7 @@
     },
     {
       "name": "hardening_ufw_outgoing_deny",
+      "group": "Güvenlik duvarı",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -630,6 +698,7 @@
     },
     {
       "name": "hardening_restrict_compilers",
+      "group": "Çekirdek",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -637,6 +706,7 @@
     },
     {
       "name": "hardening_apparmor_enforce",
+      "group": "Çekirdek",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -644,6 +714,7 @@
     },
     {
       "name": "hardening_malware_scanner",
+      "group": "Denetim",
       "type": "string",
       "default": "none",
       "description": "none (varsayılan) | rkhunter: rkhunter kurulur (Lynis HRDN-7230), günlük kontrol (cron.daily) ve apt sonrası özet veritabanı güncellemesi açılır, ilk veritabanı üretilir; sonuç /var/log/rkhunter.log ve root'a e-posta. Bilinen rootkit izleri, gizli dosyalar, şüpheli portlar ve dosya özetlerine bakar; AIDE ve auditd'in yerini tutmaz, yanlış alarm üretebilir. ClamAV bu pakette yok (dosya yükleme servisine aittir). none'a dönmek rkhunter'ı kaldırmaz"
@@ -671,6 +742,7 @@
     },
     {
       "name": "hardening_postfix_banner",
+      "group": "Paketler",
       "type": "bool",
       "default": true,
       "description": "true (varsayılan): postfix kuruluysa SMTP banner'ı `$myhostname ESMTP` yapılır (Lynis MAIL-8818: banner yazılım/işletim sistemi adını sızdırmasın) ve postfix yeniden yüklenir. Postfix kurulu değilse (Ubuntu'da MTA dma ile değişir) hiçbir şey yapılmaz; Proxmox VE'de postfix kalır, uyarı oradan gelir. Yalnızca banner metnini değiştirir. false: dokunulmaz (eski banner geri yazılmaz)"
@@ -729,6 +801,7 @@
     },
     {
       "name": "hardening_proc_hidepid",
+      "group": "Çekirdek",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -736,12 +809,14 @@
     },
     {
       "name": "hardening_proc_hidepid_users",
+      "group": "Çekirdek",
       "type": "list[string]",
       "default": [],
       "description": "hardening_proc_hidepid=true iken 'proc' grubuna eklenecek kullanıcılar: root dışında çalışan ve tüm süreçleri görmesi gereken izleme/denetim araçlarının (örn. bir izleme ajanı) kullanıcıları. Boş (varsayılan): kimse eklenmez"
     },
     {
       "name": "hardening_apt_upgrade_phased",
+      "group": "Paketler",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -749,6 +824,7 @@
     },
     {
       "name": "hardening_apt_listbugs",
+      "group": "Paketler",
       "type": "bool",
       "default": false,
       "description": "false (varsayılan): kurulmaz. true (yalnızca Debian ailesi: Debian, Proxmox VE, Raspberry Pi OS; Ubuntu 26.04'te paket yok): apt-listbugs kurulur ve kancası `-y` ile yazılır, yani apt'yi ASLA bloklamaz (varsayılan kancası bugs.debian.org'a ulaşılamazsa apt'yi bloklar, ölçüldü). Her apt işleminde Debian hata veritabanını sorgular (ağ gerekir, hata satırları basabilir); Proxmox'un kendi paketleri veritabanında olmadığından yalnızca Debian paketlerinin kritik hatalarını gösterir. Kapatınca paket ve ayar kaldırılmaz"
@@ -776,12 +852,14 @@
     },
     {
       "name": "hardening_motd_disable_scripts",
+      "group": "Sistem",
       "type": "list[string]",
       "default": [],
       "description": "Girişte gösterilen MOTD betiklerinden kapatılacaklar (CIS 1.6.4): /etc/update-motd.d içindeki dosya adları, örn. 00-header, 10-help-text, 50-motd-news. Varsayılan BOŞ = dokunulmaz. Kapatmak betiğin çalıştırma iznini kaldırır (silinmez); giriş mesajı değişir. Geri almak için listeden çıkarmak yetmez, izni elle iade edin (chmod 755). Sembolik bağlar atlanır"
     },
     {
       "name": "hardening_password_inactive_days",
+      "group": "Hesaplar",
       "type": "int",
       "default": 0,
       "min": 0,
@@ -790,6 +868,7 @@
     },
     {
       "name": "hardening_pam_pwhistory_remember",
+      "group": "Hesaplar",
       "type": "int",
       "default": 0,
       "min": 0,
@@ -798,12 +877,14 @@
     },
     {
       "name": "hardening_pam_pwhistory_enforce_for_root",
+      "group": "Hesaplar",
       "type": "bool",
       "default": false,
       "description": "true: parola geçmişi kuralı root'un parola değişikliğine de uygulanır (yalnızca hardening_pam_pwhistory_remember > 0 iken etkili). Varsayılan false"
     },
     {
       "name": "hardening_pam_faillock",
+      "group": "Hesaplar",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -811,6 +892,7 @@
     },
     {
       "name": "hardening_pam_faillock_deny",
+      "group": "Hesaplar",
       "type": "int",
       "default": 5,
       "min": 1,
@@ -819,6 +901,7 @@
     },
     {
       "name": "hardening_pam_faillock_unlock_time",
+      "group": "Hesaplar",
       "type": "int",
       "default": 900,
       "min": 0,
@@ -827,6 +910,7 @@
     },
     {
       "name": "hardening_pam_faillock_fail_interval",
+      "group": "Hesaplar",
       "type": "int",
       "default": 900,
       "min": 1,
@@ -835,6 +919,7 @@
     },
     {
       "name": "hardening_pam_faillock_even_deny_root",
+      "group": "Hesaplar",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -842,12 +927,14 @@
     },
     {
       "name": "hardening_platform",
+      "group": "Sistem",
       "type": "string",
       "default": "generic",
       "description": "Platform: generic (varsayılan) | proxmox-host | raspberry-pi. Proxmox VE hostu generic ile sertleştirilemez (rol durur). proxmox-host yalnızca GERÇEKTEN Proxmox olan hostta kabul edilir; önizleme (--check) serbesttir, GERÇEK değişiklik için ayrıca hardening_pve_apply=true gerekir. Proxmox'ta MTA değişimi, ufw ve libpam-tmpdir hiçbir zaman (strict dışında) çalışmaz. raspberry-pi yalnızca GERÇEKTEN Raspberry Pi olan hostta kabul edilir ve yalnızca usb-storage engelini gevşetir (Pi USB diskten açılabilir); Pi donanımında DEĞİL, arm64 Debian konteynerinde denendi"
     },
     {
       "name": "hardening_rpi_strict",
+      "group": "Sistem",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -904,12 +991,14 @@
     },
     {
       "name": "hardening_ssh_permit_root_login",
+      "group": "SSH",
       "type": "string",
       "default": "no",
       "description": "sshd PermitRootLogin değeri: no (varsayılan, kök girişi tamamen kapalı) | prohibit-password (yalnızca anahtarla). Proxmox VE KÜMESİNDE düğümler arası işlemler kökten SSH ister: orada prohibit-password gerekir (preflight kümede no ile durur). Parola ile kök girişi hiçbir ayarla açılmaz"
     },
     {
       "name": "hardening_log_file_permissions",
+      "group": "Sistem",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -917,18 +1006,21 @@
     },
     {
       "name": "hardening_disable_apport",
+      "group": "Sistem",
       "type": "bool",
       "default": true,
       "description": "true: Ubuntu hata raporlayıcı apport kapatılır (enabled=0, servis durdurulup maskelenir; CIS 1.5.7). Çökme raporları toplanmaz. false: dokunulmaz"
     },
     {
       "name": "hardening_disable_update_notifier_motd",
+      "group": "Sistem",
       "type": "bool",
       "default": true,
       "description": "true: update-notifier-motd zamanlayıcısı durdurulup maskelenir (CIS 1.6.12); oturum açılışındaki güncelleme iletisi yenilenmez. false: dokunulmaz"
     },
     {
       "name": "hardening_suid_report",
+      "group": "Denetim",
       "type": "bool",
       "default": true,
       "warn_if": false,
@@ -952,6 +1044,7 @@
     },
     {
       "name": "hardening_kernel_disable_ipv6_ra",
+      "group": "Çekirdek",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -959,6 +1052,7 @@
     },
     {
       "name": "hardening_ufw_routed_deny",
+      "group": "Güvenlik duvarı",
       "type": "bool",
       "default": true,
       "warn_if": false,
@@ -966,12 +1060,14 @@
     },
     {
       "name": "hardening_auditd_restart_services",
+      "group": "Denetim",
       "type": "list[string]",
       "default": [],
       "description": "Kurallar yüklendikten sonra yeniden başlatılacak servisler (auditd'den önce başlayanlar yeniden başlatılana kadar denetlenmez). Boş = hiçbiri. Servis kesintisi yaratır; ssh/sshd yazılamaz (rol reddeder)"
     },
     {
       "name": "hardening_auditd_grub_audit",
+      "group": "Denetim",
       "type": "bool",
       "default": false,
       "warn_if": true,
@@ -987,6 +1083,7 @@
     },
     {
       "name": "hardening_rollback_timeout",
+      "group": "Geri alma",
       "type": "int",
       "default": 300,
       "min": 30,

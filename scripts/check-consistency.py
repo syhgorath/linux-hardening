@@ -172,7 +172,9 @@ for v in comp.get("vars", []):
             err(f"component.yml vars: {v['name']} platforms geçersiz: {pl!r} (izinli: {sorted(PLATFORMS)})")
         if v.get("required"):
             err(f"component.yml vars: {v['name']} platforms taşıyor ve required: gizlendiğinde yine zorunlu kalır, required yapmayın")
-    if "group" in v and not (isinstance(v["group"], str) and 1 <= len(v["group"]) <= 40):
+    if "group" not in v:
+        err(f"component.yml vars: {v['name']} group yok (sshpocket değişken ekranı gruba göre süzer; her değişkene grup verin)")
+    elif not (isinstance(v["group"], str) and 1 <= len(v["group"]) <= 40):
         err(f"component.yml vars: {v['name']} group 1-40 karakterlik düz metin olmalı")
 for aname, a in comp.get("actions", {}).items():
     if "platforms" in a:

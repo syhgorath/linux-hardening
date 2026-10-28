@@ -5,8 +5,14 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+sshpocket 3.6.16 ile 0.8.4 gerçek VM turu (Ubuntu 26.04 + Proxmox VE 9) temiz geçti: `docs/verification-log.md` madde 72.
+
 ### Eklendi
+- Tüm değişkenlere `group` verildi (126/126; Alanlar, Hesaplar, Denetim, Sistem, Çekirdek, Paketler, SSH, Güvenlik duvarı, Docker, Geri alma, Proxmox); `scripts/check-consistency.py` grupsuz değişkeni reddeder. sshpocket değişken ekranı gruba göre süzer.
 - Alan anahtarları: her sertleştirme alanı için `hardening_<alan>_enabled` (`bool`, varsayılan **true** = davranış DEĞİŞMEZ): `base`, `auth`, `kernel`, `apparmor`, `auditd`, `fail2ban`, `aide`, `ufw`, `ssh` ve yalnızca Proxmox'ta `pve_pveproxy`; mevcut `files`, `sudo`, `rollback` ve `docker` (varsayılan false) ile birlikte menüde `Alanlar` grubunda. Kapatılan rol `harden.yml`'de HİÇ çalışmaz; daha önce yazdığı dosyalar, paketler ve ayarlar silinmez ya da geri alınmaz. `ufw` ve `ssh` anahtarlarında `warn_if: false` var (kapatınca onay istenir). İkisi de kapalıyken `hardening_ssh_allow_from` şartı, geri alma güvenlik ağı ve yeni bağlantı doğrulaması atlanır; biri açıksa çalışır. Zaman ve rapor rolleri salt okunur olduğundan (`hardening_time_report`, `hardening_report`) ve PAM kilitleme zaten seçmeli olduğundan (`hardening_pam_faillock`) ayrıca anahtar eklenmedi. Yeni `test_alan_anahtarlari.sh` (126 değişken).
+
+### Belgeler
+- `hardening_auditd_backlog_limit` açıklamasına `-e 2` kilidiyle etkileşim eklendi: GRUB satırı kilitten bağımsız yazılır, kilitliyken yalnızca kural yükleme atlanır.
 
 ### Değişti
 - İç ad: AppArmor rolünün `register` değişkeni `hardening_apparmor_enabled` idi, alan anahtarıyla çakıştığı için `hardening_apparmor_active` oldu (kullanıcıya görünür değil).

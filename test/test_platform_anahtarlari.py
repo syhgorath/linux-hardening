@@ -76,13 +76,19 @@ def mut_group_long(m):
     next(v for v in m["vars"] if v["name"] == "hardening_pve_apply")["group"] = "x" * 41
 
 
+def mut_group_missing(m):
+    del next(v for v in m["vars"] if v["name"] == "hardening_umask")["group"]
+
+
 ok_out = consistency(lambda m: None)
 check("denetim temiz manifestte gecer", "OK:" in ok_out, ok_out)
 for name, fn, key in (("platform_var yok", mut_no_pv, "platform_var"), ("gecersiz platform", mut_bad_platform, "geçersiz"), ("requires platform bosluğu", mut_req_gap, "kapsamalı"),
-                      ("platformlu + required", mut_required_hidden, "required"), ("group 41 karakter", mut_group_long, "group")):
+                      ("platformlu + required", mut_required_hidden, "required"), ("group 41 karakter", mut_group_long, "group"), ("group yok", mut_group_missing, "group yok")):
     out = consistency(fn)
     check(f"denetim yakalar: {name}", "TUTARSIZLIK" in out and key in out, out)
 
+
+check("her degiskenin group'u var (126/126)", all(v.get("group") for v in vars_.values()), [n for n, v in vars_.items() if not v.get("group")])
 
 # ---- anahtarlar: gercek gorevler, hedef yollari gecici dizinde ----
 def run(tasks_file, names, extra, tmp):
