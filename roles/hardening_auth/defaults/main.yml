@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): parola politikası (login.defs, pam_pwquality, pwhistory, umask) bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_auth_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # Not: login.defs değerleri sadece YENİ hesapları etkiler.
 hardening_pass_max_days: 365

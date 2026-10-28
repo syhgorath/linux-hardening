@@ -109,7 +109,7 @@ check("AppArmor: tum gorevler hardening_apparmor_enforce ile kapanir", "hardenin
 sf = ib["Work out the profiles in complain mode and the unconfined processes"]
 sample = {"profiles": {"nvidia_modprobe": "complain", "man_filter": "enforce", "lsb_release": "complain"},
           "processes": {"/usr/sbin/chronyd": [{"profile": "chronyd", "pid": "1", "status": "enforced"}], "/usr/sbin/cupsd": [{"profile": "cupsd", "pid": "2", "status": "unconfined"}]}}
-fake = {"hardening_apparmor_enabled": {"rc": 0}, "hardening_apparmor_json": {"rc": 0, "stdout": json.dumps(sample)}}
+fake = {"hardening_apparmor_active": {"rc": 0}, "hardening_apparmor_json": {"rc": 0, "stdout": json.dumps(sample)}}
 rc, out = play([{"ansible.builtin.set_fact": fake}, sf, {"ansible.builtin.debug": {"msg": "C={{ hardening_apparmor_complain | sort | join(',') }} U={{ hardening_apparmor_unconfined }}"}}])
 check("complain profilleri ve korumasiz surec sayisi aa-status --json'dan dogru cikarilir", "C=lsb_release,nvidia_modprobe U=1" in out, out[-300:])
 sample2 = {"profiles": {"a": "enforce", "b": "enforce"}, "processes": {}}
@@ -117,7 +117,7 @@ rc, out = play([{"ansible.builtin.set_fact": {**fake, "hardening_apparmor_json":
 check("hepsi enforce ise complain=0, korumasiz=0", "C=0 U=0" in out, out[-300:])
 en = ib["Put the complain-mode profiles in enforce mode"]
 check("aa-enforce yalniz complain profil VARSA ve --check degilken", "hardening_apparmor_complain" in w(en) and "length > 0" in w(en) and "ansible_check_mode" in w(en) and "aa-enforce /etc/apparmor.d/*" in en["ansible.builtin.shell"]["cmd"])
-check("AppArmor etkin degilse (konteyner) NOT verir, baska bir sey yapmaz", "hardening_apparmor_enabled.rc" in w(ib["Say that AppArmor is not enabled"]))
+check("AppArmor etkin degilse (konteyner) NOT verir, baska bir sey yapmaz", "hardening_apparmor_active.rc" in w(ib["Say that AppArmor is not enabled"]))
 check("aa-status okumalari salt okunur (check_mode false, changed false)", all(ib[n].get("check_mode") is False and ib[n].get("changed_when") is False for n in ("Check whether AppArmor is enabled in the kernel (read-only)", "Read the AppArmor profiles (read-only)")))
 hy = load("playbooks/harden.yml")[0]["roles"]
 roles = [r["role"] for r in hy if isinstance(r, dict)]

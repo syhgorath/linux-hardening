@@ -243,6 +243,10 @@ systemd zamanlayıcısı kurulur (`hardening_rollback_timeout`, varsayılan 300 
 **Bağlantı tamamen kaybolursa** (Mac kitlenir, eski oturum kopar) sunucu süre dolunca **kendini** önceki duruma döndürür.
 `hardening_rollback_enabled: false` ile kapatılabilir (önerilmez; açık uyarı verir). systemd yoksa ufw/ssh'a dokunulmaz.
 
+### Bir alanı tamamen kapatmak (`hardening_<alan>_enabled`)
+
+Her alanın kendi anahtarı vardır (`base`, `auth`, `kernel`, `apparmor`, `files`, `docker`, `auditd`, `fail2ban`, `aide`, `ufw`, `ssh`, `sudo`, `rollback`; Proxmox'ta `pve_pveproxy`). Varsayılan `true` (Docker hariç); örneğin `-e hardening_fail2ban_enabled=false` fail2ban rolünü hiç çalıştırmaz. Kapatılan alanın daha önce yazdığı dosyalar ve kurulu paketler **silinmez**. `ufw` ve `ssh` ikisi de kapalıysa `hardening_ssh_allow_from` şartı ve geri alma güvenlik ağı atlanır. Ayrıntı: `docs/component-vars.md`.
+
 Sınırlar (bilerek açık yazıyoruz):
 - **Geri alınmayanlar:** paketler, sysctl, auditd, fail2ban, AIDE ve diğer roller. Sadece SSH drop-in ve ufw geri alınır.
 - Bağlantı doğrulanamazsa geri alma anında yapılır; **bağlantı tamamen kaybolursa** sunucu `hardening_rollback_timeout` sn sonra kendini geri alır. O süre boyunca erişim yoktur. Sunucu bu sırada **yeniden başlarsa** zamanlayıcı `armed` iken yeniden etkinleşir ve açılıştan N sn sonra geri alır. Yine de son çare Proxmox konsolu/snapshot'tır.

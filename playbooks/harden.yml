@@ -1,12 +1,20 @@
 # Önce: ansible-playbook playbooks/harden.yml --check --diff
 # Tek rol:  --tags base,auth,kernel,apparmor,pveproxy,files,docker,auditd,fail2ban,aide,time,report,ufw,ssh,sudo
 # SSH ve ufw en sonda; firewall SSH iznini enable'dan önce ekler.
+# Her alan hardening_<alan>_enabled ile kapatılabilir (varsayılan true; docker hariç, o varsayılan false; files/sudo/docker/rollback kendi içinde denetler). Kapatılan rol HİÇ çalışmaz:
+# daha önce yazdığı dosyalar silinmez, geri alınmaz. Alan anahtarları: base, auth, kernel, apparmor, files, docker, auditd, fail2ban, aide,
+# pve_pveproxy, ufw, ssh, sudo, rollback. (time/report salt okunur: hardening_time_report / hardening_report; PAM kilitleme: hardening_pam_faillock.)
 - name: Harden
   # Genel grup 'hardening' (dışarıdan üretilen inventory'ler bunu kullanır); eski 'ubuntu' grubu geçiş için
   # kabul edilir. Sistem/sürüm desteği hardening_preflight ile kontrol edilir, grup adıyla değil.
   # Yalnızca envanterde VAR olan gruplar seçilir: olmayan grup için "Could not match supplied host pattern" uyarısı çıkmaz (#35).
   # İkisi de yoksa "hardening" kalır (tek, anlamlı uyarı).
   hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
+  vars:
+    # ufw ve ssh kapalıysa erişimi değiştiren bir şey kalmaz: allow_from şartı, geri alma güvenlik ağı ve yeni bağlantı doğrulaması atlanır.
+    # PAM kilitleme (hardening_pam_faillock) de güvenlik ağı ister, o yüzden onu da sayarız.
+    hardening_run_access_guards: "{{ (hardening_ufw_enabled | default(true) | bool) or (hardening_ssh_enabled | default(true) | bool) }}"
+    hardening_run_rollback_window: "{{ hardening_run_access_guards | bool or (hardening_pam_faillock | default(false) | bool) }}"
   pre_tasks:
     - name: Preflight (desteklenen OS/sürüm, sürüm değişkenleri)
       ansible.builtin.include_role:
@@ -23,31 +31,32 @@
         apply:
           tags: [ufw, ssh]
       tags: [ufw, ssh]
+      when: hardening_run_access_guards | bool
   roles:
-    - { role: hardening_base, tags: [base] }
-    - { role: hardening_auth, tags: [auth] }
-    - { role: hardening_kernel, tags: [kernel] }
-    - { role: hardening_apparmor, tags: [apparmor] }
+    - { role: hardening_base, tags: [base], when: hardening_base_enabled | default(true) | bool }
+    - { role: hardening_auth, tags: [auth], when: hardening_auth_enabled | default(true) | bool }
+    - { role: hardening_kernel, tags: [kernel], when: hardening_kernel_enabled | default(true) | bool }
+    - { role: hardening_apparmor, tags: [apparmor], when: hardening_apparmor_enabled | default(true) | bool }
     # Dosya izinleri auditd'den ÖNCE: kurallar yüklüyken chmod/chown kimlik dosyası izleme kurallarını (-w /etc/passwd ... -p wa) gürültüyle tetiklemesin.
     - { role: hardening_files, tags: [files] }
     # Docker (varsayılan KAPALI; kurulu değilse atlanır): salt okunur rapor ve isteğe bağlı daemon.json birleştirme.
     - { role: hardening_docker, tags: [docker] }
-    - { role: hardening_auditd, tags: [auditd] }
-    - { role: hardening_fail2ban, tags: [fail2ban] }
-    - { role: hardening_aide, tags: [aide] }
+    - { role: hardening_auditd, tags: [auditd], when: hardening_auditd_enabled | default(true) | bool }
+    - { role: hardening_fail2ban, tags: [fail2ban], when: hardening_fail2ban_enabled | default(true) | bool }
+    - { role: hardening_aide, tags: [aide], when: hardening_aide_enabled | default(true) | bool }
     - { role: hardening_time, tags: [time] }
     # SALT OKUNUR sistem raporu (IPv6, dinleyiciler, nokta dizinleri, nullok); hiçbir şeyi değiştirmez.
     - { role: hardening_report, tags: [report] }
     # Proxmox VE web arayüzü (pveproxy) erişim sınırı: varsayılan BOŞ (hiçbir şey yazmaz); yalnızca proxmox-host. Kendi yedeği ve 8006 doğrulaması vardır.
-    - { role: hardening_pve_pveproxy, tags: [pveproxy] }
+    - { role: hardening_pve_pveproxy, tags: [pveproxy], when: hardening_pve_pveproxy_enabled | default(true) | bool }
     # Geri alma güvenlik ağı: ufw/ssh değişmeden HEMEN ÖNCE arm edilir; hardening_verify_access doğrulayınca disarm eder.
     # Arada herhangi bir hata/kopma olursa sunucu N sn sonra kendini önceki duruma döndürür (docs/design/rollback-timer.md).
-    - { role: hardening_rollback, tags: [ufw, ssh, pam] }
+    - { role: hardening_rollback, tags: [ufw, ssh, pam], when: hardening_run_rollback_window | bool }
     # PAM'i değiştiren rol, arm penceresinin İÇİNDE (arm'dan sonra, doğrulama/disarm'dan önce) çalışır; varsayılan KAPALI. Bozulursa süre dolunca PAM özgün hâline döner.
     - { role: hardening_pam_faillock, tags: [pam] }
     # Proxmox'ta ufw ÇALIŞMAZ (güvenlik duvarı pve-firewall'dur); aşama 4'te pve-firewall rolü gelecek.
-    - { role: hardening_ufw, tags: [ufw], when: "hardening_platform | default('generic') != 'proxmox-host'" }
-    - { role: hardening_ssh, tags: [ssh] }
+    - { role: hardening_ufw, tags: [ufw], when: "hardening_platform | default('generic') != 'proxmox-host' and hardening_ufw_enabled | default(true) | bool" }
+    - { role: hardening_ssh, tags: [ssh], when: hardening_ssh_enabled | default(true) | bool }
     # sudo en sonda: yazdıktan hemen sonra become ile denenir, başarısızsa dosya silinmeye çalışılır ve play durur.
     - { role: hardening_sudo, tags: [sudo] }
   post_tasks:
@@ -58,3 +67,4 @@
         apply:
           tags: [ufw, ssh, pam]
       tags: [ufw, ssh, pam]
+      when: hardening_run_rollback_window | bool

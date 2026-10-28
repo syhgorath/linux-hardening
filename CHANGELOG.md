@@ -5,6 +5,12 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- Alan anahtarları: her sertleştirme alanı için `hardening_<alan>_enabled` (`bool`, varsayılan **true** = davranış DEĞİŞMEZ): `base`, `auth`, `kernel`, `apparmor`, `auditd`, `fail2ban`, `aide`, `ufw`, `ssh` ve yalnızca Proxmox'ta `pve_pveproxy`; mevcut `files`, `sudo`, `rollback` ve `docker` (varsayılan false) ile birlikte menüde `Alanlar` grubunda. Kapatılan rol `harden.yml`'de HİÇ çalışmaz; daha önce yazdığı dosyalar, paketler ve ayarlar silinmez ya da geri alınmaz. `ufw` ve `ssh` anahtarlarında `warn_if: false` var (kapatınca onay istenir). İkisi de kapalıyken `hardening_ssh_allow_from` şartı, geri alma güvenlik ağı ve yeni bağlantı doğrulaması atlanır; biri açıksa çalışır. Zaman ve rapor rolleri salt okunur olduğundan (`hardening_time_report`, `hardening_report`) ve PAM kilitleme zaten seçmeli olduğundan (`hardening_pam_faillock`) ayrıca anahtar eklenmedi. Yeni `test_alan_anahtarlari.sh` (126 değişken).
+
+### Değişti
+- İç ad: AppArmor rolünün `register` değişkeni `hardening_apparmor_enabled` idi, alan anahtarıyla çakıştığı için `hardening_apparmor_active` oldu (kullanıcıya görünür değil).
+
 ## [0.8.4] - 2026-10-28
 
 v0.8.3'ten sonra, **sshpocket menü süzmesi** ve sshpocket 3.6.13 ara raporunun (gerçek Proxmox VE 9 tek düğüm + Ubuntu 26.04) bulguları. `component.yml` `vars` listesi 116 değişken, 8 eylem. **Denenmeyenler:** fiziksel Proxmox, misafirli/kümeli Proxmox, Docker'lı VM, Raspberry Pi, `hardening_pve_web_exclusive`'in yeni küme ayrımının sshpocket'in gerçek apply akışıyla doğrulanması (nested Proxmox'ta elle denendi), `apt_upgrade` + phased (bekleyen güncellemeyle), `auditd_disk_full_halt`, `auditd_immutable` (`-e 2`), silahlı geri alma.

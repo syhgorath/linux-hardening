@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): fail2ban bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_fail2ban_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # Her zaman banlanmayacak adresler. Buna, Ansible'ın bağlandığı kontrol makinesinin sunucunun GÖRDÜĞÜ adresi
 # (SSH_CONNECTION) otomatik eklenir; tüm yönetim ağını muaf tutmak için burada açıkça yazın (önerilmez).
