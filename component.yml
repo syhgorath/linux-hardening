@@ -234,6 +234,7 @@ vars:
     default: true
     description: "true (varsayılan): /tmp ve /dev/shm bağlama seçenekleri SALT OKUNUR raporu (CIS 1.1.2: ayrı bağlama, nodev, nosuid, noexec). Hiçbir şeyi değiştirmez; noexec yoksa yalnızca not düşer, nodev/nosuid yoksa, ayrı bağlama değilse ya da Ansible remote_tmp /tmp altındaysa uyarır. false: rapor çalışmaz"
   - name: hardening_docker_enabled
+    group: Alanlar
     type: bool
     default: false
     warn_if: true                      # true = Docker rolü çalışır (kurulu değilse atlanır)
@@ -652,11 +653,13 @@ vars:
     warn_if: false                     # false = SUID/SGID özeti yazdırılmaz
     description: "true: SUID/SGID dosyalarının SALT OKUNUR özetini yazdırır (CIS 7.1.13); hiçbir şeyi değiştirmez, en çok 120 sn sürer. false: çalışmaz"
   - name: hardening_files_enabled
+    group: Alanlar
     type: bool
     default: true
     warn_if: false                     # false = dosya izinleri sıkılaştırılmaz
     description: "true: CIS dosya izinleri (passwd/shadow/group, sshd_config, ana bilgisayar anahtarları, cron, grub.cfg) yalnızca fazla izin KALDIRILARAK sıkılaştırılır; olmayan dosya oluşturulmaz. false: rol hiçbir şey yapmaz"
   - name: hardening_sudo_enabled
+    group: Alanlar
     type: bool
     default: true
     warn_if: false                     # false = sudo ayarı yazılmaz
@@ -681,6 +684,7 @@ vars:
     warn_if: true                      # true = GRUB'a audit=1 yazar, yeniden başlatma gerekir, geri alma kapsamında değil
     description: "true: GRUB_CMDLINE_LINUX'a audit=1 ekler ve update-grub çalıştırır; etkisi YENİDEN BAŞLATMADAN sonra başlar ve geri alma güvenlik ağı kapsamında DEĞİLDİR (elle geri alınır)"
   - name: hardening_rollback_enabled
+    group: Alanlar
     type: bool
     default: true
     warn_if: false                     # false = geri alma güvenlik ağı KAPALI (bilinçli kaçış)
@@ -691,6 +695,59 @@ vars:
     min: 30
     max: 3600
     description: "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur"
+  - name: hardening_base_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): temel sistem rolü çalışır (USB depolama, apport, update-notifier, MOTD, otomatik güvenlik güncellemeleri, yasal uyarı, journald, apt, /tmp ve /dev/shm, hidepid, rkhunter...). false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. Bu alandaki tek tek seçenekleri (hardening_unattended_upgrades, hardening_legal_banner...) ayrı ayrı da kapatabilirsiniz"
+  - name: hardening_auth_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): parola politikası çalışır (login.defs yaşlandırma ve umask, pam_pwquality, pwhistory). false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. PAM hesap kilitleme ayrıdır (hardening_pam_faillock)"
+  - name: hardening_kernel_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): çekirdek rolü çalışır (sysctl, kullanılmayan ağ protokolü ve dosya sistemi modülleri, isteğe bağlı core dump ve IPv6 RA). false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. Tek tek kapatmak için hardening_sysctl_hardening, hardening_disable_network_protocols, hardening_disable_filesystem_modules"
+  - name: hardening_apparmor_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): AppArmor rolü çalışır (durum raporu, isteğe bağlı enforce). false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. Enforce kipi kapatılınca geri alınmaz"
+  - name: hardening_auditd_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): auditd kurulur ve denetim kuralları yüklenir. false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. Kurulu auditd ve yüklü kurallar olduğu gibi çalışmaya devam eder"
+  - name: hardening_fail2ban_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): fail2ban kurulur ve sshd jail'i yazılır. false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. Kurulu fail2ban ve jail dosyaları çalışmaya devam eder"
+  - name: hardening_aide_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): AIDE kurulur, veritabanı üretilir ve günlük kontrol açılır. false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. Kurulu AIDE ve zamanlayıcı çalışmaya devam eder"
+  - name: hardening_ufw_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    warn_if: false                     # false = ufw yapılandırılmaz; sunucu başka bir güvenlik duvarı olmadan ağa açık kalabilir
+    description: "Alan anahtarı. true (varsayılan): ufw güvenlik duvarı kurulur ve yapılandırılır (SSH yalnızca hardening_ssh_allow_from ağlarından, gelen trafik varsayılan engelli; Proxmox'ta bu rol zaten çalışmaz). false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. DİKKAT: ufw'yi hiç yapılandırmayan bir sunucu ağa açık kalır, başka bir güvenlik duvarınız (bulut, ağ cihazı, pve-firewall) yoksa korumasızsınız. Zaten açık bir ufw ve kuralları olduğu gibi kalır. ssh de kapalıysa hardening_ssh_allow_from şartı, geri alma güvenlik ağı ve yeni bağlantı doğrulaması atlanır"
+  - name: hardening_ssh_enabled
+    group: Alanlar
+    type: bool
+    default: true
+    warn_if: false                     # false = sshd sertleştirilmez; parola girişi ve zayıf varsayılanlar kalır
+    description: "Alan anahtarı. true (varsayılan): sshd sertleştirmesi uygulanır (/etc/ssh/sshd_config.d/00-hardening.conf: root girişi, MaxAuthTries, banner, şifre/algoritma kısıtları...). false: rol hiç çalışmaz; daha önce yazılmış dosya ve ayarlar SİLİNMEZ, geri alınmaz. DİKKAT: bağlantıyı KESMEZ ama sshd varsayılanlarıyla (parola girişi dahil) açık kalır. ufw de kapalıysa hardening_ssh_allow_from şartı, geri alma güvenlik ağı ve yeni bağlantı doğrulaması atlanır"
+  - name: hardening_pve_pveproxy_enabled
+    platforms: [proxmox-host]
+    group: Proxmox
+    type: bool
+    default: true
+    description: "Alan anahtarı. true (varsayılan): (yalnızca hardening_platform=proxmox-host) hardening_pve_pveproxy_allow_from ile web arayüzü (8006) erişim sınırı yönetilir (liste boşsa zaten hiçbir şey yazılmaz). false: rol hiç çalışmaz; yazılmış /etc/default/pveproxy bloğu SİLİNMEZ, pveproxy yeniden başlatılmaz"
 
 # sshpocket'in yukarıdaki cmd'nin sonuna eklediği EK bayraklar. -i (geçici inventory), --limit (sunucu) ve -e @dosya
 # (değişkenler) burada YOKTUR: runner: ansible için bunları sshpocket çalıştırıcısı kendisi ekler (paket standardı §7, §14 madde 7);

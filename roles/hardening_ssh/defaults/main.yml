@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): sshd sertleştirmesi bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_ssh_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # Anahtar yoksa rol zaten durur (authorized_keys kontrolü).
 hardening_ssh_disable_password: true

@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): auditd (denetim kuralları) bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_auditd_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # Kurallar yüklendikten sonra yeniden başlatılacak servisler (auditd'den ÖNCE başlayan süreçler yeniden başlatılana kadar denetlenmez).
 # Boş = hiçbir şey yeniden başlatılmaz. Servis kesintisi yaratır; `ssh`/`sshd` yazmayın (bağlantı doğrulaması sonrası elle yapın).

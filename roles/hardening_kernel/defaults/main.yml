@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): çekirdek (sysctl, kullanılmayan ağ protokolleri ve dosya sistemi modülleri, core dump) bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_kernel_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # true: IPv6 yönlendirici duyurularını (RA) kabul etmeyi kapatır (CIS 3.3.2, accept_ra). Adresini/yolunu yalnızca RA'dan alan
 # bir sunucu IPv6 bağlantısını KAYBEDER; bu yüzden varsayılan false.

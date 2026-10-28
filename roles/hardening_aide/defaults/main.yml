@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): AIDE (dosya bütünlüğü) bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_aide_enabled: true
 # true (varsayılan): aide-common'ın günlük kontrol zamanlayıcısı (dailyaidecheck.timer) açık ve başlatılmış olsun (CIS 6.3.2). Paket bunu zaten
 # açık kurar, bu yüzden normalde değişiklik yapmaz (changed=0); biri kapattıysa geri açar. Zamanlayıcının yaptığı iş değişmez (COMMAND=update,
 # veritabanı kendiliğinden güncellenmez). Sonuç /var/log/aide/ altındadır; e-posta teslim edilmez (docs/known-issues.md).

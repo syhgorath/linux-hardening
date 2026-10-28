@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): Proxmox VE web arayüzü (pveproxy) erişim sınırı bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_pve_pveproxy_enabled: true
 # Proxmox VE web arayüzü (pveproxy) erişim sınırı (/etc/default/pveproxy: DENY_FROM="all", ALLOW_FROM=<liste>, POLICY="allow"). Varsayılan BOŞ = hiçbir şey yazılmaz
 # (daha önce yazılmış blok varsa kaldırılır). Dolu iken yalnızca bu IP/CIDR'ler (ve yerel döngü) 8006'ya bağlanabilir; pve-firewall'dan BAĞIMSIZ bir savunmadır (firewall kapalı/bozuk
 # olsa bile uygular). Kontrol makinesinin adresi listede olmalıdır, değilse hiçbir şey yazılmaz. Yazdıktan sonra pveproxy yeniden başlatılır ve kontrol makinesinden 8006 doğrulanır;

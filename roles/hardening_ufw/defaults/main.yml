@@ -1,3 +1,5 @@
+# Alan anahtarı. true (varsayılan): ufw güvenlik duvarı bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
+hardening_ufw_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
 # ZORUNLU: SSH'a izin verilen ağlar; diğer her şey gelen trafikte engellenir.
 # Bilerek BOŞ: boşken harden.yml (ufw/ssh) hata verip durur (bkz. roles/hardening_preflight/tasks/access.yml).

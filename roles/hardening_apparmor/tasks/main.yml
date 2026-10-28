@@ -10,7 +10,7 @@
 
     - name: Check whether AppArmor is enabled in the kernel (read-only)
       ansible.builtin.command: aa-status --enabled
-      register: hardening_apparmor_enabled
+      register: hardening_apparmor_active
       changed_when: false
       failed_when: false
       check_mode: false
@@ -19,7 +19,7 @@
     - name: Say that AppArmor is not enabled
       ansible.builtin.debug:
         msg: "NOT (apparmor): AppArmor çekirdekte etkin değil (konteyner ya da AppArmor'suz çekirdek olabilir); profiller enforce edilmedi."
-      when: hardening_apparmor_enabled.rc | default(1) != 0
+      when: hardening_apparmor_active.rc | default(1) != 0
 
     - name: Read the AppArmor profiles (read-only)
       ansible.builtin.command: aa-status --json
@@ -27,7 +27,7 @@
       changed_when: false
       failed_when: false
       check_mode: false
-      when: hardening_apparmor_enabled.rc | default(1) == 0
+      when: hardening_apparmor_active.rc | default(1) == 0
 
     - name: Work out the profiles in complain mode and the unconfined processes
       ansible.builtin.set_fact:
@@ -36,7 +36,7 @@
         hardening_apparmor_unconfined: >-
           {{ (hardening_apparmor_json.stdout | from_json).processes | default({}) | dict2items
              | map(attribute='value') | flatten | selectattr('status', 'defined') | selectattr('status', 'search', 'unconfined') | list | length }}
-      when: hardening_apparmor_enabled.rc | default(1) == 0 and hardening_apparmor_json.rc == 0 and hardening_apparmor_json.stdout | length > 0
+      when: hardening_apparmor_active.rc | default(1) == 0 and hardening_apparmor_json.rc == 0 and hardening_apparmor_json.stdout | length > 0
 
     - name: Put the complain-mode profiles in enforce mode
       ansible.builtin.shell:

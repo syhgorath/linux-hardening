@@ -32,7 +32,7 @@ check("platform_var = hardening_platform ve tanimli", comp.get("platform_var") =
 check("pve_firewall_preview/apply platforms=[proxmox-host]", all(comp["actions"][a].get("platforms") == ["proxmox-host"] for a in ("pve_firewall_preview", "pve_firewall_apply")))
 check("diger eylemlerde platforms YOK (her platformda gorunur)", all("platforms" not in a for n, a in comp["actions"].items() if not n.startswith("pve_firewall")))
 pve = [n for n, v in vars_.items() if v.get("platforms") == ["proxmox-host"]]
-check("Proxmox degiskenleri platforms+group=Proxmox tasir", len(pve) == 9 and all(vars_[n].get("group") == "Proxmox" for n in pve), pve)
+check("Proxmox degiskenleri platforms+group=Proxmox tasir", len(pve) == 10 and all(vars_[n].get("group") == "Proxmox" for n in pve), pve)
 check("hardening_pve_* degiskenlerinin hepsi platformlu", all(vars_[n].get("platforms") for n in vars_ if n.startswith("hardening_pve_")), [n for n in vars_ if n.startswith("hardening_pve_") and not vars_[n].get("platforms")])
 check("platformlu hicbir degisken required degil", not any(v.get("required") for v in vars_.values() if v.get("platforms")))
 check("ortak degiskenlere platforms eklenmemis (hardening_ssh_allow_from, hardening_platform)", "platforms" not in vars_["hardening_ssh_allow_from"] and "platforms" not in vars_["hardening_platform"])
