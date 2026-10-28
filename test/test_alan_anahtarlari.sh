@@ -42,7 +42,7 @@ done
 # ufw: Proxmox dışı platformda çalışır
 on=$(ran hardening_ufw "$(runh ufw)")
 off=$(ran hardening_ufw "$(runh ufw -e hardening_ufw_enabled=false)")
-[ "$on" -gt 0 ] && ok "ufw: varsayılanda rol çalıştı ($on görev)" || bad "ufw: varsayılanda rol çalışmadı"
+if [ "$on" -gt 0 ]; then ok "ufw: varsayılanda rol çalıştı ($on görev)"; else bad "ufw: varsayılanda rol çalışmadı"; fi
 expect_eq "ufw: hardening_ufw_enabled=false -> rol çalışmadı" "0" "$off"
 # pveproxy: genel platformda rol kendi içinde de atlar; kapalıyken görev çalışmamalı
 off=$(ran hardening_pve_pveproxy "$(runh pveproxy -e hardening_pve_pveproxy_enabled=false)")

@@ -10,7 +10,7 @@ standardının §6'sıyla aynıdır; varsayılanlar rollerin `defaults/main.yml`
 `group` (1-40 karakter düz metin) menüde değişkenleri gruplar. Eski sshpocket bu alanları yok sayar (geriye uyumlu).
 
 - Eylemler `pve_firewall_preview` ve `pve_firewall_apply` yalnızca `proxmox-host` menüsünde görünür; `requires` zinciri (`apply` → `preview`) aynı platformlarda olmak zorundadır.
-- Dokuz Proxmox değişkeni (`hardening_pve_*`, `hardening_fail2ban_pve_web`, `hardening_aide_pve_excludes`) `platforms: [proxmox-host]` ve `group: Proxmox` taşır.
+- On Proxmox değişkeni (`hardening_pve_*`, `hardening_fail2ban_pve_web`, `hardening_aide_pve_excludes`) `platforms: [proxmox-host]` ve `group: Proxmox` taşır.
 - Gizlenen bir değişkenin yazılı değeri yine çalıştırmaya iletilir; platformlu hiçbir değişken `required` olamaz.
 - `scripts/check-consistency.py` bunları denetler (`platform_var` tanımlı mı, platform adları, `group` uzunluğu, `requires` platform kapsaması, gizlenen değişkenin `required` olmaması).
 
