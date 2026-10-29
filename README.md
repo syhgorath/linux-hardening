@@ -5,14 +5,23 @@
 Ansible ile Linux sunucu sertleştirme (hardening). Rolleri tek repoda tutar; her dağıtım/sürüm için
 destek açıkça listelenir, desteklenmeyen sistemde çalışmayı durdurur.
 
-**Şu an desteklenen:** Ubuntu 26.04 LTS (hedef: CIS Level 1 Server yaklaşımı).
+**Şu an desteklenen:** Ubuntu 26.04 LTS ve Proxmox VE 9 (tek düğüm, `hardening_platform=proxmox-host`); Debian 13 konteynerde test edildi (hedef: CIS Level 1 Server yaklaşımı).
 Başka sürüm/dağıtım ekleme yolu açık: bkz. [docs/SUPPORT.md](docs/SUPPORT.md).
 
-> **Durum (0.x):** Ubuntu 26.04.1 LTS test VM'inde **canlı doğrulandı**: temiz sunucuda ilk kurulum, ikinci
-> koşuda `changed=0`, `--check` (`failed=0`), erişim kaybı korumaları ve geri alma güvenlik ağı (doğrulama
-> başarısızlığı, kontrol makinesinin ölmesi, sunucunun yeniden başlaması). Lynis hardening index 77, uyarı 0.
-> **Doğrulanmayanlar:** tek bir VM/yapılandırma dışı sunucular, gerçek ağ düzeyi kesinti, Raspberry Pi/Proxmox,
-> tam CIS Benchmark uyumu (bilerek "yaklaşım"). Önce test sunucusunda deneyin, snapshot alın.
+> **Durum (0.9):** Ubuntu 26.04 ve Proxmox VE 9 (tek düğüm) gerçek VM'lerde sshpocket üzerinden **canlı doğrulandı**
+> ([docs/verification-log.md](docs/verification-log.md)): temiz sunucuda ilk kurulum, ikinci koşuda `changed=0`, `--check`
+> (`failed=0`), erişim kaybı korumaları, alan anahtarları ve kalıcı kapatma eylemleri. Lynis hardening index Ubuntu'da 83.
+> **Doğrulanmayanlar:** Raspberry Pi, misafirli/kümeli Proxmox, Docker'lı VM, HA, geri alma güvenlik ağının gerçek VM'de
+> silahlı denemesi (yalnızca Docker LAB'da kanıtlı), tam CIS Benchmark uyumu (bilerek "yaklaşım").
+> Önce test sunucusunda deneyin, snapshot alın.
+
+## Alan anahtarları ve kalıcı kapatma
+- Her sertleştirme alanının kendi anahtarı vardır: `hardening_<alan>_enabled` (varsayılan `true`: davranış değişmez). `false` rolü
+  tamamen atlar; daha önce yazılmış dosyalar **silinmez**. `ufw` VE `ssh` ikisi de kapalıyken `hardening_ssh_allow_from` şartı,
+  geri alma güvenlik ağı ve yeni bağlantı doğrulaması atlanır. Ayrıntı: [docs/component-vars.md](docs/component-vars.md).
+- Bu paketin yazdıklarını kaldırmak için ayrı eylemler vardır: `kaldir_onizle` (salt okunur önizleme), `kaldir` (önce
+  `/var/backups/linux-hardening/` altına yedekler, sonra siler) ve `kaldir_geri_yukle`. İçeriği bu paketin yazdığı gibi olmayan dosya
+  atlanır. Dosyayı silmek çalışan sistemin durumunu geri almaz (ayrıntı: [HOWTO.md](HOWTO.md)).
 
 ## Akış
 1. `playbooks/audit.yml` — baseline tarama (Lynis)
@@ -43,7 +52,7 @@ Ayrıntılı kullanım, sudo/üretim notları ve sorun giderme: **[HOWTO.md](HOW
 Alınan kararlar ve istisnalar: [docs/decisions.md](docs/decisions.md).
 Canlı doğrulama kayıtları: [docs/verification-log.md](docs/verification-log.md). Yol haritası: [docs/ROADMAP.md](docs/ROADMAP.md).
 
-> **`hardening_ssh_allow_from` zorunludur** (varsayılanı bilerek boş). Boşsa, geçersizse ya da Ansible'ın bağlandığı
+> **`hardening_ssh_allow_from` zorunludur** (ufw ya da ssh alanı açıkken; varsayılanı bilerek boş). Boşsa, geçersizse ya da Ansible'ın bağlandığı
 > kaynak IP bu ağlarda değilse `harden.yml` firewall/SSH'a dokunmadan durur. Ayrıca root olarak bağlanılamaz.
 > Örn: `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'`
 >
@@ -69,22 +78,22 @@ doğrulanmış sınırları listeler. "Bilerek" yazılanlar belgeli kararlardır
 | Otomatik yeniden başlatma | Bilerek yok | Otomatik güvenlik güncellemesi açılır, reboot **yok** ([HOWTO.md](HOWTO.md)) |
 | Kullanıcı, parola, anahtar yönetimi | Tasarım gereği yok | Kullanıcıyı siz oluşturursunuz; rol yalnızca parola girişini kapatmadan önce `authorized_keys`'in dolu olduğunu doğrular |
 | Uygulama sertleştirmesi (nginx, MySQL vb.) | Kapsam dışı | Yalnızca işletim sistemi |
-| Başka dağıtım/sürüm | Şimdilik yok | Yalnızca Ubuntu 26.04; Raspberry Pi/Proxmox planlı ([SUPPORT.md](docs/SUPPORT.md)) |
+| Başka dağıtım/sürüm | Sınırlı | Ubuntu 26.04 ve Proxmox VE 9 (tek düğüm) doğrulandı, Debian 13 yalnızca konteynerde; Raspberry Pi planlı ([SUPPORT.md](docs/SUPPORT.md)) |
 | Geri alma | Kısmi | sshd drop-in, ufw ve (faillock açıksa) PAM geri alınır; paketler, sysctl, auditd, fail2ban, AIDE geri alınmaz |
-| Bölüm/bağlama seçenekleri (`/tmp`, `nodev`, `noexec`, `hidepid`) | Henüz yok | |
-| Önyükleyici (GRUB parolası, `audit=1`) | Henüz yok | `audit=1` için tasarım notu: [auditd-kapsam.md](docs/design/auditd-kapsam.md) |
-| AppArmor profilleri | Henüz yok | |
-| Günlük yönetimi (rsyslog, journald, logrotate, uzak günlük) | Henüz yok | |
+| Bölüm/bağlama seçenekleri | Kısmi | `/tmp` ve `/dev/shm` için `nodev,nosuid,noexec` (`hardening_tmp_noexec`, `hardening_shm_noexec`), `/proc` için `hidepid=2` (`hardening_proc_hidepid`, varsayılan KAPALI); ayrı bölüm (`/home`, `/var`) açılmaz |
+| Önyükleyici (GRUB) | Kısmi | `audit=1` ve `audit_backlog_limit` yazılır ([auditd-kapsam.md](docs/design/auditd-kapsam.md)); GRUB parolası **bilerek yok** (konsolsuz sunucu açılmaz, [cis-esleme.md](docs/cis-esleme.md) 1.4.1) |
+| AppArmor profilleri | Kısmi | Paketler ve etkinleştirme; `hardening_apparmor_enforce` (varsayılan KAPALI) profilleri complain'den enforce'a alır; kendi profil yazmaz |
+| Günlük yönetimi | Kısmi | journald kalıcı depolama ve sıkıştırma, sınırlar (`hardening_journald_rotation`, varsayılan KAPALI), günlük dosya izinleri; rsyslog, logrotate ve uzak günlük yok |
 | `cron`/`at` kısıtları, `sudo` yapılandırması | Kısmi | Yalnızca cron dosya/dizin **izinleri** ve `sudoers.d` ayarı (`use_pty`, `logfile`, `timestamp_timeout`); `cron.allow`/`at.allow` oluşturulmaz, `su` kısıtlanmaz. `sudoers` değişimleri ayrıca auditd ile **izlenir** |
-| IPv6'yı kapatmak | Henüz yok | |
-| Core dump | Kısmi | Yalnızca `fs.suid_dumpable = 0`; `systemd-coredump` ayarı yok |
-| Kullanılmayan servis/paket kaldırma | Kısmi | Yalnızca `postfix`/`courier-*` kaldırılır; avahi, cups vb. yok |
-| Nadir dosya sistemi modülleri (`cramfs`, `udf`, `squashfs`…) | Henüz yok | Yalnızca `dccp`, `sctp`, `rds`, `tipc` ve `usb-storage` engellenir |
-| SUID/SGID envanteri | Henüz yok | |
-| AIDE zamanlanmış kontrol | Henüz yok | Yalnızca ilk veritabanı üretilir; zamanlama paket varsayılanıdır (doğrulanmadı) |
+| IPv6'yı kapatmak | Bilerek yok | Yalnızca router duyurusu (RA) kabulü kapatılabilir (`hardening_kernel_disable_ipv6_ra`) |
+| Core dump | Var (varsayılan KAPALI) | `fs.suid_dumpable = 0` her zaman; `hardening_disable_coredump` kullanıcı sınırını ve `systemd-coredump`'ı kapatır |
+| Kullanılmayan servis/paket kaldırma | Kısmi | `postfix`/`courier-*` kaldırılır; `telnet`/`ftp` istemcileri isteğe bağlı (`hardening_remove_legacy_clients`); avahi, cups vb. yok |
+| Nadir dosya sistemi modülleri | Kısmi | `cramfs`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `firewire-core` ve `atm`, `can`, `dccp`, `rds`, `sctp`, `tipc`, `usb-storage` engellenir; `udf` ve `squashfs` engellenmez |
+| SUID/SGID envanteri | Kısmi | Salt okunur liste (`hardening_suid_report`); izin değiştirilmez |
+| AIDE zamanlanmış kontrol | Var | İlk veritabanı üretilir; `hardening_aide_scheduled_check` günlük zamanlayıcının açık olmasını sağlar. Veritabanı kendiliğinden güncellenmez, e-posta teslim edilmez |
 | Zaman senkronizasyonu | Kısmi | Yalnızca salt okunur rapor (`hardening_time`: saat kayması uyarısı); chrony yapılandırılmaz. Tasarım notu: [zaman-ntp.md](docs/design/zaman-ntp.md) |
-| Denetim (auditd) kapsamı | Sınırlı | 6 kural grubu (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); `-e 2` yok; komut yürütme/dosya silme izlenmez; auditd'den **önce** başlamış süreçler yeniden başlatılana kadar denetlenmez |
-| fail2ban | Sınırlı | Yalnızca `sshd` jail |
+| Denetim (auditd) kapsamı | Sınırlı | 6 kural grubu (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); `-e 2` isteğe bağlı (`hardening_auditd_immutable`, varsayılan KAPALI); CIS Level 2 kuralları isteğe bağlı (`hardening_auditd_cis_l2`); komut yürütme/dosya silme izlenmez; auditd'den **önce** başlamış süreçler yeniden başlatılana kadar denetlenmez |
+| fail2ban | Sınırlı | `sshd` jail; Proxmox web arayüzü jail'i isteğe bağlı (`hardening_fail2ban_pve_web`, varsayılan KAPALI) |
 
 Bilinen çakışmalar (sertleştirmenin meşru kullanımları bozabileceği yerler): [docs/known-issues.md](docs/known-issues.md).
 
