@@ -180,6 +180,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_proxmox_web_jail.py` | Proxmox web arayüzü fail2ban jail'i: filtre regex'i örnek günlük satırlarında, kapı koşulları, kaldırma |
 | `test_pveproxy_siniri.py` | `pveproxy` erişim sınırı: karar betiği (kontrol makinesi, kullanıcı satırı koruması), yazma/geri yükleme/kaldırma, 8006 doğrulaması |
 | `test_pve_banner.py` | Proxmox `pvebanner.service` drop-in'i: yasal uyarının her açılışta geri yazılması (yazma, 2. koşu `changed=0`, generic'te/birim yokken yazmama, kapatınca silme) |
+| `test_kaldir.py` | Kalıcı kapatma (`kaldir_onizle`, `kaldir`, `kaldir_geri_yukle`): gerçek Ansible, yollar geçici dizinde; önizleme yazmaz, içeriği bizim olmayan dosya atlanır, yedek 0700/0600 ve manifest, idempotens, geri yükleme, katalog dışı yol ve yol gezdirme reddi, `--check`'te silmez |
 | `test_alan_anahtarlari.sh` | Alan anahtarları (`hardening_<alan>_enabled`): kapalıyken rol hiç çalışmaz, varsayılanda çalışır; ufw+ssh ikisi de kapalıyken erişim korumaları/geri alma/doğrulama atlanır, biri açıkken çalışır; tanım tutarlılığı (tür, varsayılan, `group`, `warn_if`) |
 | `test_platform_anahtarlari.py` | sshpocket menü süzmesi (`platform_var`, `platforms`, `group`) ve tutarlılık denetiminin geçersiz platform bilgisini yakalaması; koşulsuz görevlerin sunucu başına anahtarları (false atlar, true davranışı korur) |
 | `test_proxmox_guard.py` | Preflight platform ve Proxmox koruması: gerçek `stat`/`set_fact`/`fail`, `hardening_allow_unsupported` atlatamaz |

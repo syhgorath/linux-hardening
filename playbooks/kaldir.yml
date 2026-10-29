@@ -1,0 +1,11 @@
+# Kalıcı kapatma (sshpocket eylemi kaldir): hardening_remove_items'taki dosyaları yedekleyip SİLER. Yedek: /var/backups/linux-hardening/kaldir-<tarih> (root, 0700).
+# Paket kaldırılmaz; içeriği bu paketin yazdığı gibi olmayan dosya atlanır. Geri yüklemek için kaldir_geri_yukle.
+# Sonuç satırı: SSHPOCKET_RESULT linux-hardening.kaldir silinen=<N> atlanan=<M>
+# Silme kapısı play değişkenidir (-e verilemez): sshpocket -e'yi kendisi ekler, önizleme dosyası (kaldir-onizle.yml) bunu vermez.
+- name: Remove files written by this package (with backup)
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
+  vars:
+    hardening_remove_apply: true
+  roles:
+    - hardening_preflight
+    - hardening_remove

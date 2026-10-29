@@ -1,0 +1,9 @@
+# Kaldır eyleminin yedeğinden dosyaları geri yükler (sshpocket eylemi kaldir_geri_yukle). hardening_remove_restore_from boşsa en son yedek.
+# Sonuç satırı: SSHPOCKET_RESULT linux-hardening.kaldir_geri_yukle geri_yuklenen=<N>
+- name: Restore files removed by the removal action
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
+  tasks:
+    - name: Restore
+      ansible.builtin.include_role:
+        name: hardening_remove
+        tasks_from: restore

@@ -162,6 +162,67 @@
         "SSH drop-in, ufw kuralları ve PAM dosyalarını (faillock açıksa) değişiklikten ÖNCEKİ duruma döndürür; diğer roller (sysctl, auditd, fail2ban, AIDE, paketler) geri alınmaz.",
         "Geri alma güvenlik ağı kurulu ve armed değilse hiçbir şey yapmaz."
       ]
+    },
+    "kaldir_onizle": {
+      "cmd": "ansible-playbook playbooks/kaldir-onizle.yml",
+      "effects": [],
+      "requires_sudo": true,
+      "confirm": "none",
+      "outputs": {
+        "format": "keyvalue-line",
+        "prefix": "SSHPOCKET_RESULT linux-hardening.kaldir_onizle",
+        "keys": [
+          "silinecek",
+          "atlanan"
+        ]
+      },
+      "warnings": [
+        "Salt okunur: hardening_remove_items'taki dosyalardan hangilerinin silineceğini 'SİLİNECEK: <yol>' satırlarıyla gösterir, hiçbir şey yazmaz ve silmez.",
+        "İçeriği bu paketin yazdığı gibi olmayan dosya 'ATLANDI' olarak gösterilir ve silinmez."
+      ]
+    },
+    "kaldir": {
+      "cmd": "ansible-playbook playbooks/kaldir.yml",
+      "effects": [
+        "changes-config"
+      ],
+      "requires_sudo": true,
+      "requires": [
+        "kaldir_onizle"
+      ],
+      "confirm": "type-server-name",
+      "outputs": {
+        "format": "keyvalue-line",
+        "prefix": "SSHPOCKET_RESULT linux-hardening.kaldir",
+        "keys": [
+          "silinen",
+          "atlanan"
+        ]
+      },
+      "warnings": [
+        "hardening_remove_items'taki dosyaları SİLER (paket kaldırılmaz). Silmeden önce içerik sunucuda /var/backups/linux-hardening/kaldir-<tarih>/ altına (root, 0700) kopyalanır; kaldir_geri_yukle ile geri yüklenir.",
+        "Silmek çalışan sistemi geri almaz: sysctl değerleri ve modprobe engelleri yeniden başlatmaya kadar sürer. unattended_upgrades için 20auto-upgrades kalkınca otomatik güvenlik güncellemeleri kapanır.",
+        "Geri alma güvenlik ağı (hardening_rollback) bu eylemi KAPSAMAZ; geri dönüş yedekten kaldir_geri_yukle iledir."
+      ]
+    },
+    "kaldir_geri_yukle": {
+      "cmd": "ansible-playbook playbooks/kaldir-geri-yukle.yml",
+      "effects": [
+        "changes-config"
+      ],
+      "requires_sudo": true,
+      "confirm": "type-server-name",
+      "outputs": {
+        "format": "keyvalue-line",
+        "prefix": "SSHPOCKET_RESULT linux-hardening.kaldir_geri_yukle",
+        "keys": [
+          "geri_yuklenen"
+        ]
+      },
+      "warnings": [
+        "kaldir eyleminin yedeğinden dosyaları geri yazar (hardening_remove_restore_from boşsa en son yedek). Aynı yolda sonradan yazılmış dosyanın üzerine yazar.",
+        "Yalnızca kataloğdaki yollar geri yüklenir; yedekteki başka yol yok sayılır."
+      ]
     }
   },
   "vars": [
@@ -1164,6 +1225,20 @@
       "type": "bool",
       "default": true,
       "description": "Alan anahtarı. true (varsayılan): (yalnızca hardening_platform=proxmox-host) hardening_pve_pveproxy_allow_from ile web arayüzü (8006) erişim sınırı yönetilir (liste boşsa zaten hiçbir şey yazılmaz). false: rol hiç çalışmaz; yazılmış /etc/default/pveproxy bloğu SİLİNMEZ, pveproxy yeniden başlatılmaz"
+    },
+    {
+      "name": "hardening_remove_items",
+      "group": "Kaldırma",
+      "type": "list[string]",
+      "default": [],
+      "description": "Yalnızca kaldir_onizle ve kaldir eylemlerinde etkilidir (harden.yml okumaz). Kaldırılacak seçenekler: unattended_upgrades (20auto-upgrades), disable_network_protocols, disable_filesystem_modules, sysctl_hardening, journald_persistent. Yalnızca bu paketin yazdığı dosya silinir (içerik izi yoksa atlanır); paket kaldırılmaz; silmeden önce sunucuda yedeklenir. legal_banner yoktur (özgün /etc/issue yedeği alınmamıştı). Boş ya da bilinmeyen ad eylemi reddettirir"
+    },
+    {
+      "name": "hardening_remove_restore_from",
+      "group": "Kaldırma",
+      "type": "string",
+      "default": "",
+      "description": "Yalnızca kaldir_geri_yukle eyleminde etkilidir. Boş (varsayılan): en son yedek. Dolu: /var/backups/linux-hardening altındaki yedek klasör adı (kaldir-YYYYMMDDTHHMMSSZ); biçim dışı ad reddedilir"
     }
   ],
   "invoke": {

@@ -1,0 +1,131 @@
+# Kalıcı kapatma. Önizleme (hardening_remove_apply=false) hiçbir şey yazmaz; uygulama önce yedekler, sonra siler.
+- name: Validate the removal selection
+  ansible.builtin.assert:
+    that:
+      - hardening_remove_items is sequence
+      - hardening_remove_items is not string
+      - hardening_remove_items | length > 0
+      - hardening_remove_items | difference(hardening_remove_catalog.keys() | list) | length == 0
+    fail_msg: >-
+      hardening_remove_items boş ya da geçersiz ad içeriyor. İzinli adlar: {{ hardening_remove_catalog.keys() | list | sort | join(', ') }}.
+      Hiçbir şey silinmedi.
+    quiet: true
+
+- name: Read the files this action may remove
+  ansible.builtin.slurp:
+    src: "{{ hardening_remove_root }}{{ hardening_remove_catalog[item].path }}"
+  loop: "{{ hardening_remove_items | unique }}"
+  register: hardening_remove_read
+  failed_when: false
+  check_mode: false
+
+- name: Work out what would be removed
+  ansible.builtin.set_fact:
+    hardening_remove_plan: >-
+      {%- set out = [] -%}
+      {%- for r in hardening_remove_read.results -%}
+        {%- set cat = hardening_remove_catalog[r.item] -%}
+        {%- if 'content' not in r -%}
+          {%- set st = 'absent' -%}
+        {%- elif cat.marker in (r.content | b64decode) -%}
+          {%- set st = 'delete' -%}
+        {%- else -%}
+          {%- set st = 'foreign' -%}
+        {%- endif -%}
+        {%- set _ = out.append({'item': r.item, 'path': cat.path, 'state': st}) -%}
+      {%- endfor -%}
+      {{ out | to_json }}
+  check_mode: false
+
+- name: Show the plan, one line per file
+  ansible.builtin.debug:
+    msg: >-
+      {{ {'delete': 'SİLİNECEK: ', 'foreign': 'ATLANDI (içerik bu paketin yazdığı gibi değil): ', 'absent': 'YOK (yapılacak bir şey yok): '}[p.state] }}{{ p.path }} ({{ p.item }})
+  loop: "{{ hardening_remove_plan | from_json }}"
+  loop_control:
+    loop_var: p
+    label: "{{ p.item }}"
+
+- name: Say what removing does NOT undo
+  ansible.builtin.debug:
+    msg: >-
+      Dosyayı silmek çalışan sistemi geri almaz: sysctl değerleri ve modprobe engelleri yeniden başlatmaya kadar sürer; unattended_upgrades için
+      20auto-upgrades kalkınca otomatik güvenlik güncellemeleri kapanır (paket kalır). Silinen içerik yedeklenir; kaldir_geri_yukle ile geri yüklenir.
+  when: (hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length) > 0
+
+- name: Preview result line
+  ansible.builtin.debug:
+    msg: "SSHPOCKET_RESULT linux-hardening.kaldir_onizle silinecek={{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length }} atlanan={{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'foreign') | list | length }}\n"
+  when: not (hardening_remove_apply | bool)
+
+- name: Back up and remove
+  when: hardening_remove_apply | bool and not ansible_check_mode
+  block:
+    - name: Pick the backup directory name
+      ansible.builtin.set_fact:
+        hardening_remove_backup_name: "kaldir-{{ now(utc=True).strftime('%Y%m%dT%H%M%SZ') }}"
+
+    - name: Create the backup directories (root, 0700)
+      ansible.builtin.file:
+        path: "{{ hardening_remove_root }}{{ item }}"
+        state: directory
+        owner: "{{ hardening_remove_owner }}"
+        group: "{{ hardening_remove_group }}"
+        mode: "0700"
+      loop:
+        - /var/backups/linux-hardening
+        - "/var/backups/linux-hardening/{{ hardening_remove_backup_name }}"
+      when: (hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length) > 0
+
+    - name: Back up each file before removing it
+      ansible.builtin.copy:
+        src: "{{ hardening_remove_root }}{{ p.path }}"
+        dest: "{{ hardening_remove_root }}/var/backups/linux-hardening/{{ hardening_remove_backup_name }}/{{ p.item }}.bak"
+        remote_src: true
+        owner: "{{ hardening_remove_owner }}"
+        group: "{{ hardening_remove_group }}"
+        mode: "0600"
+      loop: "{{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list }}"
+      loop_control:
+        loop_var: p
+        label: "{{ p.item }}"
+
+    - name: Write the backup manifest
+      ansible.builtin.copy:
+        dest: "{{ hardening_remove_root }}/var/backups/linux-hardening/{{ hardening_remove_backup_name }}/manifest.txt"
+        owner: "{{ hardening_remove_owner }}"
+        group: "{{ hardening_remove_group }}"
+        mode: "0600"
+        content: |
+          {% for p in hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') %}
+          {{ p.item }}	{{ p.path }}
+          {% endfor %}
+      when: (hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length) > 0
+
+    - name: Remove the files
+      ansible.builtin.file:
+        path: "{{ hardening_remove_root }}{{ p.path }}"
+        state: absent
+      loop: "{{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list }}"
+      loop_control:
+        loop_var: p
+        label: "{{ p.item }}"
+
+    - name: Restart the services whose drop-in was removed
+      ansible.builtin.systemd:
+        name: "{{ hardening_remove_catalog[p.item].restart }}"
+        state: restarted
+      loop: "{{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list }}"
+      loop_control:
+        loop_var: p
+        label: "{{ p.item }}"
+      when: hardening_remove_catalog[p.item].restart is defined
+
+    - name: Where the backup is
+      ansible.builtin.debug:
+        msg: "Yedek: /var/backups/linux-hardening/{{ hardening_remove_backup_name }} (geri yüklemek için kaldir_geri_yukle)."
+      when: (hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length) > 0
+
+    - name: Removal result line
+      ansible.builtin.debug:
+        msg: "SSHPOCKET_RESULT linux-hardening.kaldir silinen={{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length }} atlanan={{ hardening_remove_plan | from_json | selectattr('state', 'equalto', 'foreign') | list | length }}\n"
