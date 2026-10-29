@@ -5,17 +5,27 @@
 Ansible-based Linux server hardening. It keeps all roles in one repository; supported distributions/versions are
 listed explicitly and the playbooks **refuse to run on unsupported systems**.
 
-**Currently supported:** Ubuntu 26.04 LTS (target: a CIS Level 1 Server approach, not a certified CIS-compliance claim).
+**Currently supported:** Ubuntu 26.04 LTS and Proxmox VE 9 (single node, `hardening_platform=proxmox-host`); Debian 13 is tested in a container only (target: a CIS Level 1 Server approach, not a certified CIS-compliance claim).
 The path to add other versions/distributions is open: see [docs/SUPPORT.md](docs/SUPPORT.md) (Turkish).
 
 > **Language note:** the detailed guide ([HOWTO.md](HOWTO.md)), decision log ([docs/decisions.md](docs/decisions.md)) and
 > most comments are in Turkish. This file is a translation of the README only.
 
-> **Status (0.x):** **verified live** on an Ubuntu 26.04.1 LTS test VM: first-time install on a clean server, `changed=0`
-> on the second run, `--check` (`failed=0`), the access-loss protections and the rollback safety net (verification
-> failure, controller death, server reboot). Lynis hardening index 77, no warnings.
-> **Not verified:** servers other than that one VM/configuration, a real network-level outage, Raspberry Pi/Proxmox,
-> full CIS Benchmark compliance (deliberately an "approach"). Try it on a test server and take a snapshot first.
+> **Status (0.9):** **verified live** on Ubuntu 26.04 and Proxmox VE 9 (single node) VMs through sshpocket
+> ([docs/verification-log.md](docs/verification-log.md), Turkish): first-time install on a clean server, `changed=0` on the
+> second run, `--check` (`failed=0`), the access-loss protections, per-area switches and the permanent-removal actions.
+> Lynis hardening index 83 on Ubuntu.
+> **Not verified:** Raspberry Pi, Proxmox with guests or in a cluster, Docker VMs, HA, the rollback safety net armed on a real VM
+> (proven only in the Docker LAB), full CIS Benchmark compliance (deliberately an "approach"). Try it on a test server and take
+> a snapshot first.
+
+## Area switches and permanent removal
+- Every hardening area has its own switch `hardening_<area>_enabled` (default `true`: behavior unchanged). `false` skips the role
+  entirely; files written earlier are **not** deleted. With both `ufw` and `ssh` off, the `hardening_ssh_allow_from` requirement,
+  the rollback safety net and the new-connection check are skipped. See [docs/component-vars.md](docs/component-vars.md).
+- To remove what this package wrote, use the separate actions `kaldir_onizle` (read-only preview), `kaldir` (backs up to
+  `/var/backups/linux-hardening/`, then deletes) and `kaldir_geri_yukle` (restores). Files that do not look exactly like this
+  package wrote them are skipped. Deleting a file does not undo the running system's state (details in [HOWTO.md](HOWTO.md), Turkish).
 
 ## Workflow
 1. `playbooks/audit.yml` — baseline scan (Lynis)
@@ -46,7 +56,7 @@ Detailed usage, sudo/production notes and troubleshooting: **[HOWTO.md](HOWTO.md
 Decisions and exceptions: [docs/decisions.md](docs/decisions.md) (Turkish).
 Live verification log: [docs/verification-log.md](docs/verification-log.md); roadmap: [docs/ROADMAP.md](docs/ROADMAP.md) (Turkish).
 
-> **`hardening_ssh_allow_from` is required** (its default is intentionally empty). If it is empty, invalid, or the source
+> **`hardening_ssh_allow_from` is required** while the ufw or ssh area is on (its default is intentionally empty). If it is empty, invalid, or the source
 > IP Ansible connects from is not inside these networks, `harden.yml` stops without touching the firewall/SSH. You also
 > cannot connect as `root`.
 > Example: `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'`
@@ -73,22 +83,22 @@ the code. Rows marked "Deliberately" are documented decisions; the others are **
 | Automatic reboot | Deliberately not done | Automatic security updates are enabled, no reboot ([HOWTO.md](HOWTO.md), Turkish) |
 | User, password and key management | Not by design | You create the user; the role only checks that `authorized_keys` is non-empty before disabling password login |
 | Application hardening (nginx, MySQL, …) | Out of scope | Operating system only |
-| Other distributions/versions | Not yet | Ubuntu 26.04 only; Raspberry Pi/Proxmox planned ([SUPPORT.md](docs/SUPPORT.md)) |
+| Other distributions/versions | Limited | Ubuntu 26.04 and Proxmox VE 9 (single node) verified, Debian 13 in a container only; Raspberry Pi planned ([SUPPORT.md](docs/SUPPORT.md)) |
 | Rollback | Partial | The sshd drop-in, ufw and (when faillock is on) PAM are rolled back; packages, sysctl, auditd, fail2ban, AIDE are not |
-| Partition/mount options (`/tmp`, `nodev`, `noexec`, `hidepid`) | Not yet | |
-| Bootloader (GRUB password, `audit=1`) | Not yet | Design note for `audit=1`: [auditd-kapsam.md](docs/design/auditd-kapsam.md) (Turkish) |
-| AppArmor profiles | Not yet | |
-| Log management (rsyslog, journald, logrotate, remote logging) | Not yet | |
+| Partition/mount options | Partial | `nodev,nosuid,noexec` on `/tmp` and `/dev/shm` (`hardening_tmp_noexec`, `hardening_shm_noexec`), `hidepid=2` on `/proc` (`hardening_proc_hidepid`, off by default); no separate `/home`, `/var` partitions |
+| Bootloader (GRUB) | Partial | `audit=1` and `audit_backlog_limit` are written ([auditd-kapsam.md](docs/design/auditd-kapsam.md), Turkish); a GRUB password is **deliberately not set** (a server without a console would not boot unattended; [cis-esleme.md](docs/cis-esleme.md) 1.4.1) |
+| AppArmor profiles | Partial | Packages and enabling; `hardening_apparmor_enforce` (off by default) moves profiles from complain to enforce; no custom profiles are written |
+| Log management | Partial | journald persistent storage and compression, limits (`hardening_journald_rotation`, off by default), log file permissions; no rsyslog, logrotate or remote logging |
 | `cron`/`at` restrictions, `sudo` configuration | Partial | Only cron file/directory **permissions** and a `sudoers.d` drop-in (`use_pty`, `logfile`, `timestamp_timeout`); `cron.allow`/`at.allow` are not created, `su` is not restricted. `sudoers` changes are also **audited** by auditd |
-| Disabling IPv6 | Not yet | |
-| Core dumps | Partial | Only `fs.suid_dumpable = 0`; no `systemd-coredump` settings |
-| Removing unused services/packages | Partial | Only `postfix`/`courier-*` are removed; avahi, cups, etc. are not |
-| Rare filesystem modules (`cramfs`, `udf`, `squashfs`, …) | Not yet | Only `dccp`, `sctp`, `rds`, `tipc` and `usb-storage` are blocked |
-| SUID/SGID inventory | Not yet | |
-| Scheduled AIDE checks | Not yet | Only the initial database is created; scheduling is the package default (not verified) |
+| Disabling IPv6 | Deliberately not done | Only accepting router advertisements (RA) can be turned off (`hardening_kernel_disable_ipv6_ra`) |
+| Core dumps | Available (off by default) | `fs.suid_dumpable = 0` always; `hardening_disable_coredump` turns off the user limit and `systemd-coredump` |
+| Removing unused services/packages | Partial | `postfix`/`courier-*` are removed; the `telnet`/`ftp` clients are optional (`hardening_remove_legacy_clients`); avahi, cups, etc. are not |
+| Rare filesystem modules | Partial | `cramfs`, `freevxfs`, `hfs`, `hfsplus`, `jffs2`, `firewire-core` and `atm`, `can`, `dccp`, `rds`, `sctp`, `tipc`, `usb-storage` are blocked; `udf` and `squashfs` are not |
+| SUID/SGID inventory | Partial | Read-only list (`hardening_suid_report`); permissions are not changed |
+| Scheduled AIDE checks | Available | The initial database is created; `hardening_aide_scheduled_check` keeps the daily timer enabled. The database is never updated automatically and no e-mail is delivered |
 | Time synchronization | Partial | Read-only report only (`hardening_time`: clock-drift warning); chrony is not configured. Design note: [zaman-ntp.md](docs/design/zaman-ntp.md) (Turkish) |
-| Audit (auditd) coverage | Limited | 6 rule groups (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); no `-e 2`; command execution/file deletion are not audited; processes started **before** auditd are not audited until restarted |
-| fail2ban | Limited | `sshd` jail only |
+| Audit (auditd) coverage | Limited | 6 rule groups (`identity`, `scope`, `sshd`, `logins`, `time-change`, `modules`); `-e 2` is optional (`hardening_auditd_immutable`, off by default); CIS Level 2 rules are optional (`hardening_auditd_cis_l2`); command execution/file deletion are not audited; processes started **before** auditd are not audited until restarted |
+| fail2ban | Limited | `sshd` jail; a Proxmox web UI jail is optional (`hardening_fail2ban_pve_web`, off by default) |
 
 Known conflicts (places where hardening can break legitimate use): [docs/known-issues.md](docs/known-issues.md) (Turkish).
 

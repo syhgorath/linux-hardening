@@ -12,6 +12,7 @@ sshpocket 3.6.18 ile 0.9.0 gerçek VM turunun (Ubuntu 26.04) bulguları.
 - `scripts/*.sh` ve `test/*.sh` git'te çalıştırılabilir (100755) oldu; `test/test_dosya_izinleri.sh` bunu denetler. Paketi etkilemez.
 
 ### Belgeler
+- `README.md` ve `README.en.md`: "Ne yapmaz" tablosundaki bayat satırlar kodla doğrulanarak düzeltildi (hidepid, `/tmp` noexec, `audit=1`, AppArmor enforce, journald, core dump, nadir dosya sistemi modülleri, SUID raporu, AIDE zamanlayıcı, `-e 2`, Proxmox web jail'i, desteklenen sistemler); durum notu 0.9'a getirildi; alan anahtarları ve kalıcı kapatma bölümü eklendi.
 - `docs/verification-log.md` madde 73 (sshpocket 3.6.18, 0.9.0 turu), `docs/deneme-matrisi.md` ve `docs/known-issues.md` (kalıcı kapatmanın geri almadıkları) güncellendi; silahlı geri almanın gerçek VM'de denenmediği not edildi.
 
 ### Düzeltildi
