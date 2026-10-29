@@ -127,6 +127,12 @@ sudo ls /etc/ssh/sshd_config.d/ && sudo sshd -T | grep -iE 'allowtcpforwarding|a
 - **Docker denemesi:** LAB, iç içe overlayfs'te konteyner başlatamadı; `vfs` depolama sürücüsüyle çalıştı. Bu yalnızca LAB'ın sınırı, ufw/Docker
   sonucunu etkilemez. Deneme sonunda Docker ve iptables kalıntıları temizlendi.
 
+## Kalıcı kapatma (`kaldir`) neyi geri almaz
+- Dosyayı silmek **canlı durumu** geri almaz: çalışan sysctl değerleri ve yüklü modüller yeniden başlatmaya kadar sürer (Ubuntu turunda ölçüldü: yeniden başlatmadan sonra `kptr_restrict` 2→1, `rp_filter` 1→2). modprobe engeli ise dosya silinince **hemen** kalkar. Kaçış: `kaldir_geri_yukle` ya da `harden.yml` yeniden uygulanır.
+- `unattended_upgrades` silinince otomatik güvenlik güncellemeleri kapanır (paket kalır); ölçüldü.
+- Geri alma güvenlik ağı (`hardening_rollback`) bu eylemleri kapsamaz.
+- Gerçek VM'de **silahlı geri alma** henüz kanıtlanmadı (Docker LAB'da kanıtlı); fiziksel Proxmox turunda konsol erişimiyle denenecek.
+
 ## Bu tablo neyi kapsamıyor
 - Proxmox hostu ve Raspberry Pi profilleri: bkz. [ROADMAP.md](ROADMAP.md) (henüz yok). Proxmox hostunda rol bilerek DURUR; Ubuntu Server'ın Raspberry Pi üzerinde çalışması **denenmedi** (docs/SUPPORT.md). Platform kararı: paket değişkeni (docs/design/proxmox-host.md, soru 5).
 - Uygulama düzeyinde (nginx, MySQL vb.) sertleştirme bu projenin kapsamında değil.
