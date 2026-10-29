@@ -7,6 +7,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 sshpocket 3.6.18 ile 0.9.0 gerçek VM turunun (Ubuntu 26.04) bulguları.
 
+### Belgeler
+- `docs/verification-log.md` madde 73 (sshpocket 3.6.18, 0.9.0 turu), `docs/deneme-matrisi.md` ve `docs/known-issues.md` (kalıcı kapatmanın geri almadıkları) güncellendi; silahlı geri almanın gerçek VM'de denenmediği not edildi.
+
 ### Düzeltildi
 - `kaldir_onizle` / `kaldir`: bir dosyanın "bu paketin yazdığı" sayılması yalnızca işaret satırına bakıyordu; işaret satırı durduğu sürece elle eklenen satırlar da dosyayla birlikte silinirdi. Artık işaret satırı VE yorum/boş olmayan her satırın bu paketin yazabileceği biçime uyması gerekir (katalogda `line_pattern`); aksi halde dosya `ATLANDI` olur. Desenler gerçek şablon/rol çıktısıyla sınanır.
 - Kaldırma uyarısı: modprobe engeli dosya silinince **hemen** kalkar (yeni yüklemeler serbest); yeniden başlatmaya kadar süren yalnızca çalışan sysctl değerleri ve yüklü modüllerdir.

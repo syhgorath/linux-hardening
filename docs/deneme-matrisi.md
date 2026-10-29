@@ -34,6 +34,9 @@ Sonuç: ✅ sorunsuz | ⚠️ sorunlu (nasıl) | 💥 bozdu (nasıl) | ⏳ denen
 | `hardening_pve_web_allow_from` / `_exclusive` | boş/KAPALI | — (birim testi) | — | allow_from ✅; exclusive 💥 ETKİSİZDİ (0.8.3) → düzeltildi, elle ✅ (küme ayrımı), sshpocket ile ⏳; kontrol makinesi listede değilken reddetme ✅ | — | boşken çıktı değişmez |
 | `hardening_postfix_banner` / `hardening_proc_hidepid` | açık / KAPALI | ✅ gerçek `postconf`; hidepid ölçüldü, 2. koşu `changed=0` | ⏳ hidepid yeniden başlatma kalıcılığı | ⏳ postfix banner (etkili olduğu host) ve hidepid | — | izleme ajanları `hardening_proc_hidepid_users`'a |
 | `pve_firewall_preview` / `pve_firewall_apply` | — | — | — | ✅ önizleme `apply=true` ile `changed=0`; uygulama: cluster.fw yazıldı, ssh, 8006, ping sağlam, FIRE-4512 kapandı | ⏳ | kümeli Proxmox denenmedi |
+| `hardening_<alan>_enabled` (base, auth, kernel, apparmor, auditd, fail2ban, aide, ufw, ssh) | açık | — (birim testi gerçek Ansible ile) | ✅ 0.9.0: 7 alan false (rol çalışmadı, dosya yazılmadı), tek tek true, ufw+ssh birlikte false (rollback ve doğrulama atlandı, bağlantı kopmadı) | ✅ ufw false zararsız | ⏳ | false eski dosyaları silmez; silme için `kaldir` |
+| `hardening_pve_pveproxy_enabled` / `hardening_legal_banner=false` | açık | — | — | ✅ 0.9.0: false iken blok ve servis aynı kaldı, banner ve pvebanner drop-in yazılmadı | ⏳ |  |
+| `kaldir_onizle` / `kaldir` / `kaldir_geri_yukle` | — | ✅ gerçek Ansible, geçici dizin | ✅ 0.9.0: önizleme salt okunur, yedek 0700/0600, geri yükleme özgün içerikle, kaldır sonrası apply geri yazar | ✅ 0.9.0: aynı; pveproxy etkilenmedi | ⏳ | elle satır eklenmiş dosya 0.9.0'da yine silinirdi, 0.9.1'de ATLANIR (PR 149); sysctl/modül etkisi yeniden başlatmaya kadar sürer |
 
 ## Lynis hardening index (sshpocket 3.6.10)
 
