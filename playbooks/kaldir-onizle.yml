@@ -1,0 +1,8 @@
+# Kalıcı kapatma, ÖNİZLEME (sshpocket eylemi kaldir_onizle): hardening_remove_items'taki dosyalardan hangilerinin silineceğini gösterir.
+# Hiçbir şey yazmaz ve silmez. Sonuç satırı: SSHPOCKET_RESULT linux-hardening.kaldir_onizle silinecek=<N> atlanan=<M>
+# Preflight (OS desteği) çalışır; erişim korumaları çalışmaz (ufw/ssh değişmiyor).
+- name: Preview removal of files written by this package
+  hosts: "{{ ['hardening', 'ubuntu'] | select('in', groups) | join(':') or 'hardening' }}"
+  roles:
+    - hardening_preflight
+    - hardening_remove

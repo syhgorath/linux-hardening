@@ -1,0 +1,34 @@
+# Kalıcı kapatma: bu paketin yazdığı dosyaları KALDIRIR (kaldir_onizle / kaldir / kaldir_geri_yukle eylemleri). harden.yml bu rolü ÇALIŞTIRMAZ.
+# Neyin kaldırılacağı: yukarıdaki katalogdaki adlar. Paket KALDIRILMAZ; yalnızca bu rolün yazdığı dosya silinir, içeriği bizim değilse atlanır.
+# Silmeden önce dosyanın içeriği sunucuda /var/backups/linux-hardening/kaldir-<tarih>/ altına (root, 0700) kopyalanır; geri yüklemek için kaldir_geri_yukle.
+# Dosyanın silinmesi CANLI durumu geri almaz: sysctl değerleri ve modprobe engelleri yeniden başlatmaya kadar sürer (journald hemen yeniden başlatılır).
+hardening_remove_items: []
+# kaldir_geri_yukle: boş (varsayılan) = en son yedek; ya da yedek klasör adı (kaldir-YYYYMMDDTHHMMSSZ).
+hardening_remove_restore_from: ""
+# Gerçek silme kapısı (iç): playbooks/kaldir.yml play değişkeni olarak true verir; önizleme false bırakır (-e ile verilemez).
+hardening_remove_apply: false
+# Kaldırılabilen adlar. marker: dosyanın bu paketin yazdığına dair içerik izi; yoksa dosya "bizim değil" sayılır ve atlanır.
+# 20auto-upgrades için iz Ubuntu'nun kendi varsayılan içeriğidir (aynı iki satır); kaldırınca otomatik güvenlik güncellemeleri kapanır.
+hardening_remove_catalog:
+  unattended_upgrades:
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    marker: |-
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+  disable_network_protocols:
+    path: /etc/modprobe.d/60-hardening-protocols.conf
+    marker: "Ansible tarafından yönetilir"
+  disable_filesystem_modules:
+    path: /etc/modprobe.d/60-hardening-filesystems.conf
+    marker: "Ansible tarafından yönetilir"
+  sysctl_hardening:
+    path: /etc/sysctl.d/60-hardening.conf
+    marker: "Ansible tarafından yönetilir"
+  journald_persistent:
+    path: /etc/systemd/journald.conf.d/60-hardening.conf
+    marker: "Ansible tarafından yönetilir"
+    restart: systemd-journald
+# Yalnızca TEST için: yollara önek, yedek sahibi/grubu.
+hardening_remove_root: ""
+hardening_remove_owner: root
+hardening_remove_group: root

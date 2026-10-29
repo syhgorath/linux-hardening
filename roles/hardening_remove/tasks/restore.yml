@@ -1,0 +1,68 @@
+# Kaldır eyleminin yedeğinden dosyaları geri yükler (yalnızca katalogdaki yollar; manifestteki başka yol yok sayılır).
+- name: Find the backups
+  ansible.builtin.find:
+    paths: "{{ hardening_remove_root }}/var/backups/linux-hardening"
+    patterns: "kaldir-*"
+    file_type: directory
+  register: hardening_remove_backups
+  failed_when: false
+
+- name: Pick the backup to restore
+  ansible.builtin.set_fact:
+    hardening_remove_restore_name: >-
+      {{ hardening_remove_restore_from if hardening_remove_restore_from | length > 0
+         else (hardening_remove_backups.files | default([]) | map(attribute='path') | map('basename') | sort | last | default('')) }}
+
+- name: Refuse a missing or malformed backup name
+  ansible.builtin.assert:
+    that:
+      - hardening_remove_restore_name is match('^kaldir-[0-9]{8}T[0-9]{6}Z$')
+    fail_msg: >-
+      Geri yüklenecek yedek bulunamadı ya da adı geçersiz ('{{ hardening_remove_restore_name }}'). Beklenen biçim: kaldir-YYYYMMDDTHHMMSSZ
+      (/var/backups/linux-hardening altında). Hiçbir şey değişmedi.
+    quiet: true
+
+- name: Read the backup manifest
+  ansible.builtin.slurp:
+    src: "{{ hardening_remove_root }}/var/backups/linux-hardening/{{ hardening_remove_restore_name }}/manifest.txt"
+  register: hardening_remove_manifest
+
+- name: Work out what to restore
+  ansible.builtin.set_fact:
+    hardening_remove_restore_plan: >-
+      {%- set out = [] -%}
+      {%- for line in (hardening_remove_manifest.content | b64decode).splitlines() -%}
+        {%- set parts = line.split('\t') -%}
+        {%- if parts | length == 2 and parts[0] in hardening_remove_catalog and hardening_remove_catalog[parts[0]].path == parts[1] -%}
+          {%- set _ = out.append({'item': parts[0], 'path': parts[1]}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ out | to_json }}
+
+- name: Restore each file
+  ansible.builtin.copy:
+    src: "{{ hardening_remove_root }}/var/backups/linux-hardening/{{ hardening_remove_restore_name }}/{{ p.item }}.bak"
+    dest: "{{ hardening_remove_root }}{{ p.path }}"
+    remote_src: true
+    owner: "{{ hardening_remove_owner }}"
+    group: "{{ hardening_remove_group }}"
+    mode: "0644"
+  loop: "{{ hardening_remove_restore_plan | from_json }}"
+  loop_control:
+    loop_var: p
+    label: "{{ p.item }}"
+  when: not ansible_check_mode
+
+- name: Restart the services whose drop-in was restored
+  ansible.builtin.systemd:
+    name: "{{ hardening_remove_catalog[p.item].restart }}"
+    state: restarted
+  loop: "{{ hardening_remove_restore_plan | from_json }}"
+  loop_control:
+    loop_var: p
+    label: "{{ p.item }}"
+  when: hardening_remove_catalog[p.item].restart is defined and not ansible_check_mode
+
+- name: Restore result line
+  ansible.builtin.debug:
+    msg: "SSHPOCKET_RESULT linux-hardening.kaldir_geri_yukle geri_yuklenen={{ hardening_remove_restore_plan | from_json | length }}\n"

@@ -183,6 +183,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_proxmox_web_jail.py` | Proxmox web UI fail2ban jail: filter regex on sample log lines, gate conditions, removal |
 | `test_pveproxy_siniri.py` | `pveproxy` access limit: decision script (controller address, user line protection), write/restore/removal, 8006 verification |
 | `test_pve_banner.py` | Proxmox `pvebanner.service` drop-in: the legal banner is restored on every boot (write, 2nd run `changed=0`, no write on generic/missing unit, removal when off) |
+| `test_kaldir.py` | Permanent removal (`kaldir_onizle`, `kaldir`, `kaldir_geri_yukle`): real Ansible, paths in a temp dir; preview writes nothing, files whose content is not ours are skipped, backup 0700/0600 plus manifest, idempotence, restore, paths outside the catalog and path traversal rejected, `--check` never deletes |
 | `test_alan_anahtarlari.sh` | Area switches (`hardening_<area>_enabled`): a disabled role never runs, enabled by default; with ufw and ssh both off the access guards/rollback/verification are skipped, with either on they run; definition consistency (type, default, `group`, `warn_if`) |
 | `test_platform_anahtarlari.py` | sshpocket menu filtering (`platform_var`, `platforms`, `group`) and the consistency check rejecting invalid platform data; per-server switches for unconditional tasks (false skips, true keeps behaviour) |
 | `test_proxmox_guard.py` | Preflight platform and Proxmox guard: real `stat`/`set_fact`/`fail`, `hardening_allow_unsupported` cannot bypass |
