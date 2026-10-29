@@ -21,7 +21,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.8.1 yayını | Yayımlandı (`kernel_modules_disabled` + ufw önyükleme modül listesi, `verify_access` ssh-agent ipucu ve ek bağımsız değişken, manifest sınırları, deneme matrisi) |
 | v0.8.2 yayını | Yayımlandı (Proxmox'ta `kernel_modules_disabled` reddi, `hardening_fail2ban_pve_web`, `hardening_pve_pveproxy_allow_from`) |
 | v0.8.3 yayını | Yayımlandı (`hardening_pve_pveproxy` boş dosya düzeltmesi, `hardening_postfix_banner`, `hardening_proc_hidepid`, `apt_upgrade_phased`, `apt_listbugs`, Proxmox 8006 ayrı kaynak listesi, `scripts/release-publish.sh`) |
-| v0.8.4 yayını | Hazırlandı (`hardening_pve_keep_banner`, `hardening_pve_web_exclusive` küme ayrımı düzeltmesi, sshpocket menü süzmesi `platform_var`/`platforms`/`group`, koşulsuz görevler için 6 sunucu başına anahtar) |
+| v0.8.4 yayını | Yayımlandı (`hardening_pve_keep_banner`, `hardening_pve_web_exclusive` küme ayrımı düzeltmesi, sshpocket menü süzmesi `platform_var`/`platforms`/`group`, koşulsuz görevler için 6 sunucu başına anahtar) |
+| v0.9.0 yayını | Hazırlandı (alan anahtarları `hardening_<alan>_enabled`, 128/128 değişkende `group`, kalıcı kapatma eylemleri `kaldir_onizle`/`kaldir`/`kaldir_geri_yukle`; sshpocket 3.6.16 0.8.4 turu temiz) |
 
 ## Orta
 | İş | Not |

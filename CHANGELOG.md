@@ -5,7 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
-sshpocket 3.6.16 ile 0.8.4 gerçek VM turu (Ubuntu 26.04 + Proxmox VE 9) temiz geçti: `docs/verification-log.md` madde 72.
+## [0.9.0] - 2026-10-29
+
+v0.8.4'ten sonra, sshpocket 3.6.16 gerçek VM turunun (Ubuntu 26.04 + Proxmox VE 9, temiz geçti: `docs/verification-log.md` madde 72) istekleri: **alan anahtarları**, **tam gruplama** ve **kalıcı kapatma eylemleri**. `component.yml` `vars` listesi 116'dan 128'e (+12), eylemler 8'den 11'e (+3). Kırıcı değişiklik yok: yeni anahtarların hepsi varsayılan true (davranış aynı), yeni eylemler `harden.yml`'de çalışmaz. **Gerçek sunucuda denenmeyenler:** `kaldir_onizle`/`kaldir`/`kaldir_geri_yukle` (yalnızca gerçek Ansible birim testleri; journald yeniden başlatma yolu testte yok), alan anahtarlarının gerçek VM'de kapatılması, misafirli/kümeli Proxmox, Docker'lı VM, Raspberry Pi, silahlı geri alma.
 
 ### Eklendi
 - Kalıcı kapatma: üç yeni eylem (`kaldir_onizle` salt okunur, `kaldir` ve `kaldir_geri_yukle` `type-server-name` onaylı) ve `hardening_remove` rolü. `hardening_remove_items` ile seçilen, bu paketin yazdığı dosyalar (`unattended_upgrades`, `disable_network_protocols`, `disable_filesystem_modules`, `sysctl_hardening`, `journald_persistent`) önce sunucuda `/var/backups/linux-hardening/kaldir-<tarih>/` altına yedeklenir (root, 0700; dosyalar 0600, manifest), sonra silinir; içeriği bu paketin yazdığı gibi olmayan dosya atlanır; paket kaldırılmaz; `harden.yml` bu rolü çalıştırmaz. Sonuç satırları `SSHPOCKET_RESULT linux-hardening.kaldir_onizle|kaldir|kaldir_geri_yukle`. `legal_banner` kapsam dışı (özgün `/etc/issue` yedeği alınmamıştı). Tasarım sshpocket 3.6.17 görüşüyle seçildi (değişken türünü değiştirmek yerine eylem). Yeni `test_kaldir.py`. 128 değişken, 11 eylem. **Gerçek VM'de denenmedi.**
