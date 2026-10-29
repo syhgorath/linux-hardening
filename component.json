@@ -1,6 +1,6 @@
 {
   "id": "linux-hardening",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "sshpocket_api": 1,
   "name": "Linux sertleştirme",
   "description": "Ubuntu sunucuları Ansible ile sertleştirir (SSH, ufw, kernel, auditd, fail2ban, AIDE); Lynis denetimi ve geri alma güvenlik ağı içerir",

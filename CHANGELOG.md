@@ -5,7 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
-sshpocket 3.6.18 ile 0.9.0 gerçek VM turunun (Ubuntu 26.04) bulguları.
+## [0.9.1] - 2026-10-30
+
+sshpocket 3.6.18 ile 0.9.0 gerçek VM turunun (Ubuntu 26.04 + Proxmox VE 9) bulguları: `kaldir` sahiplik testi, uyarı metni ve `hardening_ssh_allow_from` zorunluluğu düzeltildi; `kaldir` eylemine `destructive` etkisi eklendi. Değişken (128) ve eylem (11) sayısı aynı; varsayılan davranış değişmedi.
 
 ### Değişti
 - `kaldir` eyleminin `effects` değerine `destructive` eklendi (dosya siler; sshpocket v3.3.0'dan beri tanır, eski sürümler reddetmez). `scripts/check-consistency.py` bu değeri kabul eder. `kaldir_onizle` ve `kaldir_geri_yukle` değişmedi. Onay biçimi aynı: `type-server-name`.
