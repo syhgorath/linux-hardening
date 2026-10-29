@@ -184,7 +184,8 @@
     "kaldir": {
       "cmd": "ansible-playbook playbooks/kaldir.yml",
       "effects": [
-        "changes-config"
+        "changes-config",
+        "destructive"
       ],
       "requires_sudo": true,
       "requires": [

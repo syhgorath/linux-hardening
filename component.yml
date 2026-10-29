@@ -136,7 +136,7 @@ actions:
       - "İçeriği bu paketin yazdığı gibi olmayan dosya 'ATLANDI' olarak gösterilir ve silinmez."
   kaldir:
     cmd: "ansible-playbook playbooks/kaldir.yml"
-    effects: [changes-config]
+    effects: [changes-config, destructive]   # destructive: dosya siler (sshpocket >= 3.3.0 tanır; zaten type-server-name onayı var)
     requires_sudo: true
     requires: [kaldir_onizle]          # sshpocket önce önizlemeyi çalıştırıp göstermeli
     confirm: type-server-name

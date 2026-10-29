@@ -204,7 +204,7 @@ for name, act in comp.get("actions", {}).items():
     for req in act.get("requires", []):
         if req not in comp["actions"]:
             err(f"actions.{name}.requires: bilinmeyen eylem {req}")
-    bad = set(act.get("effects", [])) - {"installs-package", "changes-config"}
+    bad = set(act.get("effects", [])) - {"installs-package", "changes-config", "destructive"}
     if bad:
         err(f"actions.{name}.effects geçersiz: {sorted(bad)}")
 

@@ -185,5 +185,6 @@ for act, keys in (("kaldir_onizle", ["silinecek", "atlanan"]), ("kaldir", ["sili
     line = [ln for ln in tasks.splitlines() if o["prefix"] + " " in ln]
     check(f"{act}: outputs.keys sonuc satiriyla ayni", o["keys"] == keys and len(line) == 1 and all(f" {k}=" in line[0] for k in keys), str(line))
 check("kaldir requires kaldir_onizle, type-server-name", comp["kaldir"]["requires"] == ["kaldir_onizle"] and comp["kaldir"]["confirm"] == "type-server-name" and comp["kaldir_geri_yukle"]["confirm"] == "type-server-name")
+check("kaldir silen eylem: effects changes-config + destructive, geri yukleme ve onizlemede destructive YOK", {"changes-config", "destructive"} <= set(comp["kaldir"]["effects"]) and "destructive" not in comp["kaldir_geri_yukle"]["effects"] and "destructive" not in comp["kaldir_onizle"]["effects"])
 check("kaldir_onizle salt okunur (effects bos, confirm none)", comp["kaldir_onizle"]["effects"] == [] and comp["kaldir_onizle"]["confirm"] == "none")
 sys.exit(1 if fails else 0)
