@@ -5,6 +5,13 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+sshpocket 3.6.18 ile 0.9.0 gerçek VM turunun (Ubuntu 26.04) bulguları.
+
+### Düzeltildi
+- `kaldir_onizle` / `kaldir`: bir dosyanın "bu paketin yazdığı" sayılması yalnızca işaret satırına bakıyordu; işaret satırı durduğu sürece elle eklenen satırlar da dosyayla birlikte silinirdi. Artık işaret satırı VE yorum/boş olmayan her satırın bu paketin yazabileceği biçime uyması gerekir (katalogda `line_pattern`); aksi halde dosya `ATLANDI` olur. Desenler gerçek şablon/rol çıktısıyla sınanır.
+- Kaldırma uyarısı: modprobe engeli dosya silinince **hemen** kalkar (yeni yüklemeler serbest); yeniden başlatmaya kadar süren yalnızca çalışan sysctl değerleri ve yüklü modüllerdir.
+- `hardening_ssh_allow_from` manifestte artık `required` değil: sshpocket zorunlu kapıyı paketin preflight'ından önce işletiyordu ve ufw+ssh ikisi de kapalıyken boş liste ile çalışmayı engelliyordu. Şart aynı kalır (ufw ya da ssh açıkken boşsa `harden.yml` hiçbir şey yazmadan durur), yalnızca sshpocket menüsünde önceden zorlanmaz.
+
 ## [0.9.0] - 2026-10-29
 
 v0.8.4'ten sonra, sshpocket 3.6.16 gerçek VM turunun (Ubuntu 26.04 + Proxmox VE 9, temiz geçti: `docs/verification-log.md` madde 72) istekleri: **alan anahtarları**, **tam gruplama** ve **kalıcı kapatma eylemleri**. `component.yml` `vars` listesi 116'dan 128'e (+12), eylemler 8'den 11'e (+3). Kırıcı değişiklik yok: yeni anahtarların hepsi varsayılan true (davranış aynı), yeni eylemler `harden.yml`'de çalışmaz. **Gerçek sunucuda denenmeyenler:** `kaldir_onizle`/`kaldir`/`kaldir_geri_yukle` (yalnızca gerçek Ansible birim testleri; journald yeniden başlatma yolu testte yok), alan anahtarlarının gerçek VM'de kapatılması, misafirli/kümeli Proxmox, Docker'lı VM, Raspberry Pi, silahlı geri alma.

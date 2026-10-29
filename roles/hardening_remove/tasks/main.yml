@@ -27,7 +27,7 @@
         {%- set cat = hardening_remove_catalog[r.item] -%}
         {%- if 'content' not in r -%}
           {%- set st = 'absent' -%}
-        {%- elif cat.marker in (r.content | b64decode) -%}
+        {%- elif cat.marker in (r.content | b64decode) and ((r.content | b64decode).splitlines() | map('trim') | reject('equalto', '') | reject('match', '^#') | reject('match', cat.line_pattern) | list | length) == 0 -%}
           {%- set st = 'delete' -%}
         {%- else -%}
           {%- set st = 'foreign' -%}
@@ -49,7 +49,7 @@
 - name: Say what removing does NOT undo
   ansible.builtin.debug:
     msg: >-
-      Dosyayı silmek çalışan sistemi geri almaz: sysctl değerleri ve modprobe engelleri yeniden başlatmaya kadar sürer; unattended_upgrades için
+      Dosyayı silmek çalışan sistemi geri almaz: çalışan sysctl değerleri ve yüklü modüller yeniden başlatmaya kadar sürer (modprobe engeli ise dosya silinince hemen kalkar, yeni yüklemeler serbest olur); unattended_upgrades için
       20auto-upgrades kalkınca otomatik güvenlik güncellemeleri kapanır (paket kalır). Silinen içerik yedeklenir; kaldir_geri_yukle ile geri yüklenir.
   when: (hardening_remove_plan | from_json | selectattr('state', 'equalto', 'delete') | list | length) > 0
 

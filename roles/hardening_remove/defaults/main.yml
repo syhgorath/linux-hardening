@@ -1,13 +1,14 @@
 # Kalıcı kapatma: bu paketin yazdığı dosyaları KALDIRIR (kaldir_onizle / kaldir / kaldir_geri_yukle eylemleri). harden.yml bu rolü ÇALIŞTIRMAZ.
 # Neyin kaldırılacağı: yukarıdaki katalogdaki adlar. Paket KALDIRILMAZ; yalnızca bu rolün yazdığı dosya silinir, içeriği bizim değilse atlanır.
 # Silmeden önce dosyanın içeriği sunucuda /var/backups/linux-hardening/kaldir-<tarih>/ altına (root, 0700) kopyalanır; geri yüklemek için kaldir_geri_yukle.
-# Dosyanın silinmesi CANLI durumu geri almaz: sysctl değerleri ve modprobe engelleri yeniden başlatmaya kadar sürer (journald hemen yeniden başlatılır).
+# Dosyanın silinmesi CANLI durumu geri almaz: çalışan sysctl değerleri ve yüklü modüller yeniden başlatmaya kadar sürer; modprobe engeli ise dosya silinince HEMEN kalkar (yeni yüklemeler serbest). journald hemen yeniden başlatılır.
 hardening_remove_items: []
 # kaldir_geri_yukle: boş (varsayılan) = en son yedek; ya da yedek klasör adı (kaldir-YYYYMMDDTHHMMSSZ).
 hardening_remove_restore_from: ""
 # Gerçek silme kapısı (iç): playbooks/kaldir.yml play değişkeni olarak true verir; önizleme false bırakır (-e ile verilemez).
 hardening_remove_apply: false
-# Kaldırılabilen adlar. marker: dosyanın bu paketin yazdığına dair içerik izi; yoksa dosya "bizim değil" sayılır ve atlanır.
+# Kaldırılabilen adlar. Dosya yalnızca İKİSİ de doğruysa silinir: marker içerikte var VE yorum/boş olmayan her satır line_pattern'e uyuyor
+# (elle eklenen tek satır bile dosyayı "bizim değil" yapar ve atlanır; test_kaldir.py desenleri gerçek şablon çıktısıyla sınar).
 # 20auto-upgrades için iz Ubuntu'nun kendi varsayılan içeriğidir (aynı iki satır); kaldırınca otomatik güvenlik güncellemeleri kapanır.
 hardening_remove_catalog:
   unattended_upgrades:
@@ -15,18 +16,23 @@ hardening_remove_catalog:
     marker: |-
       APT::Periodic::Update-Package-Lists "1";
       APT::Periodic::Unattended-Upgrade "1";
+    line_pattern: '^APT::Periodic::(Update-Package-Lists|Unattended-Upgrade) "1";$'
   disable_network_protocols:
     path: /etc/modprobe.d/60-hardening-protocols.conf
     marker: "Ansible tarafından yönetilir"
+    line_pattern: '^(install|blacklist) (atm|can|dccp|rds|sctp|tipc)( /bin/false)?$'
   disable_filesystem_modules:
     path: /etc/modprobe.d/60-hardening-filesystems.conf
     marker: "Ansible tarafından yönetilir"
+    line_pattern: '^(install|blacklist) (cramfs|freevxfs|hfs|hfsplus|jffs2|firewire-core)( /bin/false)?$'
   sysctl_hardening:
     path: /etc/sysctl.d/60-hardening.conf
     marker: "Ansible tarafından yönetilir"
+    line_pattern: '^(net\.ipv[46]\.conf\.(all|default)\.(rp_filter|accept_redirects|secure_redirects|send_redirects|accept_source_route|route_localnet|log_martians|accept_ra)|net\.ipv4\.(tcp_syncookies|icmp_echo_ignore_broadcasts|icmp_ignore_bogus_error_responses)|net\.core\.bpf_jit_harden|kernel\.(randomize_va_space|sysrq|unprivileged_bpf_disabled|modules_disabled|dmesg_restrict|kptr_restrict|yama\.ptrace_scope)|fs\.(protected_fifos|suid_dumpable|protected_hardlinks|protected_symlinks)) = [0-9]+$'
   journald_persistent:
     path: /etc/systemd/journald.conf.d/60-hardening.conf
     marker: "Ansible tarafından yönetilir"
+    line_pattern: '^(\[Journal\]|Storage=persistent|Compress=yes)$'
     restart: systemd-journald
 # Yalnızca TEST için: yollara önek, yedek sahibi/grubu.
 hardening_remove_root: ""

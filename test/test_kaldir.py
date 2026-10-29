@@ -55,8 +55,8 @@ def put(root, rel, text):
 
 OURS = {
     "unattended_upgrades": ('APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\n', "/etc/apt/apt.conf.d/20auto-upgrades"),
-    "disable_network_protocols": ("# Ansible tarafından yönetilir\ninstall atm /bin/true\n", "/etc/modprobe.d/60-hardening-protocols.conf"),
-    "disable_filesystem_modules": ("# Ansible tarafından yönetilir\ninstall cramfs /bin/true\n", "/etc/modprobe.d/60-hardening-filesystems.conf"),
+    "disable_network_protocols": ("# Ansible tarafından yönetilir\ninstall atm /bin/false\n", "/etc/modprobe.d/60-hardening-protocols.conf"),
+    "disable_filesystem_modules": ("# Ansible tarafından yönetilir\ninstall cramfs /bin/false\n", "/etc/modprobe.d/60-hardening-filesystems.conf"),
     "sysctl_hardening": ("# Ansible tarafından yönetilir.\nkernel.sysrq = 0\n", "/etc/sysctl.d/60-hardening.conf"),
     "journald_persistent": ("# Ansible tarafından yönetilir\n[Journal]\nStorage=persistent\n", "/etc/systemd/journald.conf.d/60-hardening.conf"),
 }
@@ -68,6 +68,38 @@ check("journald icin yeniden baslatma tanimli", catalog["journald_persistent"].g
 for k, (_, path) in OURS.items():
     written = any(path in (ROOT / "roles" / r / "tasks/main.yml").read_text(encoding="utf-8") for r in ("hardening_base", "hardening_kernel"))
     check(f"{k}: yol rollerde yaziliyor", written)
+
+# ---- satir desenleri gercek rol ciktisiyla ayni mi (rol degisip desen eskirse dosya "bizim degil" sayilirdi) ----
+import itertools
+import re
+
+import jinja2
+
+env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+env.filters["bool"] = bool
+
+
+def lines_ok(item, text):
+    pat = re.compile(catalog[item]["line_pattern"])
+    return [ln for ln in (x.strip() for x in text.splitlines()) if ln and not ln.startswith("#") and not pat.match(ln)]
+
+
+tmpl = (ROOT / "roles/hardening_kernel/templates/sysctl.conf.j2").read_text(encoding="utf-8")
+bad = []
+for relaxed, ra, extra, mods in itertools.product([False, True], repeat=4):
+    out = env.from_string(tmpl).render(hardening_platform_relaxed=relaxed, hardening_kernel_disable_ipv6_ra=ra,
+                                       hardening_kernel_extra_sysctl=extra, hardening_kernel_modules_disabled=mods)
+    bad += lines_ok("sysctl_hardening", out)
+check("sysctl deseni sablonun tum ciktilarina uyar", not bad, str(bad))
+for item, rel, role in (("disable_network_protocols", "60-hardening-protocols.conf", "hardening_kernel"),
+                        ("disable_filesystem_modules", "60-hardening-filesystems.conf", "hardening_kernel"),
+                        ("journald_persistent", "60-hardening.conf", "hardening_base")):
+    tasks = yaml.safe_load((ROOT / f"roles/{role}/tasks/main.yml").read_text(encoding="utf-8"))
+    body = next(t["ansible.builtin.copy"]["content"] for t in tasks
+                if isinstance(t.get("ansible.builtin.copy"), dict) and t["ansible.builtin.copy"].get("dest", "").endswith(rel)
+                and catalog[item]["path"] == t["ansible.builtin.copy"]["dest"])
+    rendered = env.from_string(body, ).render()
+    check(f"{item}: deseni rolun yazdigi icerige uyar", not lines_ok(item, rendered) and catalog[item]["marker"] in rendered, rendered)
 
 with tempfile.TemporaryDirectory() as d:
     root = Path(d)
@@ -91,6 +123,17 @@ with tempfile.TemporaryDirectory() as d:
     check("onizleme: bizim olmayan dosya ATLANDI", "ATLANDI (içerik bu paketin yazdığı gibi değil): /etc/sysctl.d/60-hardening.conf" in out, out)
     check("onizleme: hicbir dosya degismedi, yedek yok", all(Path(root / p.lstrip("/")).read_text() == t for p, t in before.items()) and not (root / "var/backups").exists())
     check("onizleme: canli durum uyarisi", "çalışan sistemi geri almaz" in out, out)
+
+    # ---- isaret satiri duruyor ama elle satir eklenmis: dosya bizim sayilmaz, atlanir ----
+    put(root, "/etc/sysctl.d/60-hardening.conf", "# Ansible tarafından yönetilir.\nkernel.sysrq = 0\nvm.swappiness = 1\n")
+    put(root, "/etc/apt/apt.conf.d/20auto-upgrades", 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\nAPT::Periodic::Download-Upgradeable-Packages "1";\n')
+    rc, out = run(root, {"hardening_remove_items": sel})
+    check("onizleme: isaret var ama elle satir eklenmis -> ATLANDI (silinecek=3 atlanan=2)",
+          rc == 0 and "silinecek=3 atlanan=2" in out and "ATLANDI (içerik bu paketin yazdığı gibi değil): /etc/sysctl.d/60-hardening.conf" in out
+          and "ATLANDI (içerik bu paketin yazdığı gibi değil): /etc/apt/apt.conf.d/20auto-upgrades" in out, out)
+    put(root, "/etc/apt/apt.conf.d/20auto-upgrades", OURS["unattended_upgrades"][0])
+    put(root, "/etc/sysctl.d/60-hardening.conf", "baska bir yonetici yazdi\n")
+    before = {p: Path(root / p.lstrip("/")).read_text() for _, (_, p) in OURS.items()}
 
     # ---- check modunda apply bile yazmaz ----
     rc, out = run(root, {"hardening_remove_items": sel}, apply=True, check_mode=True)

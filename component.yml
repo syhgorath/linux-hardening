@@ -146,7 +146,7 @@ actions:
       keys: [silinen, atlanan]
     warnings:
       - "hardening_remove_items'taki dosyaları SİLER (paket kaldırılmaz). Silmeden önce içerik sunucuda /var/backups/linux-hardening/kaldir-<tarih>/ altına (root, 0700) kopyalanır; kaldir_geri_yukle ile geri yüklenir."
-      - "Silmek çalışan sistemi geri almaz: sysctl değerleri ve modprobe engelleri yeniden başlatmaya kadar sürer. unattended_upgrades için 20auto-upgrades kalkınca otomatik güvenlik güncellemeleri kapanır."
+      - "Silmek çalışan sistemi geri almaz: çalışan sysctl değerleri ve yüklü modüller yeniden başlatmaya kadar sürer (modprobe engeli ise dosya silinince hemen kalkar). unattended_upgrades için 20auto-upgrades kalkınca otomatik güvenlik güncellemeleri kapanır."
       - "Geri alma güvenlik ağı (hardening_rollback) bu eylemi KAPSAMAZ; geri dönüş yedekten kaldir_geri_yukle iledir."
   kaldir_geri_yukle:
     cmd: "ansible-playbook playbooks/kaldir-geri-yukle.yml"
@@ -168,8 +168,8 @@ vars:
   - name: hardening_ssh_allow_from
     group: SSH
     type: list[cidr]
-    required: true                     # boşken harden.yml (ufw/ssh) durur; varsayılan yok
-    description: "SSH'a izin verilen yönetim ağları (CIDR listesi). Sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...): ufw yalnızca bunlardan SSH'a izin verir, yalnızca VPN yazarsan LAN'dan SSH kesilir. Kontrol makinesinin sunucudan görünen adresi de listede olmalı"
+    # required DEĞİL: ufw VE ssh alanı ikisi de kapalıyken liste gerekmez (alan anahtarları); şartı roles/hardening_preflight/tasks/access.yml koşturur, boşken ufw ya da ssh açıksa harden.yml hiçbir şey yazmadan durur
+    description: "ZORUNLU (ufw ya da ssh alanı açıkken; varsayılan yok, boşken harden.yml durur). SSH'a izin verilen yönetim ağları (CIDR listesi). Sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...): ufw yalnızca bunlardan SSH'a izin verir, yalnızca VPN yazarsan LAN'dan SSH kesilir. Kontrol makinesinin sunucudan görünen adresi de listede olmalı"
   - name: hardening_scan_dir
     group: Sistem
     type: path
