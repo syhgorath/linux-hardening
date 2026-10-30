@@ -24,8 +24,9 @@
       - hardening_ssh_allow_from | default([]) is sequence
       - hardening_ssh_allow_from | default([]) | length > 0
     fail_msg: >-
-      hardening_ssh_allow_from boş veya tanımsız. ufw'yi SSH izni olmadan açmak sunucuyu kilitler.
-      Yönetim ağınızı yazın, örn: -e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'
+      hardening_ssh_allow_from boş veya tanımsız. ufw ya da ssh alanını açık bırakıp izinli ağı vermemek sunucuyu kilitleyebilir.
+      Yönetim ağınızı yazın (örn. 192.168.1.0/24): komut satırında -e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}',
+      sshpocket'te sunucunun linux-hardening.vars dosyasına.
       (varsayılan inventory/group_vars/all.yml içinde bilerek boştur).
 
 - name: Extra ufw rules must have a valid format (daha roller çalışmadan)

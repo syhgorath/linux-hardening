@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Değişti
+- Boş `hardening_ssh_allow_from` hata mesajı "ufw ya da ssh alanı" diyor ve sshpocket'te değerin sunucunun `linux-hardening.vars` dosyasına yazıldığını belirtiyor (ssh alanı da bu kontrole düşer). Davranış aynı.
+
 ## [0.9.1] - 2026-10-30
 
 sshpocket 3.6.18 ile 0.9.0 gerçek VM turunun (Ubuntu 26.04 + Proxmox VE 9) bulguları: `kaldir` sahiplik testi, uyarı metni ve `hardening_ssh_allow_from` zorunluluğu düzeltildi; `kaldir` eylemine `destructive` etkisi eklendi. Değişken (128) ve eylem (11) sayısı aynı; varsayılan davranış değişmedi.
