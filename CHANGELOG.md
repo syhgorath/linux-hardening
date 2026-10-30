@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **İlerleme satırları** (`SSHPOCKET_PROGRESS`, `docs/ilerleme-satirlari.md`): her alan için `basladi`/`bitti`, bitişte `degisen`/`atlanan`/`kesin` (önizlemede "uygulanırsa değişecek", komut görevleri atlandığında `kesin=0`), uyarı sayısı ve AIDE ilk veritabanı için `bekle_tahmin`. `callback_plugins/sshpocket_progress.py` (bildirim eklentisi; çıktıyı değiştirmez, hata verirse sessizce kapanır), `ansible.cfg` ile etkinleşir. `playbooks/harden.yml` başına açık alanların sıralı listesini hesaplayan görev eklendi. `test/test_ilerleme.py` (gerçek Ansible, sahte roller; mutasyon doğrulaması).
+
 ### Değişti
 - Boş `hardening_ssh_allow_from` hata mesajı "ufw ya da ssh alanı" diyor ve sshpocket'te değerin sunucunun `linux-hardening.vars` dosyasına yazıldığını belirtiyor (ssh alanı da bu kontrole düşer). Davranış aynı.
 

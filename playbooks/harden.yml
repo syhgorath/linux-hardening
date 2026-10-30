@@ -23,6 +23,30 @@
         apply:
           tags: [always]
       tags: [always]
+    # SSHPOCKET_PROGRESS için açık alanların sıralı listesi (callback_plugins/sshpocket_progress.py okur). Sıra ve ad roles: ile AYNI olmalı
+    # (test_ilerleme.py denetler); rollback altyapıdır, listede yok. "Açık" = alan anahtarı/koşulu açık; rolün iç atlamaları saymaz.
+    - name: İlerleme planı (açık alanlar)
+      ansible.builtin.set_fact:
+        hardening_progress_areas: >-
+          {{ [
+            {'id': 'base', 'on': hardening_base_enabled | default(true) | bool},
+            {'id': 'auth', 'on': hardening_auth_enabled | default(true) | bool},
+            {'id': 'kernel', 'on': hardening_kernel_enabled | default(true) | bool},
+            {'id': 'apparmor', 'on': hardening_apparmor_enabled | default(true) | bool},
+            {'id': 'files', 'on': hardening_files_enabled | default(true) | bool},
+            {'id': 'docker', 'on': hardening_docker_enabled | default(false) | bool},
+            {'id': 'auditd', 'on': hardening_auditd_enabled | default(true) | bool},
+            {'id': 'fail2ban', 'on': hardening_fail2ban_enabled | default(true) | bool},
+            {'id': 'aide', 'on': hardening_aide_enabled | default(true) | bool},
+            {'id': 'time', 'on': true},
+            {'id': 'report', 'on': true},
+            {'id': 'pve_pveproxy', 'on': hardening_pve_pveproxy_enabled | default(true) | bool},
+            {'id': 'pam_faillock', 'on': hardening_pam_faillock | default(false) | bool},
+            {'id': 'ufw', 'on': (hardening_platform | default('generic') != 'proxmox-host') and (hardening_ufw_enabled | default(true) | bool)},
+            {'id': 'ssh', 'on': hardening_ssh_enabled | default(true) | bool},
+            {'id': 'sudo', 'on': hardening_sudo_enabled | default(true) | bool},
+          ] | selectattr('on') | map(attribute='id') | list }}
+      tags: [always]
     # Erişim kaybı korumaları: sadece firewall/SSH değişirken gerekli, --check'te de çalışır.
     - name: Erişim kaybı korumaları (allow_from, kaynak IP, root)
       ansible.builtin.include_role:
