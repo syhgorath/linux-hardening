@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- `audit` eylemine `outputs.findings: "bulgular.tsv"` bildirimi (`component.yml`/`component.json`) ve şema belgesi `docs/bulgular-sema.md` (10 sütun, başlık satırı şemadır). Dosyanın üretimi ve eşleme tablosu ayrı değişiklikte gelir. `scripts/check-consistency.py` adı denetler (düz `.tsv` adı, en çok 64 karakter, `/` ve `..` yok).
 - **İlerleme satırları** (`SSHPOCKET_PROGRESS`, `docs/ilerleme-satirlari.md`): her alan için `basladi`/`bitti`, bitişte `degisen`/`atlanan`/`kesin` (önizlemede "uygulanırsa değişecek", komut görevleri atlandığında `kesin=0`), uyarı sayısı ve AIDE ilk veritabanı için `bekle_tahmin`. `callback_plugins/sshpocket_progress.py` (bildirim eklentisi; çıktıyı değiştirmez, hata verirse sessizce kapanır), `ansible.cfg` ile etkinleşir. `playbooks/harden.yml` başına açık alanların sıralı listesini hesaplayan görev eklendi. `test/test_ilerleme.py` (gerçek Ansible, sahte roller; mutasyon doğrulaması).
 
 ### Değişti

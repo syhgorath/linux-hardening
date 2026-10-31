@@ -46,11 +46,12 @@
       "confirm": "yes-no",
       "warnings": [
         "Hedefe lynis paketini kurar; yapılandırmayı değiştirmez.",
-        "Rapor ve summary.json hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
+        "Rapor, summary.json ve bulgular.tsv hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
       ],
       "outputs": {
         "dir_var": "hardening_scan_dir",
-        "summary": "<dir>/<host>/<tarih>/summary.json"
+        "summary": "<dir>/<host>/<tarih>/summary.json",
+        "findings": "bulgular.tsv"
       }
     },
     "preview": {

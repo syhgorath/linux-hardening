@@ -280,6 +280,14 @@ if outs:
         if found != keys:
             err(f"rollback_status outputs.keys {keys} ile {label} satırındaki anahtarlar {found} aynı değil")
 
+# 6b) outputs.findings: düz dosya adı (sshpocket doğrulaması): "/" ve ".." yok, .tsv, en çok 64 karakter; yazan eylem aynı adı üretmeli
+for _name, _act in comp.get("actions", {}).items():
+    _f = (_act.get("outputs") or {}).get("findings")
+    if _f is None:
+        continue
+    if not isinstance(_f, str) or "/" in _f or ".." in _f or "\\" in _f or not _f.endswith(".tsv") or not 5 <= len(_f) <= 64:
+        err(f"actions.{_name}.outputs.findings düz bir .tsv dosya adı olmalı (en çok 64 karakter, '/' ve '..' yok): {_f!r}")
+
 # 7) README TR/EN "Ne yapmaz" tabloları aynı satır sayısında olmalı (biri güncellenip öteki unutulmasın)
 def scope_rows(doc, heading):
     text = (ROOT / doc).read_text(encoding="utf-8")
