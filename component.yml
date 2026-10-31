@@ -39,10 +39,11 @@ actions:
     confirm: yes-no                    # installs-package olduğu için asgari kural zaten yes-no
     warnings:
       - "Hedefe lynis paketini kurar; yapılandırmayı değiştirmez."
-      - "Rapor ve summary.json hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
+      - "Rapor, summary.json ve bulgular.tsv hassas veri içerir (hardening_scan_dir; dizin 0700, dosyalar 0600)."
     outputs:
       dir_var: hardening_scan_dir      # sshpocket verir; verilmezse kullanıcı klasörü (~/.local/share/linux-hardening/scans)
       summary: "<dir>/<host>/<tarih>/summary.json"
+      findings: "bulgular.tsv"         # düz dosya adı; summary.json'ın yanında (<host>/<tarih>/) aranır. Şema: docs/bulgular-sema.md
   preview:
     cmd: "ansible-playbook playbooks/harden.yml --check --diff"
     effects: []
