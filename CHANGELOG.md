@@ -5,6 +5,10 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.10.0] - 2026-10-31
+
+sshpocket arayüzü için iki yeni çıktı: canlı ilerleme satırları ve audit bulgu tablosu (`bulgular.tsv`). `bulgular.tsv` gerçek Ubuntu 26.04 VM ve Docker LAB üzerinde uçtan uca doğrulandı; ilerleme satırlarının gerçek günlüğü sshpocket turunda doğrulanacak.
+
 ### Eklendi
 - **`bulgular.tsv` üretimi:** `audit` eylemi Lynis uyarı/önerilerini `summary.json`'ın yanına tablo olarak yazar (`playbooks/tasks/bulgular.yml`, `filter_plugins/hardening_bulgular.py`, 0600). `vars/bulgular-eslesme.tsv` kodda doğrulanmış 13 bulguyu seçeneğe bağlar (`alan`, `deger`, `kapanir_varsayilan`); gerisi eşlemesiz listelenir. Üretim hatası denetimi etkilemez. `test/test_bulgular.py` (gerçek Ansible, mutasyon doğrulaması; eşleme `component.yml` ile çapraz denetlenir).
 - `audit` eylemine `outputs.findings: "bulgular.tsv"` bildirimi (`component.yml`/`component.json`) ve şema belgesi `docs/bulgular-sema.md` (10 sütun, başlık satırı şemadır). Dosyanın üretimi ve eşleme tablosu ayrı değişiklikte gelir. `scripts/check-consistency.py` adı denetler (düz `.tsv` adı, en çok 64 karakter, `/` ve `..` yok).
