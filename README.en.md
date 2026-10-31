@@ -216,6 +216,18 @@ CI also tries the hashed install on Python 3.12/3.13/3.14 and runs `harden.yml -
 > **Limit:** CI does not replace a live-server test; firewall/SSH changes are not applied (they would cut the runner's own connection).
 > If you change the golden files on purpose: `UPDATE_GOLDEN=1 python3 -I test/test_templates.py` and review the diff in the PR.
 
+## Origin and how it is developed
+
+This project grew out of the maintainer's earlier shell-script Proxmox hardening work
+([proxmoxhardeningv2.1.0-2](https://github.com/syhgorath/proxmoxhardeningv2.1.0-2), v2.1.0, August 2025):
+the ideas and scope were **ported** to Ansible roles and extended to Ubuntu 26.04. The old script is not used or maintained here.
+
+This package is designed to run as a component inside [sshpocket](https://github.com/syhgorath/sshpocket) (the `component.yml` / `component.json` manifest, the signed release package, the `SSHPOCKET_PROGRESS` progress lines and the `bulgular.tsv` output are for it). It can also be used on its own with `ansible-playbook`.
+
+The code, tests and docs are written with AI assistance ([Claude](https://claude.com/claude-code)); the maintainer reviews every change
+and the hardening's behaviour is measured on real VMs ([docs/verification-log.md](docs/verification-log.md)). As with any hardening,
+try it on a test server first.
+
 ## License
 
 MIT, see [LICENSE](LICENSE). Use at your own risk: hardening can cut access; try it on a test server first.

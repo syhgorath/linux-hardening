@@ -212,6 +212,18 @@ CI ayrıca Python 3.12/3.13/3.14'te hash'li kurulumu dener ve gerçek bir Linux'
 > **Sınır:** CI canlı sunucu testi yerine geçmez; firewall/SSH değişiklikleri uygulanmaz (runner'ın kendi bağlantısını keserdi).
 > Golden dosyaları bilerek değiştirirseniz: `UPDATE_GOLDEN=1 python3 -I test/test_templates.py` ve farkı PR'da inceleyin.
 
+## Kökeni ve nasıl geliştirildi
+
+Bu proje, aynı bakımcının eski kabuk betiği tabanlı Proxmox sertleştirme çalışmasından
+([proxmoxhardeningv2.1.0-2](https://github.com/syhgorath/proxmoxhardeningv2.1.0-2), v2.1.0, Ağustos 2025) çıkmıştır:
+fikirler ve kapsam Ansible rollerine **çevrilmiş**, Ubuntu 26.04 için genişletilmiştir. Eski betik burada kullanılmaz ve bakımı yapılmaz.
+
+Bu paket, [sshpocket](https://github.com/syhgorath/sshpocket) içinde bir bileşen olarak çalıştırılmak üzere tasarlanmıştır (`component.yml` / `component.json` bildirimi, imzalı sürüm paketi, `SSHPOCKET_PROGRESS` ilerleme satırları ve `bulgular.tsv` çıktısı onun içindir). `ansible-playbook` ile tek başına da kullanılabilir.
+
+Kod, test ve belgeler yapay zekâ desteğiyle ([Claude](https://claude.com/claude-code)) yazılmıştır; her değişikliği bakımcı inceler,
+sertleştirmenin davranışı gerçek VM'lerde ölçülür ([docs/verification-log.md](docs/verification-log.md)). Yine de her sertleştirme gibi
+önce test sunucusunda deneyin.
+
 ## Lisans
 
 MIT, bkz. [LICENSE](LICENSE). Kullanım sorumluluğu size aittir: sertleştirme erişimi kesebilir; önce test sunucusunda deneyin.
