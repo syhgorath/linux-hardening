@@ -75,7 +75,7 @@ with tempfile.TemporaryDirectory() as d:
     check("kimlik hic bos degil", all(x[0] for x in body))
     check("Lynis '-' yer tutucusu bos yazilir (oneri/ayrinti)", not any(x[4] == "-" or x[5] == "-" for x in body))
     ssh = [x for x in body if x[0] == "SSH-7408"]
-    check("SSH-7408 iki satir: MaxSessions eslenir, Port eslenmez", len(ssh) == 2 and ssh[0][6:9] == ["ssh", "hardening_ssh_max_sessions=2", "hayir"] and ssh[1][6:9] == ["", "", ""], ssh)
+    check("SSH-7408 iki satir: ikisi de eslemesiz (MaxSessions bilerek)", len(ssh) == 2 and ssh[0][6:9] == ["", "", ""] and ssh[1][6:9] == ["", "", ""], ssh)
     check("eslemesiz bulgu (BOOT-5122) listelenir, alan bos", any(x[0] == "BOOT-5122" and x[6] == "" for x in body))
     check("kimliksiz maddeler GENEL-1, GENEL-2", [x[0] for x in body if x[0].startswith("GENEL-")] == ["GENEL-1", "GENEL-2"], [x[0] for x in body])
     check("sekmeli aciklama boslukla birlestirildi", any(x[3] == "Kimliksiz genel uyari sekmeli" for x in body))
@@ -86,7 +86,9 @@ mrows = [ln.split("\t") for ln in (ROOT / "vars/bulgular-eslesme.tsv").read_text
 check("eslesme basligi", mrows[0] == ["kimlik", "ayrinti_icerir", "risk", "alan", "deger", "kapanir_varsayilan", "platform"], mrows[0])
 for kimlik, icerir, risk, alan, deger, kapanir, platform in mrows[1:]:
     ad = f"eslesme {kimlik}{'/' + icerir if icerir else ''}"
-    ok = alan in areas and risk in ("yuksek", "orta", "dusuk", "bilgi", "bilinmiyor") and platform in ("ubuntu", "proxmox", "hepsi") and kapanir in ("evet", "hayir")
+    # alan bos = bilerek eslemesiz satir (yalniz risk/platform dolu); alan/deger/kapanir birlikte bos olmali
+    ok = risk in ("yuksek", "orta", "dusuk", "bilgi", "bilinmiyor") and platform in ("ubuntu", "proxmox", "hepsi")
+    ok = ok and ((not alan and not deger and not kapanir) if not alan else (alan in areas and kapanir in ("evet", "hayir")))
     if deger:
         var, _, val = deger.partition("=")
         spec = variables.get(var)
