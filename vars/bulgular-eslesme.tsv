@@ -1,0 +1,18 @@
+# Lynis bulgusu -> sertleştirme seçeneği eşlemesi (bulgular.tsv üretimi, docs/bulgular-sema.md). Sekmeyle ayrılmış; '#' satırları yok sayılır.
+# ayrinti_icerir: boş değilse Lynis ayrıntısında (ya da açıklamada) geçmeli; ilk eşleşen satır kazanır.
+# YALNIZCA kodda doğrulanmış bulgular yazılır; olmayan bulgu eşlemesiz listelenir. test_bulgular.py her satırı component.yml ile çapraz denetler.
+# Bilerek eşlemesiz: BOOT-5122 (GRUB parolası yok, docs/decisions.md), SSH-7408 Port (erişim kaybı riski), DEB-0810 (apt-listbugs Ubuntu'da yok),
+# KRNL-6000 (tek kimlik, çok sysctl), FILE-6310 (bölüm ayrımı), FINT-4402 (AIDE yanlış pozitif, docs/known-issues.md).
+kimlik	ayrinti_icerir	risk	alan	deger	kapanir_varsayilan	platform
+DEB-0280		bilinmiyor	auth	hardening_pam_tmpdir=true	evet	hepsi
+DEB-0811		bilinmiyor	base	hardening_apt_listchanges=true	evet	hepsi
+DEB-0880		bilinmiyor	fail2ban	hardening_fail2ban_jail_local=true	evet	hepsi
+PKGS-7370		bilinmiyor	base	hardening_debsums=true	evet	hepsi
+PKGS-7394		bilinmiyor	base	hardening_apt_show_versions=true	evet	hepsi
+ACCT-9622		bilinmiyor	base	hardening_process_accounting=true	evet	hepsi
+AUTH-9252		bilinmiyor	files		evet	hepsi
+PKGS-7392		bilinmiyor	base	hardening_apt_upgrade=true	hayir	hepsi
+HRDN-7222		bilinmiyor	files	hardening_restrict_compilers=true	hayir	hepsi
+HRDN-7230		bilinmiyor	base	hardening_malware_scanner=rkhunter	hayir	hepsi
+FILE-6344		bilinmiyor	files	hardening_proc_hidepid=true	hayir	hepsi
+SSH-7408	MaxSessions	bilinmiyor	ssh	hardening_ssh_max_sessions=2	hayir	hepsi

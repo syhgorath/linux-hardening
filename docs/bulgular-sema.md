@@ -18,3 +18,11 @@ Dosya tek (son) audit koşusunu içerir; her audit dosyayı baştan yazar. Bulgu
 | 10 | `platform` | `ubuntu`, `proxmox` ya da `hepsi` |
 
 Lynis'in `-` ve boş alanları boş yazılır; sekme ve satır sonu boşluğa çevrilir. `alan`, `deger`, `kapanir_varsayilan`, `platform` ve bilinen `risk` pakette sabit bir eşleme tablosundan gelir; tabloda olmayan bulgu bu sütunlar boş olarak yine listelenir.
+
+## Nasıl üretilir
+
+`playbooks/audit.yml`, Lynis raporunu çektikten sonra `playbooks/tasks/bulgular.yml` görevini çalıştırır. Görev `filter_plugins/hardening_bulgular.py` süzgeciyle `lynis-report.dat` içindeki `warning[]` ve `suggestion[]` satırlarını bu tabloya çevirir ve `vars/bulgular-eslesme.tsv` ile birleştirir. Süzgeç `ansible.cfg` içindeki `filter_plugins` yoluyla bulunur.
+
+Eşleme tablosu elle bakılan, yalnızca **kodda doğrulanmış** bulguları içeren küçük bir listedir; olmayan bulgu eşlemesiz listelenir. `test/test_bulgular.py` her satırı `component.yml` ile çapraz denetler: `alan` geçerli olmalı, `deger` içindeki değişken var olmalı ve `kapanir_varsayilan=evet` ancak önerilen değer değişkenin varsayılanıyla aynıysa yazılabilir. Yeni bulgu eklerken önce ilgili seçeneğin kodda gerçekten o Lynis kimliğini hedeflediğini doğrulayın.
+
+Üretim hata verirse (bozuk rapor, eksik eşleme dosyası ya da süzgeç hatası) `bulgular.tsv` yazılmaz ya da eşleme sütunları boş kalır; denetim ve rapor etkilenmez. `--check` modunda audit zaten tarama yapmaz, dosya üretilmez.

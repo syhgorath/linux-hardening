@@ -6,6 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- **`bulgular.tsv` üretimi:** `audit` eylemi Lynis uyarı/önerilerini `summary.json`'ın yanına tablo olarak yazar (`playbooks/tasks/bulgular.yml`, `filter_plugins/hardening_bulgular.py`, 0600). `vars/bulgular-eslesme.tsv` kodda doğrulanmış 13 bulguyu seçeneğe bağlar (`alan`, `deger`, `kapanir_varsayilan`); gerisi eşlemesiz listelenir. Üretim hatası denetimi etkilemez. `test/test_bulgular.py` (gerçek Ansible, mutasyon doğrulaması; eşleme `component.yml` ile çapraz denetlenir).
 - `audit` eylemine `outputs.findings: "bulgular.tsv"` bildirimi (`component.yml`/`component.json`) ve şema belgesi `docs/bulgular-sema.md` (10 sütun, başlık satırı şemadır). Dosyanın üretimi ve eşleme tablosu ayrı değişiklikte gelir. `scripts/check-consistency.py` adı denetler (düz `.tsv` adı, en çok 64 karakter, `/` ve `..` yok).
 - **İlerleme satırları** (`SSHPOCKET_PROGRESS`, `docs/ilerleme-satirlari.md`): her alan için `basladi`/`bitti`, bitişte `degisen`/`atlanan`/`kesin` (önizlemede "uygulanırsa değişecek", komut görevleri atlandığında `kesin=0`), uyarı sayısı ve AIDE ilk veritabanı için `bekle_tahmin`. `callback_plugins/sshpocket_progress.py` (bildirim eklentisi; çıktıyı değiştirmez, hata verirse sessizce kapanır), `ansible.cfg` ile etkinleşir. `playbooks/harden.yml` başına açık alanların sıralı listesini hesaplayan görev eklendi. `test/test_ilerleme.py` (gerçek Ansible, sahte roller; mutasyon doğrulaması).
 

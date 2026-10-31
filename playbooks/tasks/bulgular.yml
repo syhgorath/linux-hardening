@@ -1,0 +1,20 @@
+# bulgular.tsv: lynis-report.dat + vars/bulgular-eslesme.tsv -> <scan_dir>/bulgular.tsv (0600). Yalnız GÖSTERİM içindir:
+# herhangi bir hata denetimi ve sertleştirmeyi etkilemez (rescue dosyayı atlar). Gerekli: hardening_audit_report, scan_dir.
+- name: Findings table (bulgular.tsv)
+  delegate_to: localhost
+  become: false
+  block:
+    - name: "Findings: build the table"
+      ansible.builtin.set_fact:
+        hardening_audit_findings: >-
+          {{ hardening_audit_report | hardening_findings_tsv(lookup('ansible.builtin.file', playbook_dir ~ '/../vars/bulgular-eslesme.tsv', errors='ignore') | default('', true)) }}
+
+    - name: "Findings: write bulgular.tsv (0600)"
+      ansible.builtin.copy:
+        dest: "{{ scan_dir }}/bulgular.tsv"
+        mode: "0600"
+        content: "{{ hardening_audit_findings }}"
+  rescue:
+    - name: "Findings: skipped (audit unaffected)"
+      ansible.builtin.debug:
+        msg: "bulgular.tsv üretilemedi; denetim ve rapor etkilenmedi (bulgular yalnızca gösterim içindir)."

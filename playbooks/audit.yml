@@ -133,3 +133,8 @@
       delegate_to: localhost
       become: false
       when: not ansible_check_mode
+
+    # bulgular.tsv: Lynis uyarı/önerileri tablo olarak (docs/bulgular-sema.md). Hata verirse atlanır, denetimi etkilemez.
+    - name: Write the findings table
+      ansible.builtin.include_tasks: tasks/bulgular.yml
+      when: not ansible_check_mode
