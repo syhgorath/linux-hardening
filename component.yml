@@ -458,7 +458,7 @@ vars:
     group: Denetim
     type: string
     default: "127.0.0.1/8 ::1"
-    description: "fail2ban'ın asla banlamayacağı adresler (boşlukla ayrılmış). Ansible'ın bağlandığı kontrol makinesinin sunucunun GÖRDÜĞÜ adresi buna otomatik eklenir. Tüm yönetim ağını yazmak önerilmez (içerideki biri bile banlanmaz)"
+    description: "fail2ban'ın asla banlamayacağı adresler (boşlukla ayrılmış); YALNIZ bu değerdir, kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez. Varsayılan yalnız yerel adresleri muaf tutar; bağlı olduğunuz adres muaf değilse art arda hatalı deneme (maxretry) sizi bantime kadar banlatır, önizleme/uygulama günlüğünde bir NOT satırı bunu söyler. Tüm yönetim ağını yazmak önerilmez (içerideki biri bile banlanmaz)"
   - name: hardening_pass_max_days
     group: Hesaplar
     type: int
@@ -579,7 +579,7 @@ vars:
     type: bool
     default: false
     warn_if: true                      # yönetici yanlış parolayı üst üste girerse web arayüzünden banlanır
-    description: "false (varsayılan): yazılmaz. true (yalnızca hardening_platform=proxmox-host): Proxmox VE web arayüzü/API için ek bir fail2ban jail'i (proxmox-web) yazılır: 8006'ya yönelik başarısız oturum açmalar (pvedaemon günlüğü) maxretry kadar tekrarlanırsa IP banlanır (bantime ve ignoreip sshd ile ortak; kontrol makinesi muaf). pve-firewall'dan bağımsız bir savunmadır. Yönetici yanlış parolayı üst üste girerse web arayüzünden banlanır. Yapılandırma fail2ban-client -t ile doğrulanır, geçersizse dosyalar silinir ve rol durur. Gerçek Proxmox VE 9'da (tek düğüm, boş VM) doğrulandı: filtre gerçek pvedaemon satırlarıyla eşleşti, 5 yanlış girişten sonra ban ve pve-firewall açıkken 8006 reddi; misafirli Proxmox denenmedi. Önce snapshot alın"
+    description: "false (varsayılan): yazılmaz. true (yalnızca hardening_platform=proxmox-host): Proxmox VE web arayüzü/API için ek bir fail2ban jail'i (proxmox-web) yazılır: 8006'ya yönelik başarısız oturum açmalar (pvedaemon günlüğü) maxretry kadar tekrarlanırsa IP banlanır (bantime ve ignoreip sshd ile ortak; kontrol makinesi ignoreip'e yazılmadıkça muaf DEĞİL). pve-firewall'dan bağımsız bir savunmadır. Yönetici yanlış parolayı üst üste girerse web arayüzünden banlanır. Yapılandırma fail2ban-client -t ile doğrulanır, geçersizse dosyalar silinir ve rol durur. Gerçek Proxmox VE 9'da (tek düğüm, boş VM) doğrulandı: filtre gerçek pvedaemon satırlarıyla eşleşti, 5 yanlış girişten sonra ban ve pve-firewall açıkken 8006 reddi; misafirli Proxmox denenmedi. Önce snapshot alın"
   - name: hardening_pve_pveproxy_allow_from
     platforms: [proxmox-host]
     group: Proxmox

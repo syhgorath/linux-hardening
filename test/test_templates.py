@@ -34,7 +34,7 @@ DEFAULTS = [
 CASES = [
     ("pwquality.conf", "roles/hardening_auth/templates/pwquality.conf.j2", {}),
     ("sshd.local", "roles/hardening_fail2ban/templates/sshd.local.j2",
-     {"hardening_fail2ban_ignoreip_effective": "127.0.0.1/8 ::1 192.0.2.10"}),
+     {"hardening_fail2ban_ignoreip": "127.0.0.1/8 ::1 192.0.2.10"}),
     ("sshd-hardening.default.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2", {}),
     ("sshd-hardening.kbd.conf", "roles/hardening_ssh/templates/sshd-hardening.conf.j2",
      {"hardening_ssh_kbdinteractive": True}),

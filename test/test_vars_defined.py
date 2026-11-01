@@ -34,7 +34,9 @@ for p in ROOT.glob("vars/*.yml"):
 role_names = {p.name for p in ROOT.glob("roles/hardening_*")}
 # ifade icinde gecen ama deger olmayanlar (dosya/rol adlari, yorumlardaki kavramlar)
 # hardening_index: Lynis rapor alanı adı (değişken değil; audit.yml yorum/regex'inde geçer)
-ignore = role_names | {"hardening_profile", "hardening_index"}
+# filter_plugins/*.py icindeki suzgec adlari (hardening_ip_in_list gibi) degisken degildir; adlar suzgec dosyalarindan okunur
+filter_names = {m for p in ROOT.glob("filter_plugins/*.py") for m in re.findall(r'"(hardening_[a-z0-9_]+)":', p.read_text(encoding="utf-8"))}
+ignore = role_names | filter_names | {"hardening_profile", "hardening_index"}
 
 missing = {k: v for k, v in used.items() if k not in defined and k not in ignore}
 # bilerek tanimsiz birakilanlar: kullanicinin vermesi beklenen/opsiyonel

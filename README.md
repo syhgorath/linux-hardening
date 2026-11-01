@@ -139,7 +139,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 |---|---|
 | `test_lint.sh` | `--syntax-check`, `yamllint --strict`, `ansible-lint` (0 bulgu), shellcheck |
 | `test_access_guards.sh` | `allow_from` boş/geçersiz/kaynak dışı, `SSH_CONNECTION` yok, root, IPv4/IPv6 |
-| `test_expressions.py` | sshd portlarının `ss` çıktısından türetilmesi, efektif fail2ban `ignoreip` |
+| `test_expressions.py` | sshd portlarının `ss` çıktısından türetilmesi |
+| `test_fail2ban_ignoreip.py` | fail2ban `ignoreip` yalnız değişkenden (otomatik adres yok), bağlı adres için tek satırlık `NOT` (CIDR üyeliği, `UYARI` değil, `hardening_ssh_allow_from` eklenmez); gerçek Ansible |
 | `test_templates.py` | Şablonların varsayılan çıktısı (golden dosyalar) ve güvenli varsayılanlar |
 | `test_scan_dir.py` | Tarama dizini varsayılanı kullanıcı klasörüdür (HOME/XDG), paket klasörüne yazılmaz, izinler 0700/0600, HOME yoksa durur |
 | `test_summary.py` | `summary.json` alanları, `null` davranışı, dizin/dosya izinleri |

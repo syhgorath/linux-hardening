@@ -98,7 +98,7 @@ Ağ ayarlarını kontrol et (varsayılanı rol `defaults/`'ında, örnek `invent
 | Değişken | Anlamı | Dikkat |
 |---|---|---|
 | `hardening_ssh_allow_from` | SSH'a izin verilen ağlar (firewall) | **ZORUNLU, varsayılan boş.** Boşsa veya Ansible'ın bağlandığı IP burada değilse playbook durur. NAT/jump host varsa sunucunun *gördüğü* adresi yaz. **Sunucuya bağlanabileceğin TÜM ağları yaz (VPN + LAN + ...):** ufw yalnızca bunlardan SSH'a izin verir; yalnızca VPN yazarsan LAN'dan SSH kesilir (ping/ARP çalışır, ssh zaman aşar) ve geri alma güvenlik ağı bunu yakalamaz. Örn. `-e '{"hardening_ssh_allow_from": ["192.168.1.0/24"]}'` |
-| `hardening_fail2ban_ignoreip` | Asla banlanmayacak adresler (varsayılan `127.0.0.1/8 ::1`) | Ansible'ın bağlandığı kontrol makinesinin **sunucunun gördüğü adresi** otomatik eklenir; tüm yönetim ağını muaf tutmak istersen açıkça yaz (önerilmez). Dinamik IP'den çalıştırırsan dosya her çalıştırmada değişir ve fail2ban yeniden başlar |
+| `hardening_fail2ban_ignoreip` | Asla banlanmayacak adresler (varsayılan `127.0.0.1/8 ::1`) | YALNIZ bu değerdir: kontrol makinesinin adresi ve `hardening_ssh_allow_from` otomatik eklenmez. Bağlı olduğun adres muaf değilse art arda hatalı denemede `bantime` kadar banlanırsın (günlükte bir `NOT (fail2ban)` satırı söyler); muaf olmak istersen açıkça yaz, tüm yönetim ağını yazmak önerilmez |
 | `hardening_ssh_disable_password` | SSH parola girişini kapat | Anahtar yoksa rol zaten durur |
 | `hardening_ssh_kbdinteractive` | 2FA/TOTP için `keyboard-interactive` (varsayılan `false`) | `true` ise `AuthenticationMethods publickey,keyboard-interactive` yazılır. PAM 2FA'sı **sizin kurmanız gerekir**; yanlışsa erişim kesilir. Bağlantı doğrulaması yalnızca banner'ı sınar |
 | `hardening_ssh_allow_tcp_forwarding` | `no` \| `local` \| `remote` \| `yes` (varsayılan `"no"`) | ProxyJump için jump host'ta en az `local`. YAML'da `no`'yu tırnaklayın (tırnaksız bool olur ve doğrulama durdurur) |
@@ -311,7 +311,7 @@ ansible-playbook playbooks/harden.yml --ask-become-pass
 1. Proxmox snapshot / yedek al.
 2. Tek sunucuyla başla: `--limit sunucu1`.
 3. Önce `--check --diff`, çıktıyı oku.
-4. `hardening_ssh_allow_from` (zorunlu) **o sunucuya göre doğru mu?** (fail2ban `ignoreip` kontrol makinesi adresini zaten otomatik ekler.) Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
+4. `hardening_ssh_allow_from` (zorunlu) **o sunucuya göre doğru mu?** (fail2ban `ignoreip` kontrol makinesi adresini EKLEMEZ; bağlı adresin banlanmasını istemiyorsan `hardening_fail2ban_ignoreip`'e yaz.) Yanlışsa firewall seni dışarıda bırakır (en riskli ayar).
 5. Sunucuda çalışan servis varsa (web, veritabanı...) portlarını `hardening_ufw_extra_allow` ile aç; yoksa firewall onları kapatır.
 6. Bakım penceresinde uygula. Otomatik reboot yoktur ama paket/servis değişiklikleri kısa kesinti yapabilir.
 7. Kademeli git: ilk gün `--tags base,auth,kernel`, sonra `auditd,fail2ban,aide`, en son `ufw,ssh`.
