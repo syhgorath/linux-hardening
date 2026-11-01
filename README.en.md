@@ -144,7 +144,8 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 |---|---|
 | `test_lint.sh` | `--syntax-check`, `yamllint --strict`, `ansible-lint` (0 findings), shellcheck |
 | `test_access_guards.sh` | `allow_from` empty/invalid/outside, missing `SSH_CONNECTION`, root, IPv4/IPv6 |
-| `test_expressions.py` | deriving sshd ports from `ss` output, effective fail2ban `ignoreip` |
+| `test_expressions.py` | deriving sshd ports from `ss` output |
+| `test_fail2ban_ignoreip.py` | fail2ban `ignoreip` comes only from the variable (no automatic address), one `NOT` line for the connected address (CIDR membership, not a `UYARI`, `hardening_ssh_allow_from` not added); real Ansible |
 | `test_templates.py` | default template output (golden files) and safe defaults |
 | `test_scan_dir.py` | The scan directory defaults to the user folder (HOME/XDG), never the package folder; modes 0700/0600; stops without HOME |
 | `test_summary.py` | `summary.json` fields, `null` behaviour, directory/file permissions |

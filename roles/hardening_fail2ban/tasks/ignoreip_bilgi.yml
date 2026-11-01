@@ -1,0 +1,20 @@
+# fail2ban ignoreip YALNIZ hardening_fail2ban_ignoreip değeridir: kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez.
+# Bu dosya yalnız bilgi verir (UYARI değil, uyarı sayısını artırmaz): bağlı adres muaf değilse art arda hatalı deneme onu banlatır.
+# SSH_CONNECTION become olmadan okunur (sudo ortamı onu siler); okunamazsa (SSH dışı bağlantı) satır çıkmaz.
+- name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
+  ansible.builtin.command: printenv SSH_CONNECTION
+  become: false
+  register: hardening_fail2ban_ssh_connection
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Say that the connected address is not exempt from fail2ban
+  ansible.builtin.debug:
+    msg: >-
+      NOT (fail2ban): Bağlı olduğun adres ({{ hardening_fail2ban_ssh_connection.stdout.split() | first }}) fail2ban'dan muaf değil: art arda hatalı deneme
+      (maxretry={{ hardening_fail2ban_maxretry }}) bantime={{ hardening_fail2ban_bantime }} ban yedirir. Muaf etmek istersen hardening_fail2ban_ignoreip'e ekle.
+  when:
+    - hardening_fail2ban_ssh_connection.rc == 0
+    - hardening_fail2ban_ssh_connection.stdout.split() | length > 0
+    - not (hardening_fail2ban_ssh_connection.stdout.split() | first | hardening_ip_in_list(hardening_fail2ban_ignoreip))

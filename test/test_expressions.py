@@ -2,7 +2,6 @@
 """Rol görevlerindeki GERÇEK Jinja ifadelerini (YAML'dan çıkarılıp Ansible ile değerlendirilir) örnek girdilerle sınar.
 
 - hardening_ufw: sshd'nin dinlediği portların `ss` çıktısından türetilmesi (PR-0b)
-- hardening_fail2ban: efektif ignoreip (PR-0d)
 """
 import json
 import os
@@ -83,25 +82,6 @@ port_cases = [
 res = run_cases([(n, i, ports_expr, "hardening_ufw_ssh_ports") for n, i, _ in port_cases])
 for n, _, want in port_cases:
     check(f"ssh portlari: {n}", want, res.get(n))
-
-# ---- 0d: ignoreip ----
-ign_expr = task_expr("roles/hardening_fail2ban/tasks/main.yml", "Compute effective ignoreip",
-                     "hardening_fail2ban_ignoreip_effective")
-base = "127.0.0.1/8 ::1"
-conn = lambda rc, out, b=base: {"hardening_fail2ban_ssh_connection": {"rc": rc, "stdout": out},  # noqa: E731
-                                "hardening_fail2ban_ignoreip": b}
-ign_cases = [
-    ("IPv4 eklenir", conn(0, "10.1.2.3 5555 10.9.9.9 22"), "127.0.0.1/8 ::1 10.1.2.3"),
-    ("IPv6 eklenir", conn(0, "fd00::5 5555 fd00::9 22"), "127.0.0.1/8 ::1 fd00::5"),
-    ("zaten listede tekrar yok", conn(0, "127.0.0.1 5555 127.0.0.1 22", "127.0.0.1 ::1"), "127.0.0.1 ::1"),
-    ("rc!=0 taban liste", conn(1, ""), base),
-    ("bos stdout taban liste", conn(0, ""), base),
-    ("ozel liste + adres", conn(0, "192.168.1.9 1 192.168.1.2 22", "127.0.0.1/8 ::1 192.168.1.0/24"),
-     "127.0.0.1/8 ::1 192.168.1.0/24 192.168.1.9"),
-]
-res = run_cases([(n, i, ign_expr, "hardening_fail2ban_ignoreip_effective") for n, i, _ in ign_cases])
-for n, _, want in ign_cases:
-    check(f"ignoreip: {n}", want, res.get(n))
 
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)

@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Değişti
+- **fail2ban `ignoreip` artık yalnız `hardening_fail2ban_ignoreip`'tir** (davranış değişikliği, tüm platformlar): kontrol makinesinin adresi ve `hardening_ssh_allow_from` OTOMATİK eklenmez. `ignoreip` bir açıktır; ele geçirilmiş yönetim cihazı da banlanabilmeli, ssh koruması `hardening_ssh_allow_from`'dur. Eskiden apply'ın nereden (LAN/VPN) yapıldığına göre dosya değişiyordu (sahte `changed`, fail2ban yeniden başlatması); artık aynı vars ile her adresten `changed=0`. Varsayılan `127.0.0.1/8 ::1` aynı (yerel süreçler kendini banlatmasın). Bağlı adres muaf değilse günlükte tek satırlık `NOT (fail2ban): …` çıkar (CIDR üyeliği `filter_plugins/hardening_net.py`; `UYARI` değil, alan özetindeki uyarı sayısını artırmaz). **Yükseltmede** daha önce otomatik eklenen adres jail dosyasından düşer: bir kez `changed` + fail2ban yeniden başlar; bağlı adresiniz muaf kalsın istiyorsanız `hardening_fail2ban_ignoreip`'e yazın. Test: `test/test_fail2ban_ignoreip.py`. Gerçek VM'de (Ubuntu + Proxmox) henüz doğrulanmadı.
+
 ## [0.10.0] - 2026-10-31
 
 sshpocket arayüzü için iki yeni çıktı: canlı ilerleme satırları ve audit bulgu tablosu (`bulgular.tsv`). `bulgular.tsv` gerçek Ubuntu 26.04 VM ve Docker LAB üzerinde uçtan uca doğrulandı; ilerleme satırlarının gerçek günlüğü sshpocket turunda doğrulanacak.
