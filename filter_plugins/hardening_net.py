@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import ipaddress
+import re
+
+LOOPBACK = ["127.0.0.1/8", "::1"]
 
 
 def hardening_ip_in_list(address, entries):
@@ -19,6 +22,15 @@ def hardening_ip_in_list(address, entries):
     return False
 
 
+def hardening_ignoreip_effective(extra):
+    """fail2ban ignoreip: yerel adresler HER ZAMAN başta, ardından kullanıcının adresleri (boşluk ya da virgülle ayrılmış, tekrarsız)."""
+    out = list(LOOPBACK)
+    for token in re.split(r"[\s,]+", str(extra or "")):
+        if token and token not in out:
+            out.append(token)
+    return " ".join(out)
+
+
 class FilterModule:
     def filters(self):
-        return {"hardening_ip_in_list": hardening_ip_in_list}
+        return {"hardening_ip_in_list": hardening_ip_in_list, "hardening_ignoreip_effective": hardening_ignoreip_effective}

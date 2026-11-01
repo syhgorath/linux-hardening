@@ -1,7 +1,7 @@
 # Ansible tarafından yönetilir
 [DEFAULT]
 ignoreip = 127.0.0.1/8 ::1 192.0.2.10
-bantime = 1h
+bantime = 10m
 maxretry = 5
 
 [sshd]

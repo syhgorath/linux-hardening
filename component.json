@@ -1,6 +1,6 @@
 {
   "id": "linux-hardening",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "sshpocket_api": 1,
   "name": "Linux sertleştirme",
   "description": "Ubuntu sunucuları Ansible ile sertleştirir (SSH, ufw, kernel, auditd, fail2ban, AIDE); Lynis denetimi ve geri alma güvenlik ağı içerir",
@@ -619,15 +619,15 @@
       "name": "hardening_fail2ban_bantime",
       "group": "Denetim",
       "type": "string",
-      "default": "1h",
-      "description": "fail2ban sshd jail ban süresi (fail2ban zaman biçimi: 10m, 1h, 1d; varsayılan 1h)"
+      "default": "10m",
+      "description": "fail2ban sshd jail ban süresi (fail2ban zaman biçimi: 10m, 1h, 1d; varsayılan 10m). Muaf olmayan bir adresten art arda hatalı deneme (maxretry) bu süre boyunca banlatır"
     },
     {
       "name": "hardening_fail2ban_ignoreip",
       "group": "Denetim",
       "type": "string",
-      "default": "127.0.0.1/8 ::1",
-      "description": "fail2ban'ın asla banlamayacağı adresler (boşlukla ayrılmış); YALNIZ bu değerdir, kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez. Varsayılan yalnız yerel adresleri muaf tutar; bağlı olduğunuz adres muaf değilse art arda hatalı deneme (maxretry) sizi bantime kadar banlatır, önizleme/uygulama günlüğünde bir NOT satırı bunu söyler. Tüm yönetim ağını yazmak önerilmez (içerideki biri bile banlanmaz)"
+      "default": "",
+      "description": "fail2ban'ın asla banlamayacağı EK adresler/ağlar (boşlukla ayrılmış). Yerel adresler (127.0.0.1/8 ::1) HER ZAMAN muaftır, yazmanız gerekmez; bu değer onlara EKLENİR, ezmez. Kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez: bağlı olduğunuz adres burada yoksa art arda hatalı deneme (maxretry) sizi bantime kadar banlatır, önizleme/uygulama günlüğünde bir NOT satırı bunu söyler. Tüm yönetim ağını yazmak önerilmez (içerideki biri bile banlanmaz)"
     },
     {
       "name": "hardening_pass_max_days",

@@ -5,8 +5,14 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+## [0.11.0] - 2026-11-01
+
+fail2ban sadeleştirmesi (sshpocket fiziksel Proxmox turu bulgusu): `ignoreip` artık hangi adresten çalıştırıldığına bağlı değil. Gerçek VM'de (Ubuntu + Proxmox) henüz doğrulanmadı.
+
 ### Değişti
-- **fail2ban `ignoreip` artık yalnız `hardening_fail2ban_ignoreip`'tir** (davranış değişikliği, tüm platformlar): kontrol makinesinin adresi ve `hardening_ssh_allow_from` OTOMATİK eklenmez. `ignoreip` bir açıktır; ele geçirilmiş yönetim cihazı da banlanabilmeli, ssh koruması `hardening_ssh_allow_from`'dur. Eskiden apply'ın nereden (LAN/VPN) yapıldığına göre dosya değişiyordu (sahte `changed`, fail2ban yeniden başlatması); artık aynı vars ile her adresten `changed=0`. Varsayılan `127.0.0.1/8 ::1` aynı (yerel süreçler kendini banlatmasın). Bağlı adres muaf değilse günlükte tek satırlık `NOT (fail2ban): …` çıkar (CIDR üyeliği `filter_plugins/hardening_net.py`; `UYARI` değil, alan özetindeki uyarı sayısını artırmaz). **Yükseltmede** daha önce otomatik eklenen adres jail dosyasından düşer: bir kez `changed` + fail2ban yeniden başlar; bağlı adresiniz muaf kalsın istiyorsanız `hardening_fail2ban_ignoreip`'e yazın. Test: `test/test_fail2ban_ignoreip.py`. Gerçek VM'de (Ubuntu + Proxmox) henüz doğrulanmadı.
+- **fail2ban `ignoreip`: yerel adresler her zaman muaf, kullanıcı değeri onlara EKLENİR** (davranış değişikliği): `127.0.0.1/8 ::1` koddan her zaman yazılır; `hardening_fail2ban_ignoreip` varsayılanı artık BOŞ ve ek adresler içindir (boşluk ya da virgülle ayrılmış, tekrarlar atılır). Değişkeni vermek yerel adresleri düşürmez. `filter_plugins/hardening_net.py`: `hardening_ignoreip_effective`. Test: `test/test_fail2ban_ignoreip.py`.
+- **fail2ban `bantime` varsayılanı 1h → 10m** (davranış değişikliği): kontrol makinesi artık otomatik muaf olmadığından kendini banlatmak olasıdır, 1h yazım hatasına ağır ceza verirdi. Gerçek brute-force için ban kısalır; `maxretry` (5) aynı. Eski değeri isteyen `hardening_fail2ban_bantime: 1h` yazar.
+- **fail2ban `ignoreip`: kontrol makinesinin adresi ve `hardening_ssh_allow_from` OTOMATİK eklenmez** (davranış değişikliği, tüm platformlar, PR 162). `ignoreip` bir açıktır; ele geçirilmiş yönetim cihazı da banlanabilmeli, ssh koruması `hardening_ssh_allow_from`'dur. Eskiden apply'ın nereden (LAN/VPN) yapıldığına göre dosya değişiyordu (sahte `changed`, fail2ban yeniden başlatması); artık aynı vars ile her adresten `changed=0`. Bağlı adres muaf değilse günlükte tek satırlık `NOT (fail2ban): …` çıkar (CIDR üyeliği `hardening_ip_in_list`; `UYARI` değil, alan özetindeki uyarı sayısını artırmaz). **Yükseltmede** daha önce otomatik eklenen adres jail dosyasından düşer: bir kez `changed` + fail2ban yeniden başlar; bağlı adresiniz muaf kalsın istiyorsanız `hardening_fail2ban_ignoreip`'e yazın. Test: `test/test_fail2ban_ignoreip.py`.
 
 ## [0.10.0] - 2026-10-31
 
