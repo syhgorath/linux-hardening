@@ -24,7 +24,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.8.4 yayını | Yayımlandı (`hardening_pve_keep_banner`, `hardening_pve_web_exclusive` küme ayrımı düzeltmesi, sshpocket menü süzmesi `platform_var`/`platforms`/`group`, koşulsuz görevler için 6 sunucu başına anahtar) |
 | v0.9.0 yayını | Yayımlandı 2026-10-29; sshpocket 3.6.18 Ubuntu + Proxmox turu temiz, 3 küçük bulgu PR 149'da düzeltildi (alan anahtarları `hardening_<alan>_enabled`, 128/128 değişkende `group`, kalıcı kapatma eylemleri `kaldir_onizle`/`kaldir`/`kaldir_geri_yukle`; sshpocket 3.6.16 0.8.4 turu temiz) |
 | v0.9.1 yayını | Yayımlandı 2026-10-30 (0.9.0 turu bulguları: `kaldir` satır deseniyle sahiplik, modprobe uyarısı, `hardening_ssh_allow_from` artık `required` değil, `kaldir` için `destructive`; README güncellemesi) |
-| v0.10.0 yayını | Hazırlandı (`SSHPOCKET_PROGRESS` ilerleme satırları, `audit` için `bulgular.tsv` üretimi ve `outputs.findings` bildirimi; sshpocket ekranı PR 139 ve 140 ile main'de) |
+| v0.10.0 yayını | Yayımlandı 2026-10-31 (`SSHPOCKET_PROGRESS` ilerleme satırları, `audit` için `bulgular.tsv` üretimi ve `outputs.findings` bildirimi; sshpocket ekranı PR 139 ve 140 ile main'de) |
+| v0.11.0 yayını | Hazırlandı (fail2ban: `ignoreip` kontrol makinesi/`hardening_ssh_allow_from` adresini otomatik eklemez, yerel adresler her zaman muaf, `hardening_fail2ban_ignoreip` ek adresler için ve varsayılan boş, `bantime` 10m; gerçek VM'de henüz doğrulanmadı) |
 
 ## Orta
 | İş | Not |

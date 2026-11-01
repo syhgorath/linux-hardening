@@ -22,3 +22,7 @@ key/
 
 # Sürüm paketleri (scripts/release.sh çıktısı)
 dist/
+
+# Python bayt kodu
+__pycache__/
+*.pyc

@@ -1,11 +1,11 @@
 # Alan anahtarı. true (varsayılan): fail2ban bu rolle uygulanır. false: rol (harden.yml'de) HİÇ çalışmaz; daha önce yazılmış dosya/ayar SİLİNMEZ ya da geri alınmaz.
 hardening_fail2ban_enabled: true
 # Varsayılanlar. Geçersiz kılmak için: group_vars/host_vars, -e veya -e @dosya.yml (bkz. HOWTO.md).
-# Her zaman banlanmayacak adresler. Buna, Ansible'ın bağlandığı kontrol makinesinin sunucunun GÖRDÜĞÜ adresi
-# (SSH_CONNECTION) otomatik eklenir; tüm yönetim ağını muaf tutmak için burada açıkça yazın (önerilmez).
-hardening_fail2ban_ignoreip: "127.0.0.1/8 ::1"
+# Yerel adresler (127.0.0.1/8 ::1) HER ZAMAN muaftır, buraya yazmanız gerekmez. Bu değişken onlara EKLENİR (ezmez): boşlukla ayrılmış ek adresler/ağlar.
+# Kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez; tüm yönetim ağını muaf tutmak için açıkça yazın (önerilmez).
+hardening_fail2ban_ignoreip: ""
 hardening_fail2ban_maxretry: 5
-hardening_fail2ban_bantime: 1h
+hardening_fail2ban_bantime: 10m
 # true (varsayılan): boş bir /etc/fail2ban/jail.local oluşturulur (Lynis DEB-0880; var olan dosyaya dokunulmaz). Davranışı değiştirmez.
 hardening_fail2ban_jail_local: true
 # false (varsayılan, warn_if): true iken (yalnızca hardening_platform=proxmox-host) Proxmox VE web arayüzü/API için ek bir fail2ban jail'i (proxmox-web) yazılır: 8006'ya yönelik

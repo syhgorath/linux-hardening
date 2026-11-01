@@ -1,4 +1,4 @@
-# fail2ban ignoreip YALNIZ hardening_fail2ban_ignoreip değeridir: kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez.
+# fail2ban ignoreip = yerel adresler (127.0.0.1/8 ::1, HER ZAMAN) + hardening_fail2ban_ignoreip: kontrol makinesinin ya da hardening_ssh_allow_from'un adresi otomatik eklenmez.
 # Bu dosya yalnız bilgi verir (UYARI değil, uyarı sayısını artırmaz): bağlı adres muaf değilse art arda hatalı deneme onu banlatır.
 # SSH_CONNECTION become olmadan okunur (sudo ortamı onu siler); okunamazsa (SSH dışı bağlantı) satır çıkmaz.
 - name: Client address as the server sees it (SSH_CONNECTION, become olmadan)
@@ -17,4 +17,4 @@
   when:
     - hardening_fail2ban_ssh_connection.rc == 0
     - hardening_fail2ban_ssh_connection.stdout.split() | length > 0
-    - not (hardening_fail2ban_ssh_connection.stdout.split() | first | hardening_ip_in_list(hardening_fail2ban_ignoreip))
+    - not (hardening_fail2ban_ssh_connection.stdout.split() | first | hardening_ip_in_list(hardening_fail2ban_ignoreip | hardening_ignoreip_effective))

@@ -67,7 +67,9 @@ expect = {
     "hardening_ssh_disable_password": True,
     "hardening_ssh_kbdinteractive": False,
     "hardening_ssh_allow_tcp_forwarding": "no",
-    "hardening_fail2ban_ignoreip": "127.0.0.1/8 ::1",
+    # ignoreip: yerel adresler koddan HER ZAMAN eklenir (hardening_ignoreip_effective); degisken yalniz EK adresler icin, varsayilan bos
+    "hardening_fail2ban_ignoreip": "",
+    "hardening_fail2ban_bantime": "10m",
     "hardening_allow_unsupported": False,
     "hardening_rollback_enabled": True,
     "hardening_rollback_timeout": 300,
