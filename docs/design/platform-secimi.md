@@ -1,0 +1,121 @@
+# Tasarım: sunucu eklerken platform seçimi
+
+> **Durum: ÖNERİ (kod yok).** sshpocket koordinatörüyle kullanıcının ilkeleri temel alındı; denenmedi.
+> Bu not `component.yml`'i, rolleri ya da testleri DEĞİŞTİRMEZ. Karar ve uygulama ayrı PR'larla gelir; test planı §9, açık sorular §10.
+
+## 1. Sorun
+Kullanıcı USB'deki `fizikiproxmox` sunucusu için `preview` çalıştırdı ve "Bu sunucu bir Proxmox VE hostu, `generic` platformla
+sertleştirilmez" hatasını aldı: `hardening_platform=proxmox-host` yerelde vardı, sunucunun vars dosyasında yoktu. Hata doğru
+(preflight yanlış platformu durdurur), ama GitHub'dan indirip Proxmox'a uygulayan biri neyi değiştireceğini bulamayabilir.
+
+Bugün `hardening_platform` bir **paket değişkenidir** ve varsayılanı `generic`'tir; platformu söyleme işi kullanıcıda kalıyor.
+
+## 2. Bugün pakette ne var (ölçülen)
+| Bilgi | Nerede | Not |
+|---|---|---|
+| Platform değişkeni | `platform_var: hardening_platform` (`component.yml`) | sshpocket değişken listesini bununla süzer |
+| Bilinen platformlar | `generic`, `proxmox-host`, `raspberry-pi` | **üç yerde ayrı yazılı**: `roles/hardening_preflight/defaults/main.yml` (`hardening_platforms_known`), `scripts/check-consistency.py` (`PLATFORMS`), `component.yml` yorumu |
+| Platforma özgü değişken | `vars[].platforms` | 128 değişkenin 10'u `[proxmox-host]` (tümü grup `Proxmox`); 118'i her platformda. `raspberry-pi` etiketli değişken YOK |
+| Platforma özgü eylem | `actions[].platforms` | `pve_firewall_preview`, `pve_firewall_apply` |
+| Yanlış seçimde koruma | preflight | Proxmox + `generic` → DURUR; `proxmox-host`/`raspberry-pi` + o donanım değil → DURUR; `hardening_allow_unsupported` bunları atlatmaz. Pi + `generic` → yalnızca not düşer |
+| Proxmox'ta gerçek değişiklik kapısı | `hardening_pve_apply` | `false` iken preflight gerçek koşuyu durdurur (`--check` serbest) |
+
+## 3. İlkeler (kullanıcıyla vardığımız; bu notun temeli)
+1. **Yanlış seçim güvenli kalır.** Preflight'ın iki yönlü doğrulaması (Proxmox'u `generic` yapma / Proxmox olmayanı `proxmox-host` yapma) aynen kalır. Menü yalnızca kolaylıktır, güvenlik tarafı değildir.
+2. **Değişkenler üç gruba ayrılır** (§4).
+3. **Platform bilgisi pakette olur**; sshpocket "Proxmox nedir" bilmez, paketin bildirdiğini gösterir ve seçileni yazar.
+4. **`auto` yok.** `hardening_platform` her zaman somut bir değerdir (§6).
+
+## 4. Üç değişken grubu
+128 değişkeni tek tek sınıflamıyoruz; mevcut etiketlerden türeyen kural:
+
+| Grup | Kural | Örnek | Davranış |
+|---|---|---|---|
+| **(a) Sunucu NE** | yalnızca `platform_var` | `hardening_platform` | Seçimden otomatik yazılır |
+| **(b) Platform varsayılanı** | `platforms:` etiketli değişkenler (10 Proxmox) | `hardening_pve_pveproxy_allow_from` (boş), `hardening_pve_keep_banner` (true), `hardening_aide_pve_excludes` | **Yeni yazılacak bir şey yok**: değişken zaten kendi `default`'unu taşıyor; platform seçilince menüde görünür olur. Elle `-e` ile gevşetmek gerekmez |
+| **(c) Erişimi/sunucuyu etkileyen** | `warn_if` taşıyanlar (45 değişken) ve `hardening_ssh_allow_from` | `hardening_ufw_prune_ssh`, `hardening_rpi_strict`, `hardening_pve_strict`, `hardening_pve_apply`, `hardening_fail2ban_pve_web`, `hardening_ssh_allow_from` | **Asla sessizce yazılmaz.** İstisnalar aşağıda |
+
+(c) içinde üç ayrı davranış:
+- **Sunucu eklerken SORULUR:** yalnızca `hardening_ssh_allow_from` (öneri sunulabilir, otomatik doldurulmaz; fail2ban `ignoreip` kararındaki ilkeyle aynı: kontrol makinesinin adresi sessizce eklenmez). Paket manifestte `ask` listesiyle bildirir.
+- **Apply anında türer:** `hardening_pve_apply` (§5).
+- **Asla otomatik:** `hardening_ufw_prune_ssh` (siler), `hardening_pve_strict`, `hardening_rpi_strict` (korumaları gevşeten/sıkılaştıran), diğer tüm `warn_if` değişkenleri. Kullanıcı değişken ekranından bilinçli açar.
+
+## 5. `hardening_pve_apply` için apply onayı
+**Gözlem:** `apply` eylemi zaten `confirm: type-server-name` ve `requires: [preview]` taşıyor; `pve_firewall_apply` aynı onayı kendi içinde taşıyor ve `hardening_pve_apply`'a BAĞLI DEĞİL. Yani Proxmox'ta gerçek koşu için kullanıcı hem sunucu adını yazıyor hem vars dosyasına `hardening_pve_apply=true` yazıyor: ikinci adım ikincil bir kapı, ayrı bir karar değil.
+
+**Öneri:** katalogdaki `apply_vars` (§7) yalnızca `apply` eyleminde, onay verildikten SONRA `-e hardening_pve_apply=true` olarak geçirilir; vars dosyasına hiç yazılmaz. Böylece `fizikiproxmox` türü "vars'ta eksik" hatası bu değişken için de oluşmaz, ama bir `preview` hiçbir zaman gerçek koşu olamaz.
+
+**Riskler (paket davranışı değişir):**
+1. **`-e` vars dosyasını ezer.** Kullanıcı dosyaya bilerek `hardening_pve_apply=false` yazmışsa `-e` onu aşardı. Kural: sshpocket `apply_vars`'ı **yalnızca değişken vars dosyasında YOKSA** geçirir. Açık soru 3.
+2. **Uyarı metinleri Ubuntu'ya göre.** `apply` uyarıları ufw/PAM'den söz ediyor; Proxmox'ta hipervizörü, VM'leri, `pve-firewall`'u ilgilendiren uyarılar gerekir. Katalogda platform başına `warnings` olmalı ve onay ekranında gösterilmeli.
+3. **Eski sshpocket kataloğu bilmez.** O zaman `hardening_pve_apply` hiç geçmez ve preflight Proxmox'ta gerçek koşuyu **durdurur**: güvenli yönde başarısız olur (hata mesajı zaten değişkeni söylüyor). Davranış kaybı yok, yalnızca eski elle yol.
+4. **Değişken kalır.** `hardening_pve_apply` `component.yml`'den kalkmaz; elle `-e`/vars ile kullananlar (ve eski sürümler) aynı çalışır. Bu yüzden "türetme" yalnızca eksik olanı doldurur.
+5. Onay gücü aynı kalır (`type-server-name`); gevşetme yok. Gerçek Proxmox'ta apply hâlâ `DENENMEDİ` notları taşıyor, bu değişiklik onları kaldırmaz.
+
+## 6. Platformu kim algılar? ( `auto` neden yok )
+sshpocket değişken listesini `hardening_platform` değerine göre süzüyor; değer `auto` kalırsa süzemez. Bu yüzden değer sunucu eklenirken **bir kez somut olarak** yazılır.
+
+**Öneri: algılamayı paket raporlar.** Salt okunur yeni bir eylem (örnek ad `platform_detect`): preflight/erişim korumalarını ÇALIŞTIRMAZ (`rollback_*` gibi), `sudo` gerektirmez, tek bir sonuç satırı yazar:
+
+```
+SSHPOCKET_RESULT linux-hardening.platform_detect detected=proxmox-host hint=none os=debian-13
+SSHPOCKET_RESULT linux-hardening.platform_detect detected=generic hint=raspberry-pi os=debian-13
+```
+
+- İşaretler (`/etc/pve`, `/usr/bin/pveversion`; Pi için `/etc/rpi-issue`, `/boot/firmware/config.txt`) preflight'taki mevcut listelerle **aynı** değişkenlerden okunur; ikinci bir kopya yazılmaz.
+- **`raspberry-pi` hiçbir zaman `detected` olmaz, yalnızca `hint`.** Platform seçimi `usb-storage` engelini gevşetir; USB diskten açılan bir Pi'de yanlış otomatik seçim sessizce yanlış politika demektir. Menü "Pi gibi görünüyor, Raspberry Pi seçilsin mi?" diye sorar, kullanıcı onaylar.
+- sshpocket önerilen değeri gösterir, kullanıcı değiştirebilir; seçilen vars dosyasına yazılır. Preflight yine doğrular (ilke 1).
+- **Alternatif (reddedildi):** sshpocket'in ssh ile `/etc/pve`'ye bakması. Proxmox bilgisini sshpocket'e taşır (ilke 3'ü bozar) ve her yeni platformda onu da değiştirmek gerekir. Açık soru 2.
+
+## 7. Manifest önerisi
+Yeni **isteğe bağlı** üst düzey alan `platform_catalog` (ad bilerek `platforms`'tan farklı: o, değişken/eylem düzeyinde süzme etiketi olarak kalır):
+
+```yaml
+platform_catalog:
+  - id: generic
+    label: "Ubuntu / Debian"
+    description: "Genel sunucu. Varsayılan."
+    detect: { markers_var: null }          # her şey generic'tir; öneri son çaredir
+    ask: [hardening_ssh_allow_from]
+  - id: proxmox-host
+    label: "Proxmox VE hostu"
+    description: "Hipervizör. ufw ve bazı kernel/dosya kuralları uygulanmaz; gerçek değişiklik apply onayıyla."
+    detect: { markers_var: hardening_proxmox_markers, auto: true }
+    ask: [hardening_ssh_allow_from]
+    apply_vars: { hardening_pve_apply: true }
+    apply_warnings:
+      - "Proxmox VE hostunu değiştirir; önce snapshot alın, VM'ler etkilenebilir."
+  - id: raspberry-pi
+    label: "Raspberry Pi"
+    description: "usb-storage engeli gevşetilir (USB'den açılan Pi için)."
+    detect: { markers_var: hardening_rpi_markers, auto: false }   # yalnızca hint
+    ask: [hardening_ssh_allow_from]
+```
+
+- Her giriş: `id` (= `hardening_platform` değeri), `label`, kısa `description`, `detect`, `ask` (sunucu eklerken sorulacak değişkenler), isteğe bağlı `apply_vars` ve `apply_warnings`.
+- **Tek kaynak:** `hardening_platforms_known`, `check-consistency.py` içindeki `PLATFORMS` ve katalog bugünkü üç ayrı listenin yerini alır; tutarlılık denetimi hepsinin aynı küme olduğunu kanıtlar. Yeni platform eklemek: katalog girişi + rol/preflight + (varsa) `platforms:` etiketli değişkenler. Menü kendiliğinden büyür.
+- `ask`/`apply_vars` içindeki her ad `vars` içinde tanımlı olmalı; `apply_vars` yalnızca `warn_if` taşıyan bool değişkenlere izin verir (sessiz yazılan şey açıkça işaretlidir).
+- `component.json`'a `make-component-json.py` ile aynen taşınır.
+
+**Paket standardı / `sshpocket_api`:** alan eklenir, mevcut hiçbir şey değişmez; öneri `sshpocket_api: 1` kalır. Eski sshpocket bilinmeyen üst düzey alanı yok sayarsa sorun yok; sayamazsa (doğrulayıcı reddederse) `sshpocket_api` yükseltmesi gerekir. Bunu paket tarafı bilemez: açık soru 1.
+
+## 8. Eski paket ve vars dosyalarıyla uyum
+- `hardening_platform` yoksa davranış değişmez: `generic`. Proxmox'ta bu preflight'ta durur; hata iletisine "vars dosyasına `hardening_platform=proxmox-host` ekleyin" ipucu eklenir (küçük, ayrı PR; bugün ileti yalnızca `--check -e …` önerisini veriyor).
+- Katalog yok ya da sshpocket tanımıyorsa her şey bugünkü gibi çalışır.
+- Eski sunucu klasörlerinin vars dosyaları geçerli kalır; yeni alan hiçbir değişkenin anlamını değiştirmez. `hardening_pve_apply` vars'ta zaten `true` ise `apply_vars` hiçbir şey eklemez.
+- README/HOWTO'ya Proxmox için tek satırlık "platformu söyle" notu (GitHub'dan indirenler için).
+
+## 9. Test planı (uygulama PR'larında; şimdi yazılmadı)
+1. **Katalog tutarlılığı:** katalog kimlikleri = `hardening_platforms_known` = `PLATFORMS`; `detect.markers_var` rol varsayılanlarında tanımlı; `ask` ve `apply_vars` adları `vars`'ta var; `apply_vars` yalnızca `warn_if` bool. Mutasyon: birine fazladan kimlik ekle → test kırılır.
+2. **`platform_detect`** (gerçek Ansible, sahte işaret dosyalarıyla, `test_rpi_platform.py` desenindeki gibi): Proxmox → `detected=proxmox-host`; Pi işaretli → `detected=generic hint=raspberry-pi` (asla `detected=raspberry-pi`); ikisi de yok → `generic`; tek satır, `SSHPOCKET_RESULT` öneki; `sudo` gerektirmez; `--check`'te de çalışır; preflight'ı çalıştırmaz.
+3. **Geriye uyum:** katalogsuz `component.json` ile tutarlılık denetimi geçer; `hardening_pve_apply=false` açık yazılmış vars `apply_vars` ile ezilmez (bu kural sshpocket testidir, pakette yalnızca belge).
+4. **Preflight ipucu:** Proxmox + `generic` iletisi vars dosyası ipucunu içerir (golden).
+5. **Gerçek VM:** Proxmox'ta `platform_detect` → `apply` (onay + `apply_vars`) bir kez; bugün hiçbir şey bu yolla denenmedi. `verification-log.md`'ye yazılır.
+
+## 10. Açık sorular
+1. **sshpocket:** doğrulayıcı bilinmeyen üst düzey manifest alanını reddediyor mu? Reddediyorsa `sshpocket_api` yükseltmesi gerekir.
+2. **Algılama sırası:** sunucu eklenirken inventory var ama vars dosyası yok; `platform_detect` o anda çalıştırılabilir mi (SSH anahtarı/ajan, sudo parolası)? Çalışamazsa alternatif: kullanıcı seçer, ilk `preview` yanlışı preflight'ta yakalar.
+3. **`-e` önceliği:** "yalnızca vars dosyasında yoksa geçir" kuralını sshpocket mi uygular, paket mi (örneğin `apply_vars` değerini bir `hardening_pve_apply_auto` gibi ara değişkene yazıp preflight'ın `default` ile birleştirmesi)? İkincisi pakette kalır ama yeni değişken demektir.
+4. **`ask` için öneri:** `hardening_ssh_allow_from` önerisini sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Önerilen değer hiçbir zaman sessizce yazılmaz; bu notta yalnızca soruluyor.
+5. **Çok düğümlü Proxmox / ZFS / Ceph:** platform tek kimlik; küme reddi `pve-firewall` eyleminde zaten var, `harden.yml` için ayrı doğrulama gerekir mi? Denenmedi.
+6. **Pi için `apply_warnings`:** `usb-storage` gevşetmesi yeterli bir uyarı mı, `hardening_rpi_strict` soru olarak mı sorulmalı?
