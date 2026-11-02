@@ -155,7 +155,8 @@ for v in comp.get("vars", []):
         err(f"component.yml vars: {name} warn_if ({meta['warn_if']}) varsayılana eşit: kullanıcı hiçbir şeyi değiştirmediği hâlde her çalıştırmada uyarı/onay çıkar (warn_if'i kaldırın)")
 
 # 4b) platforma göre süzme (sshpocket): platform_var, eylem/değişken platforms, group
-PLATFORMS = {"generic", "proxmox-host", "raspberry-pi"}
+_pre = yaml.safe_load((ROOT / "roles/hardening_preflight/defaults/main.yml").read_text(encoding="utf-8")) or {}
+PLATFORMS = set(_pre.get("hardening_platforms_known", []))   # tek kaynak: preflight; platform_choices ile eşitliği 5a'da denetlenir
 pv = comp.get("platform_var")
 var_names = {(v.get("name") if isinstance(v, dict) else v) for v in comp.get("vars", [])}   # eski biçim (yalnızca ad listesi) de kabul edilir
 uses_platforms = any(isinstance(v, dict) and "platforms" in v for v in comp.get("vars", [])) or any("platforms" in a for a in comp.get("actions", {}).values())
@@ -207,6 +208,99 @@ for name, act in comp.get("actions", {}).items():
     bad = set(act.get("effects", [])) - {"installs-package", "changes-config", "destructive"}
     if bad:
         err(f"actions.{name}.effects geçersiz: {sorted(bad)}")
+
+# 5a) platform_choices, onboarding_vars, requires_vars (docs/design/platform-secimi.md). Hepsi isteğe bağlı alanlardır; varsa biçimleri ve çapraz bağlantıları denetlenir.
+vmeta = {v["name"]: v for v in comp.get("vars", []) if isinstance(v, dict)}   # eski biçimde (yalnızca ad listesi) boş: değişken şemasına bağlı denetimler atlanır
+platform_var_default = vmeta.get(pv, {}).get("default") if pv else None
+choices = comp.get("platform_choices")
+if choices is not None:
+    if not isinstance(choices, list) or not choices:
+        err("component.yml platform_choices boş olmayan bir liste olmalı")
+        choices = []
+    ids = []
+    for c in choices:
+        if not isinstance(c, dict):
+            err(f"component.yml platform_choices: öğe sözlük olmalı: {c!r}")
+            continue
+        cid = c.get("id")
+        ids.append(cid)
+        for k in ("id", "label", "description"):
+            if not (isinstance(c.get(k), str) and c[k].strip()):
+                err(f"component.yml platform_choices {cid}: {k} boş olmayan metin olmalı")
+        if not isinstance(c.get("auto_detect"), bool):
+            err(f"component.yml platform_choices {cid}: auto_detect true/false olmalı")
+        if not isinstance(c.get("defaults"), dict):
+            err(f"component.yml platform_choices {cid}: defaults sözlük olmalı ({{}} olabilir)")
+        for dn in (c.get("defaults") or {}):
+            if dn == pv:
+                err(f"component.yml platform_choices {cid}: defaults içinde {pv} olmamalı (id otomatik yazılır)")
+            elif vmeta and dn not in vmeta:
+                err(f"component.yml platform_choices {cid}: defaults {dn} vars içinde tanımlı değil")
+            elif vmeta and vmeta[dn].get("warn_if") is not None:
+                err(f"component.yml platform_choices {cid}: defaults {dn} warn_if taşıyor, sessizce yazılamaz")
+        av = c.get("apply_vars")
+        if av is not None:
+            if not isinstance(av, dict) or not av:
+                err(f"component.yml platform_choices {cid}: apply_vars boş olmayan sözlük olmalı")
+                av = {}
+            if av and not (isinstance(c.get("apply_warnings"), list) and c["apply_warnings"]
+                           and all(isinstance(w, str) and w.strip() for w in c["apply_warnings"])):
+                err(f"component.yml platform_choices {cid}: apply_vars dolu iken apply_warnings boş olmayan metin listesi olmalı")
+            for an, aval in av.items():
+                m = vmeta.get(an)
+                if not vmeta:
+                    continue
+                if m is None:
+                    err(f"component.yml platform_choices {cid}: apply_vars {an} vars içinde tanımlı değil")
+                    continue
+                if m.get("type") != "bool" or not isinstance(aval, bool):
+                    err(f"component.yml platform_choices {cid}: apply_vars {an} bool olmalı (tür {m.get('type')!r}, değer {aval!r})")
+                if m.get("warn_if") is None:
+                    err(f"component.yml platform_choices {cid}: apply_vars {an} warn_if taşımalı (yalnızca işaretli, tehlikeli ayarlar apply anında açılabilir)")
+                if cid not in (m.get("platforms") or []):
+                    err(f"component.yml platform_choices {cid}: apply_vars {an} bu platforma ait değil (platforms etiketi {cid} içermeli; silici/genel değişken verilemez)")
+        elif c.get("apply_warnings") is not None:
+            err(f"component.yml platform_choices {cid}: apply_warnings var ama apply_vars yok")
+        if cid == "raspberry-pi" and c.get("auto_detect") is not False:
+            err("component.yml platform_choices raspberry-pi: auto_detect false olmalı (Pi otomatik seçilmez: usb-storage engelini gevşetir)")
+    if len(ids) != len(set(ids)):
+        err(f"component.yml platform_choices: yinelenen id: {ids}")
+    if set(ids) != PLATFORMS:
+        err(f"component.yml platform_choices kimlikleri ({sorted(set(ids))}) hardening_platforms_known ({sorted(PLATFORMS)}) ile aynı olmalı")
+    if platform_var_default is not None and platform_var_default not in ids:
+        err(f"component.yml {pv} varsayılanı ({platform_var_default!r}) platform_choices içinde yok")
+    for vn, vm in vmeta.items():
+        for pl in vm.get("platforms") or []:
+            if pl not in ids:
+                err(f"component.yml vars {vn}: platforms {pl} platform_choices içinde yok")
+onb = comp.get("onboarding_vars")
+if onb is not None:
+    if not isinstance(onb, list):
+        err("component.yml onboarding_vars liste olmalı")
+        onb = []
+    for on in onb:
+        if not vmeta:
+            continue
+        if on not in vmeta:
+            err(f"component.yml onboarding_vars: {on} vars içinde tanımlı değil")
+        elif vmeta[on].get("warn_if") is not None:
+            err(f"component.yml onboarding_vars: {on} warn_if taşıyor, sunucu eklerken sorulamaz")
+for aname, a in comp.get("actions", {}).items():
+    if "requires_vars" in a:
+        rvs = a["requires_vars"]
+        if not isinstance(rvs, list) or not rvs:
+            err(f"actions.{aname}.requires_vars boş olmayan liste olmalı")
+            continue
+        for rv in rvs:
+            if vmeta and rv not in vmeta:
+                err(f"actions.{aname}.requires_vars: {rv} vars içinde tanımlı değil")
+# allow_from kapısı: sshpocket bu eylemleri değişken boşken ssh'a gitmeden reddeder; audit/rollback/kaldir kilitlenmemeli
+for aname in ("preview", "apply", "pve_firewall_preview", "pve_firewall_apply"):
+    if "hardening_ssh_allow_from" not in comp.get("actions", {}).get(aname, {}).get("requires_vars", []):
+        err(f"actions.{aname}: requires_vars hardening_ssh_allow_from içermeli (erişim kaybı kapısı)")
+for aname, a in comp.get("actions", {}).items():
+    if aname not in ("preview", "apply", "pve_firewall_preview", "pve_firewall_apply") and "hardening_ssh_allow_from" in a.get("requires_vars", []):
+        err(f"actions.{aname}: requires_vars hardening_ssh_allow_from taşımamalı (audit/rollback/kaldir bu değişkene ihtiyaç duymaz, kilitlenmemeli)")
 
 # 5b) paket standardı v1: runner, confirm, warnings (sshpocket asgari kuralı: effects boş değilse en az yes-no)
 CONFIRMS = ["none", "yes-no", "type-server-name"]

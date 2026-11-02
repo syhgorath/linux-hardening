@@ -1,6 +1,6 @@
 # Tasarım: sunucu eklerken platform seçimi
 
-> **Durum: ÖNERİ (kod yok); `apply_vars` kullanıcı tarafından onaylandı, `requires_vars` onay bekliyor.** sshpocket koordinatörüyle kullanıcının ilkeleri temel alındı; denenmedi.
+> **Durum: manifest alanları UYGULANDI** (`platform_choices`, `onboarding_vars`, `requires_vars`, `apply_vars`; `component.yml` + `check-consistency.py`, bkz. CHANGELOG [Yayımlanmamış]). **Yapılmadı:** `platform_detect` eylemi, sshpocket tarafı (menü, `apply_vars`/`requires_vars` kapıları). Alan adları sshpocket notuyla uzlaşıldı. Gerçek sunucuda denenmedi. sshpocket koordinatörüyle kullanıcının ilkeleri temel alındı; denenmedi.
 > Bu not `component.yml`'i, rolleri ya da testleri DEĞİŞTİRMEZ. Karar ve uygulama ayrı PR'larla gelir; test planı §9, açık sorular §10.
 
 ## 1. Sorun

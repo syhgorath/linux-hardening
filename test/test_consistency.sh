@@ -60,6 +60,17 @@ mutate "README TR telnet uyarisi yok" README.md 's/telnet/tel-net/g' "README.md:
 mutate "README EN telnet uyarisi yok" README.en.md 's/telnet/tel-net/g' "README.en.md: 'telnet/ftp kaldırma' uyarısı yok"
 mutate "README EN 'Ne yapmaz' bolumu yok" README.en.md 's/^## What it does not do/## Other/' "'## What it does not do' bölümü yok"
 
+# platform_choices / onboarding_vars / requires_vars (docs/design/platform-secimi.md)
+mutate "platform_choices kimligi preflight listesinde yok" component.yml 's/- id: raspberry-pi/- id: baska-platform/' "platform_choices kimlikleri"
+mutate "raspberry-pi auto_detect true"  component.yml '/id: raspberry-pi/,/auto_detect/ s/auto_detect: false/auto_detect: true/' "auto_detect false olmalı"
+mutate "platform defaults warn_if degisken" component.yml '/id: generic/,/auto_detect/ s/defaults: {}/defaults: { hardening_ufw_prune_ssh: true }/' "warn_if taşıyor, sessizce yazılamaz"
+mutate "apply_vars silici degisken"     component.yml '/id: proxmox-host/,/apply_warnings/ s/hardening_pve_apply: true/hardening_ufw_prune_ssh: true/' "bu platforma ait değil"
+mutate "apply_vars dolu apply_warnings yok" component.yml '/apply_warnings:/,/çok düğümlü küme doğrulanmadı\."/d' "apply_warnings boş olmayan"
+mutate "onboarding_vars warn_if degisken" component.yml 's/onboarding_vars: \[hardening_ssh_allow_from\]/onboarding_vars: [hardening_ufw_prune_ssh]/' "sunucu eklerken sorulamaz"
+mutate "requires_vars bilinmeyen degisken" component.yml 's/requires_vars: \[hardening_ssh_allow_from\]/requires_vars: [hardening_yok]/' "vars içinde tanımlı değil"
+mutate "apply requires_vars allow_from yok" component.yml '/requires_vars: \[hardening_ssh_allow_from\]/d' "requires_vars hardening_ssh_allow_from içermeli"
+mutate "audit requires_vars allow_from aldi" component.yml $'/cmd: "ansible-playbook playbooks\\/audit.yml"/a\\\n    requires_vars: [hardening_ssh_allow_from]' "kilitlenmemeli"
+
 # component.json uretici: gercek depoda guncel; component.yml degisirse --check yakalar
 out=$("$PY" -I scripts/make-component-json.py --check 2>&1); rc=$?
 expect_eq "component.json guncel (--check)" "0" "$rc"

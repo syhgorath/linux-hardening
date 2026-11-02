@@ -22,6 +22,35 @@ inventory_group: hardening
 # Gizlenen değişkenin yazılı değeri yine çalıştırmaya iletilir; gizlenebilecek hiçbir değişken required değildir.
 platform_var: hardening_platform
 
+# Sunucu eklerken platform seçimi (docs/design/platform-secimi.md). Hepsi isteğe bağlı: bilinmeyen alanı eski sshpocket yok sayar (sshpocket_api 1 kalır).
+# id = hardening_platform değeri (sshpocket yazar); kimlik kümesi roles/hardening_preflight hardening_platforms_known ile AYNI olmalı (check-consistency).
+# defaults: seçimle birlikte yazılacak EK değişkenler (warn_if taşıyan değişken olamaz). auto_detect: platform_detect önerisi bu platformu seçebilir mi (false = yalnızca ipucu).
+# apply_vars: yalnızca değişiklik yapan eylemde, type-server-name onayından SONRA o koşuya -e ile geçer; vars dosyasına yazılmaz, dosyada yazılıysa ezilmez (kuralı sshpocket uygular);
+#   yalnızca bu platforma ait (platforms: etiketli) warn_if bool değişkenler; apply_vars doluysa apply_warnings zorunlu (onaydan ÖNCE gösterilir).
+platform_choices:
+  - id: generic
+    label: "Ubuntu / Debian"
+    description: "Genel sunucu (Ubuntu 26.04, Debian 13). Varsayılan."
+    defaults: {}
+    auto_detect: true
+  - id: proxmox-host
+    label: "Proxmox VE hostu"
+    description: "Hipervizör: ufw ve bazı kernel/dosya kuralları uygulanmaz. Yalnızca TEK düğüm desteklenir; çok düğümlü küme doğrulanmadı / desteklenmiyor. Gerçek değişiklik apply onayıyla açılır."
+    defaults: {}
+    auto_detect: true
+    apply_vars: { hardening_pve_apply: true }
+    apply_warnings:
+      - "Proxmox VE hostunu GERÇEKTEN değiştirir; yanlış ayar hipervizörü ve VM'leri etkileyebilir. Önce snapshot alın, önizlemeye bakın."
+      - "Bu koşuya özel hardening_pve_apply=true geçirilir (vars dosyanıza yazılmaz). Dosyada elle yazdığınız değer ezilmez."
+      - "Yalnızca tek düğümlü Proxmox desteklenir; çok düğümlü küme doğrulanmadı."
+  - id: raspberry-pi
+    label: "Raspberry Pi"
+    description: "usb-storage engeli gevşetilir (USB'den açılan Pi için). Pi donanımında DENENMEDİ (yalnızca arm64 Debian konteynerinde). hardening_rpi_strict sunucu eklerken sorulmaz."
+    defaults: {}
+    auto_detect: false
+# Sunucu eklerken SORULACAK değişkenler (platformdan bağımsız tek liste; warn_if taşıyan değişken olamaz).
+onboarding_vars: [hardening_ssh_allow_from]
+
 profiles:                 # status: supported | planned
   - { id: ubuntu-26.04, status: supported }
   - { id: debian-13, status: supported }
@@ -46,6 +75,7 @@ actions:
       findings: "bulgular.tsv"         # düz dosya adı; summary.json'ın yanında (<host>/<tarih>/) aranır. Şema: docs/bulgular-sema.md
   preview:
     cmd: "ansible-playbook playbooks/harden.yml --check --diff"
+    requires_vars: [hardening_ssh_allow_from]   # sshpocket kapısı: değişken .vars'ta boş/yoksa eylem ssh'a gitmeden reddedilir (preflight access.yml zaten durdurur); audit/rollback_*/kaldir_* etkilenmez
     effects: []
     requires_sudo: true
     confirm: none
@@ -57,6 +87,7 @@ actions:
       - "Erişim kaybı korumaları (hardening_ssh_allow_from, kaynak IP, root kontrolü) önizlemede de çalışır ve durdurabilir."
   apply:
     cmd: "ansible-playbook playbooks/harden.yml"
+    requires_vars: [hardening_ssh_allow_from]   # sshpocket kapısı: değişken .vars'ta boş/yoksa eylem ssh'a gitmeden reddedilir (preflight access.yml zaten durdurur); audit/rollback_*/kaldir_* etkilenmez
     effects: [installs-package, changes-config]
     requires_sudo: true
     requires: [preview]                # sshpocket önce preview çalıştırıp göstermeli
@@ -72,6 +103,7 @@ actions:
   pve_firewall_preview:
     platforms: [proxmox-host]          # Ubuntu/Debian/Pi menüsünde görünmez
     cmd: "ansible-playbook playbooks/pve-firewall-onizleme.yml --check"
+    requires_vars: [hardening_ssh_allow_from]   # sshpocket kapısı: değişken .vars'ta boş/yoksa eylem ssh'a gitmeden reddedilir (preflight access.yml zaten durdurur); audit/rollback_*/kaldir_* etkilenmez
     effects: []
     requires_sudo: true
     confirm: none
@@ -82,6 +114,7 @@ actions:
   pve_firewall_apply:
     platforms: [proxmox-host]          # Ubuntu/Debian/Pi menüsünde görünmez
     cmd: "ansible-playbook playbooks/pve-firewall-uygula.yml"
+    requires_vars: [hardening_ssh_allow_from]   # sshpocket kapısı: değişken .vars'ta boş/yoksa eylem ssh'a gitmeden reddedilir (preflight access.yml zaten durdurur); audit/rollback_*/kaldir_* etkilenmez
     effects: [changes-config]
     requires_sudo: true
     requires: [pve_firewall_preview]   # sshpocket önce önizlemeyi çalıştırıp göstermeli
