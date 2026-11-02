@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Değişti
+- **preflight: Proxmox + `generic` hata iletisine ipucu** (yalnızca metin, davranış aynı): sunucu Proxmox VE hostuysa ve platform `generic` ise ileti artık `hardening_platform=proxmox-host` değişkenini nereye kalıcı yazacağını da söyler (sshpocket: `servers/<ad>/linux-hardening.vars`; elle: `-e` ya da `group_vars`). Yalnızca birim/Ansible testiyle denendi (`test/test_proxmox_guard.py`); gerçek sunucuda denenmedi.
+
 ## [0.11.0] - 2026-11-01
 
 fail2ban sadeleştirmesi (sshpocket fiziksel Proxmox turu bulgusu): `ignoreip` artık hangi adresten çalıştırıldığına bağlı değil. Gerçek VM'de (Ubuntu + Proxmox) henüz doğrulanmadı.
