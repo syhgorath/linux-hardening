@@ -1,6 +1,6 @@
 # Tasarım: sunucu eklerken platform seçimi
 
-> **Durum: ÖNERİ (kod yok).** sshpocket koordinatörüyle kullanıcının ilkeleri temel alındı; denenmedi.
+> **Durum: ÖNERİ (kod yok); `apply_vars` kullanıcı tarafından onaylandı, `requires_vars` onay bekliyor.** sshpocket koordinatörüyle kullanıcının ilkeleri temel alındı; denenmedi.
 > Bu not `component.yml`'i, rolleri ya da testleri DEĞİŞTİRMEZ. Karar ve uygulama ayrı PR'larla gelir; test planı §9, açık sorular §10.
 
 ## 1. Sorun
@@ -126,12 +126,12 @@ onboarding_vars: [hardening_ssh_allow_from]   # sunucu eklerken SORULUR (platfor
 6. **Raspberry Pi:** `hardening_rpi_strict` sunucu eklerken ASLA sorulmaz, varsayılan kapalı kalır (`onboarding_vars`/`defaults`'ta bulunamaz). `apply_warnings` Pi için kısa ve açık: "USB'den açılan ya da USB depolama kullanan Pi'de usb-storage engeli sistem diskine erişimi keser; `raspberry-pi` platformunda bu engel gevşetilir." Pi donanımında DENENMEDİ (arm64 Debian konteynerinde denendi, `verification-log.md` madde 44); bu `description`'a da yazılır.
 
 **Hâlâ açık:**
-- **`apply_vars`/`apply_warnings`: sshpocket KOŞULLU KABUL etti, son karar KULLANICIDA, onay bekliyor** (kullanıcı cevapları bu maddeye değinmedi). Koşullar (sshpocket notu §5):
+- **`apply_vars`/`apply_warnings`: KULLANICI ONAYLADI (2026-11-02, koordinatör aracılığıyla); sshpocket koşullu kabul etti. Uygulama bu PR'da YOK, ayrı iş olarak kalır.** Kural: Proxmox'ta `apply`, sunucu adı onayından sonra `hardening_pve_apply`'ı kendisi geçirir; "dosyada varsa ezme" ilkesi geçerli (kuralı sshpocket uygular). Koşullar (sshpocket notu §5):
   a) `apply_vars` doluysa `apply_warnings` zorunlu; metin `type-server-name` sorusundan ÖNCE gösterilir.
   b) Vars dosyasına yazılmaz, yalnızca o koşuya `-e` ile geçer; dosyada varsa ezilmez; günlük başlığında "bu koşuya özel: hardening_pve_apply=true" satırı.
   c) Yalnızca değişiklik yapan eylemlerde (preview/audit değil) ve platform açıkça seçilmişse (`platform_var` dosyada yazılı; auto/belirsiz değil).
   d) Yalnızca tanımlı bool/enum değişkenler; `hardening_ufw_prune_ssh` gibi silici bulunamaz.
-  Paket tarafı karşılığı: tutarlılık denetimi `apply_vars` doluysa `apply_warnings`'in boş olmamasını ve yalnızca `warn_if` bool değişkenleri içermesini zorunlu kılar; `hardening_ufw_prune_ssh` reddedilir. Onaylanmazsa `hardening_pve_apply` elle kalır, hiçbir şey kaybolmaz.
+  Paket tarafı karşılığı: tutarlılık denetimi `apply_vars` doluysa `apply_warnings`'in boş olmamasını ve yalnızca `warn_if` bool değişkenleri içermesini zorunlu kılar; `hardening_ufw_prune_ssh` reddedilir. Elle yazılmış `hardening_pve_apply` yine geçerlidir; hiçbir şey kaybolmaz.
 - **Eylem düzeyi `requires_vars` (sshpocket önerisi, paket tarafı kabul etti, kullanıcı henüz görmedi):** `actions.<ad>.requires_vars: [hardening_ssh_allow_from]`, isteğe bağlı yeni alan. sshpocket, değişken vars dosyasında boş/yoksa o eylemi ssh'a gitmeden reddeder; `sshpocket_api` artmaz, eski sshpocket alanı yok sayar (preflight `access.yml` yine durdurur: kemer + pantolon). Paketteki yeri: `preview`, `apply`, `pve_firewall_preview`, `pve_firewall_apply` (hepsi allow_from'a göre kural yazar/gösterir). `audit`, `rollback_*`, `kaldir_*` etkilenmez. `required: true` kullanılmaz: gizli değişkeni de zorunlu tutar ve sshpocket'in kapısı (effects'i boş olmayan her eylem + başka eylemin `requires` ön koşulu) 0.11.0 manifestinde 10 eylemi kapatır (`audit`, `preview`, `apply`, `pve_firewall_*`, `rollback_disarm`, `rollback_now`, `kaldir_onizle`, `kaldir`, `kaldir_geri_yukle`); yalnız `rollback_status` çalışır. `requires_vars` yalnız seçilen 4 eylemi kapatır. Sınır: ufw VE ssh alanı ikisi de kapalıyken `preview`/`apply` allow_from istemez, ama `requires_vars` yine de ister; bu bilinçli sıkılık (sunucu eklerken zaten zorunlu sorulur). `check-consistency.py` `requires_vars` adlarının `vars`'ta tanımlı olmasını denetler. Paket davranış değişikliği yeni sürüm gerektirir.
 - **`hardening_ssh_allow_from` önerisi:** sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Öneri hiçbir zaman sessizce yazılmaz.
 - **Küçük ayrı PR (kullanıcıya sorulacak, yazılmadı):** preflight "generic + Proxmox" hata iletisine "vars dosyasına `hardening_platform=proxmox-host` ekleyin" ipucu.
