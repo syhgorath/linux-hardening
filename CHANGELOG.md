@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **Manifestte platform seçimi ve allow_from kapısı** (`component.yml`/`component.json`, tüm alanlar isteğe bağlı; `sshpocket_api` 1 kalır, eski sshpocket bilinmeyen alanı yok sayar): `platform_choices` (generic / proxmox-host / raspberry-pi: id, label, description, defaults, auto_detect; Proxmox için `apply_vars: {hardening_pve_apply: true}` + `apply_warnings`), `onboarding_vars: [hardening_ssh_allow_from]` ve `preview`, `apply`, `pve_firewall_preview`, `pve_firewall_apply` eylemlerinde `requires_vars: [hardening_ssh_allow_from]` (değişken boşken yeni sshpocket bu eylemleri ssh'a gitmeden reddeder; `audit`, `rollback_*`, `kaldir_*` etkilenmez). `scripts/check-consistency.py`: `platform_choices` kimlikleri = `hardening_platforms_known`; `defaults`/`onboarding_vars` `warn_if` değişken taşıyamaz; `apply_vars` yalnızca o platforma ait `warn_if` bool değişken (silici/genel değişken verilemez) ve `apply_warnings` zorunlu; Pi `auto_detect` her zaman false. Rollerin ve playbookların davranışı değişmez; `platform_detect` eylemi ayrı iştir. Tasarım: `docs/design/platform-secimi.md`. Gerçek sunucuda ve gerçek sshpocket'te denenmedi (yalnızca tutarlılık denetimi ve mutasyon testleri; sshpocket doğrulayıcısı `component.json`'u okudu).
+
 ## [0.11.0] - 2026-11-01
 
 fail2ban sadeleştirmesi (sshpocket fiziksel Proxmox turu bulgusu): `ignoreip` artık hangi adresten çalıştırıldığına bağlı değil. Gerçek VM'de (Ubuntu + Proxmox) henüz doğrulanmadı.
