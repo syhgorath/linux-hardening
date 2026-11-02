@@ -55,7 +55,7 @@ Bugün `hardening_platform` bir **paket değişkenidir** ve varsayılanı `gener
 ## 6. Platformu kim algılar? ( `auto` neden yok )
 sshpocket değişken listesini `hardening_platform` değerine göre süzüyor; değer `auto` kalırsa süzemez. Bu yüzden değer sunucu eklenirken **bir kez somut olarak** yazılır.
 
-**Öneri: algılamayı paket raporlar.** Salt okunur yeni bir eylem (örnek ad `platform_detect`): preflight/erişim korumalarını ÇALIŞTIRMAZ (`rollback_*` gibi), `sudo` gerektirmez, tek bir sonuç satırı yazar:
+**Öneri: algılamayı (isteğe bağlı bir ÖNERİ olarak) paket raporlar; sunucu ekleme akışı ona bağlı değildir (§10-2).** Salt okunur yeni bir eylem (örnek ad `platform_detect`): preflight/erişim korumalarını ÇALIŞTIRMAZ (`rollback_*` gibi), `sudo` gerektirmez, tek bir sonuç satırı yazar:
 
 ```
 SSHPOCKET_RESULT linux-hardening.platform_detect platform=proxmox-host hint=none os=debian-13
@@ -116,16 +116,21 @@ onboarding_vars: [hardening_ssh_allow_from]   # sunucu eklerken SORULUR (platfor
 4. **Preflight ipucu:** Proxmox + `generic` iletisi vars dosyası ipucunu içerir (golden).
 5. **Gerçek VM:** Proxmox'ta `platform_detect` → `apply` (onay + `apply_vars`) bir kez; bugün hiçbir şey bu yolla denenmedi. `verification-log.md`'ye yazılır.
 
-## 10. Açık sorular
-1. ~~Doğrulayıcı bilinmeyen üst düzey alanı reddeder mi?~~ **Cevaplandı (sshpocket):** reddetmez, yok sayar; yalnızca `required_features`'taki bilinmeyen özellik ve daha yeni `sshpocket_api` reddedilir. Yeni alanlar isteğe bağlı eklenebilir, `sshpocket_api` yükselmez.
-2. ~~`platform_detect` sunucu eklenirken çalışabilir mi?~~ **Cevaplandı (sshpocket):** evet, ama normal yürütme yolundan geçer: kök kullanıcı reddi, host key `known_hosts`'ta olmalı, ajanda anahtar yüklü olmalı, profil kapısı. Bunlar eksikse eylem "çalıştırılmadı" döner ve tahmin sessizce atlanır (kullanıcı platformu kendi seçer; preflight yanlışı yakalar). Pakete düşen koşul: eylem `effects: []`, `requires_sudo: false`, `requires` yok, `confirm: none` olmalı ve **zorunlu değişkeni olmamalı** (vars dosyası henüz yok). Pakette zaten `required: true` değişken yok.
-3. **`-e` önceliği:** "yalnızca vars dosyasında yoksa geçir" kuralını sshpocket mi uygular, paket mi (örneğin `apply_vars` değerini bir `hardening_pve_apply_auto` gibi ara değişkene yazıp preflight'ın `default` ile birleştirmesi)? İkincisi pakette kalır ama yeni değişken demektir.
-4. **`onboarding_vars` önerisi:** `hardening_ssh_allow_from` önerisini sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Önerilen değer hiçbir zaman sessizce yazılmaz; bu notta yalnızca soruluyor.
-5. **Çok düğümlü Proxmox / ZFS / Ceph:** platform tek kimlik; küme reddi `pve-firewall` eyleminde zaten var, `harden.yml` için ayrı doğrulama gerekir mi? Denenmedi.
-6. **Pi için `apply_warnings`:** `usb-storage` gevşetmesi yeterli bir uyarı mı, `hardening_rpi_strict` soru olarak mı sorulmalı?
-7. **`apply_vars`/`apply_warnings`: sshpocket KOŞULLU KABUL etti, son karar KULLANICIDA** (gerçek koşu elle yazmadan onayla açılır; güvenlik anlamı değişir). Koşullar (sshpocket notu §5):
-   a) `apply_vars` doluysa `apply_warnings` zorunlu; metin `type-server-name` sorusundan ÖNCE gösterilir.
-   b) Vars dosyasına yazılmaz, yalnızca o koşuya `-e` ile geçer; dosyada varsa ezilmez; günlük başlığında "bu koşuya özel: hardening_pve_apply=true" satırı.
-   c) Yalnızca değişiklik yapan eylemlerde (preview/audit değil) ve platform açıkça seçilmişse (`platform_var` dosyada yazılı; auto/belirsiz değil).
-   d) Yalnızca tanımlı bool/enum değişkenler; `hardening_ufw_prune_ssh` gibi silici bulunamaz.
-   Paket tarafı karşılığı: tutarlılık denetimi `apply_vars` doluysa `apply_warnings`'in boş olmamasını ve yalnızca `warn_if` bool değişkenleri içermesini zorunlu kılar; `hardening_ufw_prune_ssh` reddedilir. Kullanıcı onaylamazsa `hardening_pve_apply` elle kalır, hiçbir şey kaybolmaz.
+## 10. Kararlar ve açık sorular
+**Kullanıcı cevapları (koordinatör aracılığıyla, 2026-11-02):**
+1. Bilinmeyen üst düzey alan: sshpocket doğrulayıcısı **yok sayar** (yalnızca bilinmeyen `required_features` ve daha yeni `sshpocket_api` reddedilir). Alan isteğe bağlı eklenir, `sshpocket_api: 1` kalır, eski sshpocket bozulmaz (yeni özelliği göstermez).
+2. **Platformu kullanıcıya doğrudan sor.** Algılama zorunlu değil: `platform_detect` varsa yalnızca ÖNERİ, yoksa düz soru. Ajan/sudo/host key gerektiren algılama sunucu ekleme akışının ön koşulu OLMAZ; kapılar eksikse tahmin atlanır (sshpocket cevabı: eylem "çalıştırılmadı" döner).
+3. "Yalnızca vars dosyasında yoksa geçir" kuralını kimin uygulayacağı: **AÇIK**, sshpocket oturumuna soruldu. İlke karar: kullanıcının yazdığı değer ezilmez. Öneri: sshpocket uygular (vars dosyasını o okuyor); paket tarafı ara değişken (`hardening_pve_apply_auto`) yalnızca sshpocket yapamazsa.
+4. **`hardening_ssh_allow_from` zorunlu; boşsa eylemler ÇALIŞMASIN.** Bugünkü durum: manifestte `required` DEĞİL (bilerek: ufw VE ssh alanı ikisi de kapalıyken liste gerekmez, `component.yml` yorumu). Zorlama paketin kendisinde var: `roles/hardening_preflight/tasks/access.yml` boş/tanımsız listede `harden.yml`'i hiçbir şey yazmadan durdurur (`preview` dahil, çünkü preflight `--check`'te de çalışır). `audit` ve `rollback_*`/`kaldir_*` bu kapıdan geçmez (salt okunur / kontrol kaybından sonra da çalışmalı). Öneri: sshpocket sunucu eklerken değeri zorunlu SORAR (`onboarding_vars`), boşsa sunucuyu kaydetmez ya da `apply`/`preview` eylemlerini devre dışı bırakır; `required: true` manifest işaretine **geçilmez**, çünkü `required` alan gizlendiğinde de zorunlu kalır ve `audit`'i de kilitlerdi (`audit` için liste gereksiz). Paket davranışı değişmez.
+5. **Çok düğümlü Proxmox: desteklenmiyor / doğrulanmadı.** Kullanıcıda küme yok, test edilemez. `pve_firewall_*` küme reddi zaten var; `harden.yml` için küme doğrulaması yazılmaz, uygulama vaadi verilmez. `platform_choices` açıklamasına "tek düğüm" yazılır.
+6. **Raspberry Pi:** `hardening_rpi_strict` sunucu eklerken ASLA sorulmaz, varsayılan kapalı kalır (`onboarding_vars`/`defaults`'ta bulunamaz). `apply_warnings` Pi için kısa ve açık: "USB'den açılan ya da USB depolama kullanan Pi'de usb-storage engeli sistem diskine erişimi keser; `raspberry-pi` platformunda bu engel gevşetilir." Pi donanımında DENENMEDİ (arm64 Debian konteynerinde denendi, `verification-log.md` madde 44); bu `description`'a da yazılır.
+
+**Hâlâ açık:**
+- **`apply_vars`/`apply_warnings`: sshpocket KOŞULLU KABUL etti, son karar KULLANICIDA, onay bekliyor** (kullanıcı cevapları bu maddeye değinmedi). Koşullar (sshpocket notu §5):
+  a) `apply_vars` doluysa `apply_warnings` zorunlu; metin `type-server-name` sorusundan ÖNCE gösterilir.
+  b) Vars dosyasına yazılmaz, yalnızca o koşuya `-e` ile geçer; dosyada varsa ezilmez; günlük başlığında "bu koşuya özel: hardening_pve_apply=true" satırı.
+  c) Yalnızca değişiklik yapan eylemlerde (preview/audit değil) ve platform açıkça seçilmişse (`platform_var` dosyada yazılı; auto/belirsiz değil).
+  d) Yalnızca tanımlı bool/enum değişkenler; `hardening_ufw_prune_ssh` gibi silici bulunamaz.
+  Paket tarafı karşılığı: tutarlılık denetimi `apply_vars` doluysa `apply_warnings`'in boş olmamasını ve yalnızca `warn_if` bool değişkenleri içermesini zorunlu kılar; `hardening_ufw_prune_ssh` reddedilir. Onaylanmazsa `hardening_pve_apply` elle kalır, hiçbir şey kaybolmaz.
+- **`hardening_ssh_allow_from` önerisi:** sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Öneri hiçbir zaman sessizce yazılmaz.
+- **Küçük ayrı PR (kullanıcıya sorulacak, yazılmadı):** preflight "generic + Proxmox" hata iletisine "vars dosyasına `hardening_platform=proxmox-host` ekleyin" ipucu.
