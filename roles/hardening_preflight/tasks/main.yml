@@ -27,6 +27,8 @@
       Bu sunucu bir Proxmox VE hostu ({{ hardening_proxmox_stat.results | selectattr('stat.exists') | map(attribute='item') | join(', ') }} var). `generic` platformla
       sertleştirilmez; hiçbir bayrak (hardening_allow_unsupported dahil) bu denetimi atlatmaz. Proxmox üstündeki sıradan Ubuntu VM'leri etkilenmez.
       Yalnızca önizleme için: --check -e hardening_platform=proxmox-host. docs/design/proxmox-host.md'ye bak.
+      Bu sunucuyu Proxmox olarak sertleştirmek istiyorsanız hardening_platform=proxmox-host değişkenini kalıcı yazın:
+      sshpocket'te sunucunun linux-hardening.vars dosyasına (servers/<ad>/linux-hardening.vars), elle çalıştırıyorsanız -e ile ya da group_vars'a.
   when: hardening_is_proxmox | bool and hardening_platform != 'proxmox-host'
 
 - name: Refuse the proxmox-host platform on a host that is not Proxmox VE
