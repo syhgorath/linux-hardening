@@ -123,4 +123,9 @@ onboarding_vars: [hardening_ssh_allow_from]   # sunucu eklerken SORULUR (platfor
 4. **`onboarding_vars` önerisi:** `hardening_ssh_allow_from` önerisini sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Önerilen değer hiçbir zaman sessizce yazılmaz; bu notta yalnızca soruluyor.
 5. **Çok düğümlü Proxmox / ZFS / Ceph:** platform tek kimlik; küme reddi `pve-firewall` eyleminde zaten var, `harden.yml` için ayrı doğrulama gerekir mi? Denenmedi.
 6. **Pi için `apply_warnings`:** `usb-storage` gevşetmesi yeterli bir uyarı mı, `hardening_rpi_strict` soru olarak mı sorulmalı?
-7. **`apply_vars`/`apply_warnings` sshpocket notunda yok:** sshpocket tarafı bu iki alanı (yalnızca `apply` onayından sonra, yalnızca vars dosyasında yoksa geçen değişkenler ve onay ekranı uyarıları) kabul ediyor mu, yoksa `hardening_pve_apply` elle kalsın mı?
+7. **`apply_vars`/`apply_warnings`: sshpocket KOŞULLU KABUL etti, son karar KULLANICIDA** (gerçek koşu elle yazmadan onayla açılır; güvenlik anlamı değişir). Koşullar (sshpocket notu §5):
+   a) `apply_vars` doluysa `apply_warnings` zorunlu; metin `type-server-name` sorusundan ÖNCE gösterilir.
+   b) Vars dosyasına yazılmaz, yalnızca o koşuya `-e` ile geçer; dosyada varsa ezilmez; günlük başlığında "bu koşuya özel: hardening_pve_apply=true" satırı.
+   c) Yalnızca değişiklik yapan eylemlerde (preview/audit değil) ve platform açıkça seçilmişse (`platform_var` dosyada yazılı; auto/belirsiz değil).
+   d) Yalnızca tanımlı bool/enum değişkenler; `hardening_ufw_prune_ssh` gibi silici bulunamaz.
+   Paket tarafı karşılığı: tutarlılık denetimi `apply_vars` doluysa `apply_warnings`'in boş olmamasını ve yalnızca `warn_if` bool değişkenleri içermesini zorunlu kılar; `hardening_ufw_prune_ssh` reddedilir. Kullanıcı onaylamazsa `hardening_pve_apply` elle kalır, hiçbir şey kaybolmaz.
