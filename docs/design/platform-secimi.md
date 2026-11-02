@@ -110,7 +110,7 @@ onboarding_vars: [hardening_ssh_allow_from]   # sunucu eklerken SORULUR (platfor
 - README/HOWTO'ya Proxmox için tek satırlık "platformu söyle" notu (GitHub'dan indirenler için).
 
 ## 9. Test planı (uygulama PR'larında; şimdi yazılmadı)
-1. **Katalog tutarlılığı:** katalog kimlikleri = `hardening_platforms_known` = `PLATFORMS`; `detect.markers_var` rol varsayılanlarında tanımlı; `ask` ve `apply_vars` adları `vars`'ta var; `apply_vars` yalnızca `warn_if` bool. Mutasyon: birine fazladan kimlik ekle → test kırılır.
+1. **Katalog tutarlılığı:** `platform_choices` kimlikleri = `hardening_platforms_known` = `PLATFORMS`; `onboarding_vars`, `defaults` ve `apply_vars` adları `vars`'ta var; `onboarding_vars`/`defaults` içinde `hardening_ssh_allow_from` dışında `warn_if` değişken yok; `apply_vars` yalnızca `warn_if` bool. Mutasyon: birine fazladan kimlik ekle → test kırılır.
 2. **`platform_detect`** (gerçek Ansible, sahte işaret dosyalarıyla, `test_rpi_platform.py` desenindeki gibi): Proxmox → `platform=proxmox-host`; Pi işaretli → `platform=generic hint=raspberry-pi` (asla `platform=raspberry-pi`); ikisi de yok → `generic`; tek satır, `SSHPOCKET_RESULT` öneki; `sudo` gerektirmez; `--check`'te de çalışır; preflight'ı çalıştırmaz.
 3. **Geriye uyum:** katalogsuz `component.json` ile tutarlılık denetimi geçer; `hardening_pve_apply=false` açık yazılmış vars `apply_vars` ile ezilmez (bu kural sshpocket testidir, pakette yalnızca belge).
 4. **Preflight ipucu:** Proxmox + `generic` iletisi vars dosyası ipucunu içerir (golden).
@@ -120,7 +120,7 @@ onboarding_vars: [hardening_ssh_allow_from]   # sunucu eklerken SORULUR (platfor
 1. **sshpocket:** doğrulayıcı bilinmeyen üst düzey manifest alanını reddediyor mu? Reddediyorsa `sshpocket_api` yükseltmesi gerekir.
 2. **Algılama sırası:** sunucu eklenirken inventory var ama vars dosyası yok; `platform_detect` o anda çalıştırılabilir mi (SSH anahtarı/ajan, sudo parolası)? Çalışamazsa alternatif: kullanıcı seçer, ilk `preview` yanlışı preflight'ta yakalar.
 3. **`-e` önceliği:** "yalnızca vars dosyasında yoksa geçir" kuralını sshpocket mi uygular, paket mi (örneğin `apply_vars` değerini bir `hardening_pve_apply_auto` gibi ara değişkene yazıp preflight'ın `default` ile birleştirmesi)? İkincisi pakette kalır ama yeni değişken demektir.
-4. **`ask` için öneri:** `hardening_ssh_allow_from` önerisini sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Önerilen değer hiçbir zaman sessizce yazılmaz; bu notta yalnızca soruluyor.
+4. **`onboarding_vars` önerisi:** `hardening_ssh_allow_from` önerisini sshpocket nereden üretir (kontrol makinesinin yerel ağları)? Önerilen değer hiçbir zaman sessizce yazılmaz; bu notta yalnızca soruluyor.
 5. **Çok düğümlü Proxmox / ZFS / Ceph:** platform tek kimlik; küme reddi `pve-firewall` eyleminde zaten var, `harden.yml` için ayrı doğrulama gerekir mi? Denenmedi.
 6. **Pi için `apply_warnings`:** `usb-storage` gevşetmesi yeterli bir uyarı mı, `hardening_rpi_strict` soru olarak mı sorulmalı?
 7. **`apply_vars`/`apply_warnings` sshpocket notunda yok:** sshpocket tarafı bu iki alanı (yalnızca `apply` onayından sonra, yalnızca vars dosyasında yoksa geçen değişkenler ve onay ekranı uyarıları) kabul ediyor mu, yoksa `hardening_pve_apply` elle kalsın mı?
