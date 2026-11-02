@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory() as t:
     check("generic + Proxmox isareti YOK: devam eder (relaxed=False, proxmox=False)", rc == 0 and "DEVAM-EDILDI relaxed=False proxmox=False platform=generic" in out)
     for allow in (False, True):
         rc, out = play("generic", [str(pve)], allow=allow)
-        check(f"generic + isaret VAR (allow_unsupported={allow}): DURUR, hangi isaret oldugunu soyler, --check onerisini verir", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out and str(pve) in out and "-e hardening_platform=proxmox-host" in out and "DEVAM-EDILDI" not in out)
+        check(f"generic + isaret VAR (allow_unsupported={allow}): DURUR, hangi isaret oldugunu soyler, --check onerisini verir", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out and str(pve) in out and "-e hardening_platform=proxmox-host" in out and "linux-hardening.vars" in out and "hardening_platform=proxmox-host değişkenini kalıcı yazın" in out and "DEVAM-EDILDI" not in out)
     rc, out = play("generic", [str(pve)], check_mode=True)
     check("generic + isaret VAR, --check'te de DURUR", rc != 0 and "Bu sunucu bir Proxmox VE hostu" in out)
     f = Path(t) / "pveversion"
