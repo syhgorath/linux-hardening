@@ -7,6 +7,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ### Düzeltildi
 - **Proxmox'ta `login.defs` `UMASK 027` artık yazılmıyor** (`hardening_platform=proxmox-host`, `hardening_pve_strict=false`): 027 ile sudo oturumunda açılan her yeni dizin 0750 oluyor ve ayrıcalıksız LXC oluşturma (`pct create --unprivileged 1`) `tar: /var/lib/lxc/<id>/rootfs: Cannot open: Permission denied` ile düşüyordu (sshpocket'in gerçek Proxmox VE 9 turunda görüldü; geçici çözüm `umask 022`). Parola yaşlanması ayarları Proxmox'ta yine yazılır; `hardening_pve_strict=true` UMASK'ı yazar; generic/Ubuntu/Debian değişmedi. Eski sürümle sertleştirilmiş hostta mevcut `UMASK 027` satırı GERİ ALINMAZ (el ile `UMASK 022`; `docs/known-issues.md`). Test gerçek `when` ifadesini loop'la değerlendirir (ifade gevşetilince düşer). Sertleşmiş Proxmox'ta `pct create` bu değişiklikle henüz denenmedi.
+- **Geri alma, ufw zaten aktifken canlı kuralları yüklemiyordu** (`hardening-rollback restore`): ufw dosyaları (`ufw.conf`, `user.rules`, `user6.rules`) geri yazılıyor, ardından `ufw --force enable` çağrılıyordu; ufw zaten aktifse `enable` kuralları yeniden yüklemediği için dosyalar doğru ama çekirdekteki (nft) kurallar bozuk kalıyordu (gerçek VM'de 22/tcp zaman aşımı, elle `ufw reload` ile açıldı). Artık ufw önceden aktifse `enable`'dan sonra `ufw --force reload` da çalışır; ufw önceden pasifse çağrılmaz. Betik testi sahte `ufw` ile her iki yolu doğrular (reload satırı silinince düşer). Gerçek sunucuda henüz yeniden doğrulanmadı.
 
 ## [0.12.0] - 2026-11-02
 
