@@ -103,6 +103,19 @@ echo "-- 3b) restore idempotent"
 expect_contains "  ikinci restore no-op" "$out" "armed degil"
 if log_lacks "ufw "; then ok "ikinci restore ufw cagirmadi"; else bad "ikinci restore ufw cagirdi"; fi
 
+echo "-- 3c) restore SONRASI disarm (zamanlayici apply bitmeden tetiklendi): sessiz gecmez, cikis 3; ikinci disarm sessiz"
+out=$(hr disarm); rc=$?
+expect_eq "disarm cikis 3 (apply basarili SAYMAMALI)" "3" "$rc"
+expect_contains "  hata mesaji zamanlayiciyi soyler" "$out" "HATA: geri alma zamanlayicisi"
+absent "  restore kaydi bir kez bildirilince silinir" "$R/var/lib/hardening-rollback/restored"
+out=$(hr disarm); rc=$?
+expect_eq "ikinci disarm cikis 0 (idempotent)" "0" "$rc"
+expect_contains "  ikinci disarm: yapilacak bir sey yok" "$out" "armed degil"
+hr arm >/dev/null 2>&1; hr restore >/dev/null 2>&1; hr arm >/dev/null 2>&1; out=$(hr disarm); rc=$?
+expect_eq "arm -> disarm normal akis cikis 0 (arm eski restore kaydini siler)" "0" "$rc"
+expect_contains "  disarmed" "$out" "disarmed"
+out=$(hr disarm); rc=$?
+expect_eq "  sonraki disarm eski restore kaydi yuzunden HATA vermez" "0" "$rc"
 echo "-- 4) drop-in YOKTU, ufw PASIFTI: restore siler/kapatir"
 setup   # ufw aktif degil, drop-in yok
 hr arm >/dev/null

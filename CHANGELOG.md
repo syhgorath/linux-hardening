@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **Zamanlayıcı apply bitmeden tetiklenirse `disarm` artık sessiz geçmiyor** (`hardening-rollback`): `hardening_rollback_timeout` apply'dan kısaysa zamanlayıcı apply ortasında tetikleniyor (PAM, sshd drop-in, ufw geri alınıyor), apply'ın `disarm` adımı ise "armed degil: yapilacak bir sey yok" deyip `ok=192 failed=0` raporluyor, sunucu sertleşmemiş kalıyordu (gerçek VM'de 3 kez, `hardening_rollback_timeout=60`). Artık `restore` bitince `/var/lib/hardening-rollback/restored` kaydı yazılır; armed değilken `disarm` bu kaydı görürse "HATA: geri alma zamanlayicisi disarm'dan ONCE tetiklenmis" yazıp **çıkış 3** verir (apply başarısız olur; kayıt bir kez bildirilir, sonraki `disarm` sessiz kalır; `arm` kaydı siler). Normal akış (arm → disarm) ve hiç arm edilmemiş `disarm` değişmedi. Betik testi her iki yönü doğrular (kayıt silme ve çıkış kodu mutasyonla düşer). Önlem hâlâ süreyi apply'a yetecek kadar uzun tutmak (varsayılan 300 sn). Gerçek sunucuda henüz yeniden doğrulanmadı.
+
 ## [0.12.0] - 2026-11-02
 
 sshpocket'te sunucu eklerken platform seçimi ve erişim kaybına karşı `hardening_ssh_allow_from` kapısı için manifest alanları (`platform_choices`, `onboarding_vars`, `requires_vars`, `apply_vars`) ve Proxmox + `generic` hata iletisine ipucu. Roller ve playbooklar değişmedi. **Gerçek sunucuda denenmedi**: yalnızca birim/Ansible testi ve tutarlılık denetimi. Alanları sshpocket tarafı 3.6.19 sonrası PR 150 ile okuyor; gerçek sshpocket akışı + gerçek sunucuda doğrulama bu sürümden sonra yapılacak.
