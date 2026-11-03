@@ -216,6 +216,8 @@ do_restore() {
     done
     if [ "$(cat "$STATE/ufw-active")" = "yes" ]; then
       "$UFW" --force enable >/dev/null 2>&1 || log "UYARI: ufw enable basarisiz"
+      # ufw zaten aktifse enable kurallari yeniden YUKLEMEZ: dosyalar eski ama cekirdekteki (nft) kurallar bozuk kalir; reload canli kurallari dosyadan yazar
+      "$UFW" --force reload >/dev/null 2>&1 || log "UYARI: ufw reload basarisiz"
       log "ufw onceki kurallarla aktif birakildi"
     else
       "$UFW" --force disable >/dev/null 2>&1 || log "UYARI: ufw disable basarisiz"

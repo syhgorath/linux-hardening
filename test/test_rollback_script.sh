@@ -95,6 +95,7 @@ file_eq "drop-in onceki icerige dondu" "$R/etc/ssh/sshd_config.d/00-hardening.co
 file_eq "user.rules geri yuklendi" "$R/etc/ufw/user.rules" "ORIGINAL-RULES4"
 file_eq "ufw.conf geri yuklendi" "$R/etc/ufw/ufw.conf" "ORIGINAL-UFWCONF"
 if log_has "ufw --force enable"; then ok "ufw eskiden aktifti: enable"; else bad "ufw enable cagrilmadi"; fi
+if log_has "ufw --force reload"; then ok "ufw aktifken canli kurallar reload ile yuklendi"; else bad "ufw reload cagrilmadi (nft kurallari eski kalir)"; fi
 if log_has "systemctl reload ssh"; then ok "sshd reload"; else bad "sshd reload yok"; fi
 if log_has "systemctl disable --now hardening-rollback.timer"; then ok "timer durduruldu"; else bad "timer durdurulmadi"; fi
 absent "armed silindi" "$R/var/lib/hardening-rollback/armed"
@@ -124,6 +125,7 @@ printf 'YENI\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
 absent "drop-in silindi (onceden yoktu)" "$R/etc/ssh/sshd_config.d/00-hardening.conf"
 if log_has "ufw --force disable"; then ok "ufw pasifti: disable"; else bad "ufw disable cagrilmadi"; fi
 if log_lacks "ufw --force enable"; then ok "ufw enable CAGRILMADI"; else bad "ufw enable cagrildi"; fi
+if log_lacks "ufw --force reload"; then ok "ufw pasifti: reload CAGRILMADI"; else bad "ufw pasifken reload cagrildi"; fi
 
 echo "-- 5) iki kez arm: ILK yedek korunur"
 setup; touch "$HR_UFW_ACTIVE"; printf 'BIRINCI\n' > "$R/etc/ssh/sshd_config.d/00-hardening.conf"
