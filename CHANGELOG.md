@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **Geri alma, ufw zaten aktifken canlı kuralları yüklemiyordu** (`hardening-rollback restore`): ufw dosyaları (`ufw.conf`, `user.rules`, `user6.rules`) geri yazılıyor, ardından `ufw --force enable` çağrılıyordu; ufw zaten aktifse `enable` kuralları yeniden yüklemediği için dosyalar doğru ama çekirdekteki (nft) kurallar bozuk kalıyordu (gerçek VM'de 22/tcp zaman aşımı, elle `ufw reload` ile açıldı). Artık ufw önceden aktifse `enable`'dan sonra `ufw --force reload` da çalışır; ufw önceden pasifse çağrılmaz. Betik testi sahte `ufw` ile her iki yolu doğrular (reload satırı silinince düşer). Gerçek sunucuda henüz yeniden doğrulanmadı.
+
 ## [0.12.0] - 2026-11-02
 
 sshpocket'te sunucu eklerken platform seçimi ve erişim kaybına karşı `hardening_ssh_allow_from` kapısı için manifest alanları (`platform_choices`, `onboarding_vars`, `requires_vars`, `apply_vars`) ve Proxmox + `generic` hata iletisine ipucu. Roller ve playbooklar değişmedi. **Gerçek sunucuda denenmedi**: yalnızca birim/Ansible testi ve tutarlılık denetimi. Alanları sshpocket tarafı 3.6.19 sonrası PR 150 ile okuyor; gerçek sshpocket akışı + gerçek sunucuda doğrulama bu sürümden sonra yapılacak.
