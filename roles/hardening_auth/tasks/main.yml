@@ -16,6 +16,8 @@
     - { key: UMASK, value: "{{ hardening_umask }}" }
     - { key: SHA_CRYPT_MIN_ROUNDS, value: "65536" }
     - { key: SHA_CRYPT_MAX_ROUNDS, value: "65536" }
+  # Proxmox'ta (gevşek) UMASK yazılmaz: 027 ile sudo oturumunda açılan her yeni dizin 0750 olur ve ayrıcalıksız LXC oluşturma (pct create --unprivileged 1) "tar: /var/lib/lxc/<id>/rootfs: Cannot open: Permission denied" ile düşer (gerçek Proxmox VE 9'da görüldü); hardening_pve_strict=true ile yazılır.
+  when: item.key != 'UMASK' or not (hardening_platform_relaxed | default(false) | bool)
 
 - name: Validate the pwquality options
   ansible.builtin.assert:

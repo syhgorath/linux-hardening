@@ -54,6 +54,28 @@ V = {"hardening_disable_usb_storage": True}
 check("usb-storage: tanimsiz/generic calisir; kapaliysa calismaz", runs(wu, V) and runs(wu, {**V, "hardening_platform_relaxed": False}) and not runs(wu, {"hardening_disable_usb_storage": False}))
 check("   proxmox-host (relaxed=True): CALISMAZ; strict (relaxed=False): calisir", not runs(wu, {**V, "hardening_platform_relaxed": True}) and runs(wu, {**V, "hardening_platform_relaxed": False}))
 
+auth = {t["name"]: t for t in load("roles/hardening_auth/tasks/main.yml") if t.get("name")}
+lg = auth["Set login.defs password aging and umask"]
+
+
+def login_defs_keys(vars_):
+    """Gercek gorevin loop+when'i: hangi login.defs anahtarlari yazilir (debug ile, dosyaya dokunmadan)."""
+    keys = [i["key"] for i in lg["loop"]]
+    with tempfile.TemporaryDirectory() as t:
+        pb = Path(t) / "p.yml"
+        pb.write_text(yaml.safe_dump([{"hosts": "localhost", "connection": "local", "gather_facts": False, "vars": vars_,
+                                       "tasks": [{"ansible.builtin.debug": {"msg": "YAZILDI={{ item }}"}, "loop": keys, "when": lg["when"].replace("item.key", "item")}]}]), encoding="utf-8")
+        r = subprocess.run(["ansible-playbook", "-i", str(ROOT / "test/inventory-local.yml"), str(pb)], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                           env={**os.environ, "ANSIBLE_CONFIG": str(ROOT / "test/ansible-test.cfg")})
+    if r.returncode != 0:
+        raise RuntimeError(r.stdout + r.stderr)
+    return {k for k in keys if f"YAZILDI={k}" in r.stdout}
+
+
+check("UMASK: tanimsiz/generic platformda yazilir", "UMASK" in login_defs_keys({}) and "UMASK" in login_defs_keys({"hardening_platform_relaxed": False}))
+check("   proxmox-host (relaxed=True): UMASK YAZILMAZ (ayricaliksiz LXC olusturma 0750 dizinle duser); strict (relaxed=False): yazilir", "UMASK" not in login_defs_keys({"hardening_platform_relaxed": True}))
+check("   Proxmox'ta parola yaslanmasi anahtarlari yine yazilir", {"PASS_MAX_DAYS", "PASS_MIN_DAYS", "PASS_WARN_AGE"} <= login_defs_keys({"hardening_platform_relaxed": True}))
+
 files = {t["name"]: t for t in load("roles/hardening_files/tasks/main.yml") if t.get("name")}
 wn = files["Harden the /tmp and /dev/shm mount options"]["when"]
 N = {"hardening_tmp_noexec": True, "hardening_shm_noexec": True}

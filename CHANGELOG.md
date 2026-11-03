@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Düzeltildi
+- **Proxmox'ta `login.defs` `UMASK 027` artık yazılmıyor** (`hardening_platform=proxmox-host`, `hardening_pve_strict=false`): 027 ile sudo oturumunda açılan her yeni dizin 0750 oluyor ve ayrıcalıksız LXC oluşturma (`pct create --unprivileged 1`) `tar: /var/lib/lxc/<id>/rootfs: Cannot open: Permission denied` ile düşüyordu (sshpocket'in gerçek Proxmox VE 9 turunda görüldü; geçici çözüm `umask 022`). Parola yaşlanması ayarları Proxmox'ta yine yazılır; `hardening_pve_strict=true` UMASK'ı yazar; generic/Ubuntu/Debian değişmedi. Eski sürümle sertleştirilmiş hostta mevcut `UMASK 027` satırı GERİ ALINMAZ (el ile `UMASK 022`; `docs/known-issues.md`). Test gerçek `when` ifadesini loop'la değerlendirir (ifade gevşetilince düşer). Sertleşmiş Proxmox'ta `pct create` bu değişiklikle henüz denenmedi.
+
 ## [0.12.0] - 2026-11-02
 
 sshpocket'te sunucu eklerken platform seçimi ve erişim kaybına karşı `hardening_ssh_allow_from` kapısı için manifest alanları (`platform_choices`, `onboarding_vars`, `requires_vars`, `apply_vars`) ve Proxmox + `generic` hata iletisine ipucu. Roller ve playbooklar değişmedi. **Gerçek sunucuda denenmedi**: yalnızca birim/Ansible testi ve tutarlılık denetimi. Alanları sshpocket tarafı 3.6.19 sonrası PR 150 ile okuyor; gerçek sshpocket akışı + gerçek sunucuda doğrulama bu sürümden sonra yapılacak.
