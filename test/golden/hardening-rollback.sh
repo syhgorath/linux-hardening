@@ -15,6 +15,7 @@ set -eu
 ROOT="${HR_ROOT:-}"
 STATE="$ROOT/var/lib/hardening-rollback"
 ARMED="$STATE/armed"
+RESTORED="$STATE/restored"   # restore tamamlaninca yazilir (epoch): armed degilken disarm "zamanlayici onceden tetiklendi"yi sessiz gecmesin
 DROPIN="$ROOT/etc/ssh/sshd_config.d/00-hardening.conf"
 UFWDIR="$ROOT/etc/ufw"
 UFW="${HR_UFW:-ufw}"
@@ -153,6 +154,7 @@ pam_restore() {
 do_arm() {
   mkdir -p "$STATE"
   chmod 0700 "$STATE"
+  rm -f "$RESTORED"
   if [ -e "$ARMED" ]; then
     log "zaten armed: ilk yedek korunuyor, geri sayim yenileniyor"
   else
@@ -177,6 +179,11 @@ do_disarm() {
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
   if [ "$was_armed" = 1 ]; then
     log "disarmed"
+  elif [ -e "$RESTORED" ]; then
+    # zamanlayici apply bitmeden tetiklendi: ufw/ssh/PAM geri alindi, apply sertlesmemis sunucuyu "basarili" saymamali. Kayit bir kez bildirilir (tekrar disarm sessiz)
+    rm -f "$RESTORED"
+    log "HATA: geri alma zamanlayicisi disarm'dan ONCE tetiklenmis (hardening_rollback_timeout cok kisa olabilir); degisiklikler geri alindi, sunucu sertlestirilmemis olabilir"
+    return 3
   else
     log "armed degil: yapilacak bir sey yok"
   fi
@@ -222,6 +229,7 @@ do_restore() {
   pam_clear_backup
   pve_clear_backup
   "$SYSTEMCTL" disable --now "$TIMER" >/dev/null 2>&1 || true
+  echo "${HR_NOW:-$(date +%s)}" > "$RESTORED"
   log "geri alma tamamlandi"
 }
 
