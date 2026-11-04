@@ -6,6 +6,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
+- **Ek seçenekler aday listesi güncellendi** (`docs/design/ek-secenekler/`, yalnızca tasarım): GRUB parolası bulgusu (Ubuntu 26.04 `10_linux` betiğinde `--unrestricted` desteği yok; superusers açılışı da parolaya bağlar, bu yüzden güvenli bir pasif uygulama bulunamadı), yeni adaylar (Ctrl+Alt+Del maskesi, auditd dışlama, auditd durum raporu, kayma özeti) ve bir dış kaynak incelemesinin fikir notları.
+
+### Eklendi
 - **systemd servis sandbox özeti** (`hardening_report`, `hardening_systemd_security_report`, varsayılan açık, SALT OKUNUR): `systemd-analyze security` tablosundan birim sayıları (OK/MEDIUM/EXPOSED/UNSAFE) ve bu paketin yönettiği servislerin (`hardening_systemd_security_units`: ssh, fail2ban, auditd, cron, chrony, ufw) maruziyet puanı rapora NOT olarak eklenir. Uyarı üretmez, hiçbir servis ayarı değiştirilmez: dağıtım servislerinin çoğu varsayılan olarak sandbox'sızdır (Ubuntu 26.04 test VM'inde 50 birimin 36'sı UNSAFE). Görev ve karar betiği gerçek VM'de `--check` ile uçtan uca denendi; servis sandbox'ını UYGULAMAK (drop-in) bu sürümde YOK ve servis başına denenmeden eklenmeyecek.
 - **Ek seçenekler aday listeleri** (`docs/design/ek-secenekler/`): Ubuntu, Proxmox VE, Debian ve Raspberry Pi için ayrı belgeler. Yalnızca TASARIM: hiçbir kod eklenmedi, hiçbir davranış değişmedi. Amaç, her ayarın kullanıcı tarafından açılıp kapatılabilmesi ve değiştirilebilmesi (sabit değerleri değişkene çevirme, yeni pasif seçenekler, salt okunur raporlar, tarama aracı eşlemesi). Her madde işaretlenip ayrı PR'larla eklenecek; denenmeyenler "DENENMEDİ" yazılacak.
 
