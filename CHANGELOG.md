@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Eklendi
+- **Ek seçenekler aday listeleri** (`docs/design/ek-secenekler/`): Ubuntu, Proxmox VE, Debian ve Raspberry Pi için ayrı belgeler. Yalnızca TASARIM: hiçbir kod eklenmedi, hiçbir davranış değişmedi. Amaç, her ayarın kullanıcı tarafından açılıp kapatılabilmesi ve değiştirilebilmesi (sabit değerleri değişkene çevirme, yeni pasif seçenekler, salt okunur raporlar, tarama aracı eşlemesi). Her madde işaretlenip ayrı PR'larla eklenecek; denenmeyenler "DENENMEDİ" yazılacak.
+
 ## [0.12.1] - 2026-11-04
 
 sshpocket'in gerçek VM turunda (Ubuntu 26.04 ve Proxmox VE 9, 0.12.0) bulunan üç hatanın düzeltmesi: geri alma ufw kurallarını yüklemiyordu, geri alma apply sırasında tetiklenince apply başarılı sayılıyordu, Proxmox'ta UMASK 027 ayrıcalıksız LXC oluşturmayı bozuyordu. Düzeltmeler birim/betik testleriyle (mutasyonla doğrulanmış) denendi; **gerçek sunucuda henüz yeniden doğrulanmadı.**
