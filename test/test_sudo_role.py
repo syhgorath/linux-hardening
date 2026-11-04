@@ -33,7 +33,7 @@ wrapper = tasks[0]
 inner = wrapper["block"]
 mod = lambda t: next(k for k in t if k.startswith("ansible.builtin."))
 
-check("varsayilan: rol acik, logfile /var/log/sudo.log", {k: v for k, v in defaults.items() if k.startswith("hardening_sudo_")} == {"hardening_sudo_enabled": True, "hardening_sudo_logfile": "/var/log/sudo.log"}, f"defaults={defaults}")
+check("varsayilan: rol acik, logfile /var/log/sudo.log", {k: v for k, v in defaults.items() if k.startswith("hardening_sudo_")} == {"hardening_sudo_enabled": True, "hardening_sudo_logfile": "/var/log/sudo.log", "hardening_sudo_use_pty": True, "hardening_sudo_timestamp_timeout": 15}, f"defaults={defaults}")
 check("tum gorevler hardening_sudo_enabled ile kapatilabilir", "hardening_sudo_enabled" in str(wrapper.get("when")))
 
 cp = next(t for t in inner if "ansible.builtin.copy" in t)["ansible.builtin.copy"]
@@ -47,12 +47,12 @@ check("visudo -cf ile DOGRULANIR (validate)", "visudo -cf %s" in str(cp.get("val
 check("/etc/sudoers dosyasina lineinfile/blockinfile/replace ile dokunulmaz", not re.search(r"(lineinfile|blockinfile|replace):[\s\S]{0,80}/etc/sudoers\b(?!\.d)", raw))
 
 content = cp["content"]
-for needle, why in (("Defaults use_pty", "CIS 5.2.2"), ("Defaults timestamp_timeout=15", "CIS 5.2.6 (en cok 15)")):
+for needle, why in (("Defaults use_pty", "CIS 5.2.2"), ("Defaults timestamp_timeout={{ hardening_sudo_timestamp_timeout }}", "CIS 5.2.6, deger degisken; varsayilan 15 asagida")):
     check(f"icerik: {needle} ({why})", needle in content)
+check("icerik: use_pty yalniz hardening_sudo_use_pty acikken", re.search(r"\{% if hardening_sudo_use_pty %\}\s*Defaults use_pty\s*\{% endif %\}", content) is not None)
 check("icerik: logfile yalniz klasik sudo'da (if not hardening_sudo_is_rs)", re.search(r"\{% if not hardening_sudo_is_rs %\}\s*Defaults logfile=.*\s*\{% endif %\}", content) is not None)
 check("icerikte 'NOPASSWD'/'!authenticate' YOK (parolasiz sudo acilmaz)", "NOPASSWD" not in content and "!authenticate" not in content)
-m = re.search(r"timestamp_timeout=(-?\d+)", content)
-check("timestamp_timeout 0..15 araliginda (negatif = hic sormaz, 15'ten buyuk CIS'e aykiri)", bool(m) and 0 <= int(m.group(1)) <= 15)
+check("timestamp_timeout VARSAYILANI 0..15 araliginda (negatif = hic sormaz, 15'ten buyuk CIS'e aykiri)", 0 <= defaults["hardening_sudo_timestamp_timeout"] <= 15)
 
 names = [t.get("name") for t in inner]
 probe = next(t for t in inner if "ansible.builtin.command" in t and "id -u" in str(t["ansible.builtin.command"]))

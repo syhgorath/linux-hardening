@@ -23,3 +23,16 @@ hardening_ssh_allow_groups: []
 # sshd MaxSessions (CIS: en çok 10). Varsayılan 4: Ansible oturum çoklaması (ControlMaster) bir bağlantıda birden çok oturum açar. Lynis SSH-7408 2 ister; 2'de çoklama
 # "channel open failed: administratively prohibited" ile kırılabilir. sshpocket'te denenmeden düşürmeyin.
 hardening_ssh_max_sessions: 4
+# Aşağıdakiler eskiden şablonda SABİTTİ; varsayılanlar eski değerlerle AYNIDIR (hiçbir sunucuda davranış değişmez). Değerler yazılmadan önce doğrulanır, sshd -t geçmeyen dosya yazılmaz.
+# MaxAuthTries (1-10; CIS en çok 4), LoginGraceTime saniye (1-600; 0 = sınırsız, kabul edilmez), LogLevel (QUIET|FATAL|ERROR|INFO|VERBOSE; DEBUG* yok: hassas bilgi yazar),
+# MaxStartups ("başla" ya da "başla:oran:tam", örn. 10:30:60), ClientAliveInterval saniye (0-3600; 0 = canlılık denetimi KAPALI, boşta bağlantılar düşmez) ve ClientAliveCountMax (0-10).
+# Dikkat: ClientAlive değerlerini büyütmek ya da 0 yapmak CIS 5.1 boşta oturum kapatma isteğini zayıflatır; küçültmek sshpocket oturumlarını erken koparabilir.
+hardening_ssh_max_auth_tries: 3
+hardening_ssh_login_grace_time: 60
+hardening_ssh_log_level: VERBOSE
+hardening_ssh_max_startups: "10:30:60"
+hardening_ssh_client_alive_interval: 300
+hardening_ssh_client_alive_count_max: 2
+# X11Forwarding ve AllowAgentForwarding: false (varsayılan) = "no". true = "yes" (sertleştirmeyi zayıflatır).
+hardening_ssh_x11_forwarding: false
+hardening_ssh_agent_forwarding: false
