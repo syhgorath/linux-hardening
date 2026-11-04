@@ -3,6 +3,7 @@
 
 Girdi (argv[1], JSON): ipv6 ({disable_all: "0"|"1"|"", global_addrs: int}), listeners (liste: "tcp 0.0.0.0:22" = `ss -H -lntu` netid + yerel adres:port), approved (liste: "22/tcp", "123/udp";
 boşsa yalnızca bilgi notu), dotdirs (liste: "750 kullanici /home/kullanici/.ssh" = `stat -c '%a %U %n'`), nullok ({lines: ["/etc/pam.d/common-auth:25:..."], empty_accounts: ["ad"]}).
+systemd_security ({rows: ["ssh.service 9.6 UNSAFE", ...] = `systemd-analyze security` tablosunun birim/maruziyet/etiket sütunları, units: yönetilen birimler}): servis sandbox özeti, yalnızca NOT.
 Çıktı (stdout, JSON): status (ok|warn), warnings, notes. Python 3.9+ (yalnızca stdlib)."""
 import json
 import re
@@ -19,6 +20,32 @@ def split_addr(entry):
         return entry, ""
     addr, port = entry.rsplit(":", 1)
     return addr.strip("[]"), port
+
+
+def systemd_security_notes(ss):
+    """`systemd-analyze security` özeti. Yalnızca NOT: dağıtım servislerinin çoğu varsayılan olarak sandbox'sızdır (UNSAFE olağan), bu yüzden uyarı üretilmez ve hiçbir servis ayarı değiştirilmez."""
+    rows = {}
+    for raw in ss.get("rows") or []:
+        parts = str(raw).split()
+        if len(parts) < 3:
+            continue
+        try:
+            float(parts[1])
+        except ValueError:
+            continue
+        rows[parts[0]] = (parts[1], parts[2])
+    if not rows:
+        return ["systemd servis sandbox puanları okunamadı (systemd-analyze security yok ya da çıktı vermedi)."]
+    counts = {}
+    for _, label in rows.values():
+        counts[label] = counts.get(label, 0) + 1
+    summary = ", ".join("%d %s" % (counts[k], k) for k in ("OK", "MEDIUM", "EXPOSED", "UNSAFE") if k in counts)
+    managed = [u for u in ss.get("units") or [] if u in rows]
+    text = "systemd servis sandbox özeti (systemd-analyze security): %d birim: %s." % (len(rows), summary)
+    if managed:
+        text += " Bu paketin yönettiği servisler: %s." % ", ".join("%s %s %s" % (u, rows[u][0], rows[u][1]) for u in managed)
+    text += " Dağıtım servislerinin çoğu varsayılan olarak sandbox'sızdır (UNSAFE olağan); bu paket servis ayarı DEĞİŞTİRMEZ, yalnızca bilgi."
+    return [text]
 
 
 def decide(cfg):
@@ -100,6 +127,10 @@ def decide(cfg):
     missing = [m for m, sep in mounts.items() if str(sep).lower() not in ("yes", "true", "1")]
     if mounts and missing:
         note.append("Ayrı bölüm (mount noktası) yok: %s (CIS 1.1.2.x.1, Level 2). Bölümler kurulumda belirlenir; çalışan sunucuda sonradan eklenmez, bu paket de dokunmaz." % ", ".join(missing))
+
+    ss = cfg.get("systemd_security")
+    if isinstance(ss, dict) and ss:
+        note.extend(systemd_security_notes(ss))
 
     return {"status": "warn" if warn else "ok", "warnings": warn, "notes": note}
 

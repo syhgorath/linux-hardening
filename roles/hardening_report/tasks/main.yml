@@ -89,6 +89,20 @@
       failed_when: false
       check_mode: false
 
+    - name: Read the systemd service sandbox scores
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          command -v systemd-analyze >/dev/null 2>&1 || exit 0
+          systemd-analyze security --no-pager 2>/dev/null | awk 'NR != 1 && $2 ~ /^[0-9]+(\.[0-9]+)?$/ {print $1 " " $2 " " $3}'
+          true
+        executable: /bin/bash
+      register: hardening_report_sdsec
+      when: hardening_systemd_security_report | bool
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
     - name: Evaluate the system report
       ansible.builtin.script:
         cmd: "cis_report.py {{ hardening_report_input | to_json | quote }}"
@@ -109,6 +123,7 @@
           nopasswd: "{{ hardening_report_sudomount.stdout_lines | select('match', '^NOPASSWD:') | map('regex_replace', '^NOPASSWD:', '') | list }}"
           shells_nologin: "{{ 'SHELLS_NOLOGIN' in hardening_report_sudomount.stdout_lines }}"
           mounts: "{{ dict(hardening_report_sudomount.stdout_lines | select('match', '^MOUNT:') | map('regex_replace', '^MOUNT:', '') | map('split', ':') | list) }}"
+          systemd_security: "{{ {'rows': hardening_report_sdsec.stdout_lines | default([]), 'units': hardening_systemd_security_units} if (hardening_systemd_security_report | bool) else {} }}"
           nullok:
             lines: "{{ hardening_report_nullok.stdout_lines | select('match', '^NULLOK:') | map('regex_replace', '^NULLOK:', '') | list }}"
             empty_accounts: "{{ hardening_report_nullok.stdout_lines | select('match', '^EMPTY:') | map('regex_replace', '^EMPTY:', '') | list }}"

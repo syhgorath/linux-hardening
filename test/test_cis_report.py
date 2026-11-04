@@ -87,5 +87,20 @@ o = run({"mounts": {"/home": "no", "/var": "yes", "/var/tmp": "no", "/var/log": 
 check("ayri bolum yok -> NOT, eksik olanlar listelenir, ayri olanlar listelenmez", "/home" in n(o) and "/var/tmp" in n(o) and "/var/log/audit" in n(o) and "/var, " not in n(o) and not o["warnings"], str(o))
 check("tum bolumler ayri -> not yok", "Ayrı bölüm" not in n(run({"mounts": {"/home": "yes", "/var": "yes"}})))
 
+# systemd servis sandbox ozeti (gercek VM'de `systemd-analyze security` ciktisindan; SALT OKUNUR, yalniz NOT)
+ROWS = ["ssh.service 9.6 UNSAFE", "chrony.service 3.7 OK", "fail2ban.service 9.6 UNSAFE", "systemd-logind.service 2.8 OK", "uuidd.service 5.8 MEDIUM", "ModemManager.service 6.3 MEDIUM", "snapd.service 9.9 UNSAFE"]
+UNITS = ["ssh.service", "sshd.service", "fail2ban.service", "auditd.service", "chrony.service"]
+o = run({"systemd_security": {"rows": ROWS, "units": UNITS}})
+check("sandbox ozeti: toplam ve etiket sayilari", "7 birim" in n(o) and "2 OK, 2 MEDIUM, 3 UNSAFE" in n(o), n(o))
+check("   yonetilen servisler puanlariyla, olmayanlar (sshd, auditd) atlanir", "ssh.service 9.6 UNSAFE" in n(o) and "chrony.service 3.7 OK" in n(o) and "fail2ban.service 9.6 UNSAFE" in n(o) and "sshd.service" not in n(o) and "auditd" not in n(o), n(o))
+check("   UNSAFE olagan: UYARI uretmez, durum ok", not o["warnings"] and o["status"] == "ok")
+check("   servis ayari degistirmedigini soyler", "DEĞİŞTİRMEZ" in n(o))
+check("   yonetilen birim listesi bos -> yalniz ozet", "yönettiği" not in n(run({"systemd_security": {"rows": ROWS, "units": []}})))
+o = run({"systemd_security": {"rows": ["", "UNIT EXPOSURE PREDICATE HAPPY", "x.service abc OK", "yarim 1.0"], "units": UNITS}})
+check("   bozuk/baslik satirlari yok sayilir -> okunamadi notu", "okunamadı" in n(o) and not o["warnings"], n(o))
+check("   satir yok -> okunamadi notu (systemd-analyze yok)", "okunamadı" in n(run({"systemd_security": {"rows": [], "units": UNITS}})))
+check("   rapor kapali ({} gelir) -> hic not yok", "sandbox" not in n(run({"systemd_security": {}})))
+check("   anahtar yoksa eski davranis: sandbox notu yok", "sandbox" not in n(run({})))
+
 print("TAMAM" if fails == 0 else f"BASARISIZ: {fails}")
 sys.exit(1 if fails else 0)
