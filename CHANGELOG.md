@@ -6,7 +6,7 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 ## [Yayımlanmamış]
 
 ### Eklendi
-- **systemd servis sandbox özeti** (`hardening_report`, `hardening_systemd_security_report`, varsayılan açık, SALT OKUNUR): `systemd-analyze security` tablosundan birim sayıları (OK/MEDIUM/EXPOSED/UNSAFE) ve bu paketin yönettiği servislerin (`hardening_systemd_security_units`: ssh, fail2ban, auditd, cron, chrony, ufw) maruziyet puanı rapora NOT olarak eklenir. Uyarı üretmez, hiçbir servis ayarı değiştirilmez: dağıtım servislerinin çoğu varsayılan olarak sandbox'sızdır (Ubuntu 26.04 test VM'inde 50 birimin 36'sı UNSAFE). Görev ve karar betiği gerçek VM'de `--check` ile uçtan uca denendi; servis sandbox'ını UYGULAMAK (drop-in) bu sürümde YOK ve servis başına denenmeden eklenmeyecek. `docs/design/ek-secenekler/` aday listeleri (yalnızca tasarım).
+- **systemd servis sandbox özeti** (`hardening_report`, `hardening_systemd_security_report`, varsayılan açık, SALT OKUNUR): `systemd-analyze security` tablosundan birim sayıları (OK/MEDIUM/EXPOSED/UNSAFE) ve bu paketin yönettiği servislerin (`hardening_systemd_security_units`: ssh, fail2ban, auditd, cron, chrony, ufw) maruziyet puanı rapora NOT olarak eklenir. Uyarı üretmez, hiçbir servis ayarı değiştirilmez: dağıtım servislerinin çoğu varsayılan olarak sandbox'sızdır (Ubuntu 26.04 test VM'inde 50 birimin 36'sı UNSAFE). Görev ve karar betiği gerçek VM'de `--check` ile uçtan uca denendi; servis sandbox'ını UYGULAMAK (drop-in) bu sürümde YOK ve servis başına denenmeden eklenmeyecek.
 
 ## [0.12.1] - 2026-11-04
 
