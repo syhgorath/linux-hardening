@@ -630,6 +630,28 @@
       "description": "Onaylı dinleyen portlar (\"22/tcp\", \"123/udp\"). Boş (varsayılan): rapor yalnızca yerel olmayan adreste dinleyen portları not eder. Dolu: listede olmayanlar UYARI olur (CIS 2.1.23); hiçbir servis kapatılmaz. Yalnızca hardening_report=true iken etkili"
     },
     {
+      "name": "hardening_systemd_security_report",
+      "group": "Denetim",
+      "type": "bool",
+      "default": true,
+      "description": "true (varsayılan): systemd servis sandbox özeti (systemd-analyze security) SALT OKUNUR rapora NOT olarak eklenir: kaç birim OK/MEDIUM/EXPOSED/UNSAFE ve bu paketin yönettiği servislerin puanı. Dağıtım servislerinin çoğu varsayılan olarak sandbox'sızdır (UNSAFE olağan), bu yüzden uyarı üretilmez; hiçbir servis ayarı değiştirilmez. false: bu not atlanır."
+    },
+    {
+      "name": "hardening_systemd_security_units",
+      "group": "Denetim",
+      "type": "list[string]",
+      "default": [
+        "ssh.service",
+        "sshd.service",
+        "fail2ban.service",
+        "auditd.service",
+        "cron.service",
+        "chrony.service",
+        "ufw.service"
+      ],
+      "description": "Sandbox özetinde puanı ayrıca gösterilecek servis birimleri (sistemde olmayanlar atlanır). Yalnızca rapor; hardening_systemd_security_report=true iken kullanılır."
+    },
+    {
       "name": "hardening_ssh_disable_password",
       "group": "SSH",
       "type": "bool",

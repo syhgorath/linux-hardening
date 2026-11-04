@@ -5,3 +5,14 @@ hardening_report: true
 hardening_approved_listeners: []
 # Yalnızca TEST için.
 hardening_report_shadow_path: /etc/shadow
+# true (varsayılan): `systemd-analyze security` servis sandbox özeti (SALT OKUNUR, yalnızca NOT; hiçbir servis ayarı değiştirilmez). Dağıtım servislerinin çoğu UNSAFE çıkar, bu olağandır.
+hardening_systemd_security_report: true
+# Özette ayrıca puanı gösterilecek birimler (yoksa atlanır).
+hardening_systemd_security_units:
+  - ssh.service
+  - sshd.service
+  - fail2ban.service
+  - auditd.service
+  - cron.service
+  - chrony.service
+  - ufw.service
