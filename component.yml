@@ -550,6 +550,19 @@ vars:
     type: path
     default: /var/log/sudo.log
     description: "sudo günlük dosyası (CIS 5.2.3). Ubuntu 26.04'te varsayılan sudo-rs dosya günlüğünü desteklemez, orada olaylar journald'e gider ve bu değer kullanılmaz"
+  - name: hardening_sudo_use_pty
+    group: Hesaplar
+    type: bool
+    default: true
+    warn_if: false                     # false = sudo use_pty kapalı (CIS 5.2.2 korumasını kaldırır)
+    description: "true (varsayılan): sudoers 'Defaults use_pty' (sudo komutları pty'de çalışır, CIS 5.2.2). false: bu satır yazılmaz. Eskiden sabit açıktı."
+  - name: hardening_sudo_timestamp_timeout
+    group: Hesaplar
+    type: int
+    default: 15
+    min: 0
+    max: 120
+    description: "sudoers 'Defaults timestamp_timeout' (dakika, 0-120; CIS en çok 15 ister). 0 her sudo'da parola ister; -1 (süresiz) kabul edilmez. Eskiden sabit 15'ti; varsayılan aynı."
   - name: hardening_auditd_cis_l2
     group: Denetim
     type: bool
@@ -593,6 +606,56 @@ vars:
     min: 1
     max: 10
     description: "sshd MaxSessions (1-10; CIS en çok 10 ister). Varsayılan 4: Ansible oturum çoklaması (ControlMaster) bir bağlantıda birden çok oturum açar. Lynis SSH-7408 2 ister; 2'de çoklama 'channel open failed: administratively prohibited' ile kırılabilir. sshpocket'te denenmeden düşürmeyin"
+  - name: hardening_ssh_max_auth_tries
+    group: SSH
+    type: int
+    default: 3
+    min: 1
+    max: 10
+    description: "sshd MaxAuthTries (1-10; CIS en çok 4 ister). Eskiden sabit 3'tü; varsayılan aynı, davranış değişmez."
+  - name: hardening_ssh_login_grace_time
+    group: SSH
+    type: int
+    default: 60
+    min: 1
+    max: 600
+    description: "sshd LoginGraceTime (saniye, 1-600; 0 = sınırsız kabul edilmez). Eskiden sabit 60'tı; varsayılan aynı, davranış değişmez."
+  - name: hardening_ssh_log_level
+    group: SSH
+    type: string
+    default: VERBOSE
+    description: "sshd LogLevel: QUIET | FATAL | ERROR | INFO | VERBOSE (varsayılan, CIS INFO ya da VERBOSE ister). DEBUG* kabul edilmez (hassas bilgi yazar). Eskiden sabit VERBOSE'tu; QUIET/FATAL/ERROR denetim izini azaltır."
+  - name: hardening_ssh_max_startups
+    group: SSH
+    type: string
+    default: "10:30:60"
+    description: "sshd MaxStartups: 'başla' ya da 'başla:oran:tam' (örn. 10:30:60, varsayılan). Kimlik doğrulanmamış eşzamanlı bağlantıları sınırlar. Eskiden sabit 10:30:60'tı; varsayılan aynı."
+  - name: hardening_ssh_client_alive_interval
+    group: SSH
+    type: int
+    default: 300
+    min: 0
+    max: 3600
+    description: "sshd ClientAliveInterval (saniye, 0-3600). 0 = canlılık denetimi KAPALI (boşta kopan bağlantılar düşmez, CIS boşta oturum kapatma isteğini zayıflatır). Küçültmek sshpocket oturumlarını erken koparabilir. Eskiden sabit 300'dü; varsayılan aynı."
+  - name: hardening_ssh_client_alive_count_max
+    group: SSH
+    type: int
+    default: 2
+    min: 0
+    max: 10
+    description: "sshd ClientAliveCountMax (0-10): cevapsız canlılık denetimi sayısı; bağlantı ClientAliveInterval x bu değer saniye sonra kapanır. Eskiden sabit 2'ydi; varsayılan aynı."
+  - name: hardening_ssh_x11_forwarding
+    group: SSH
+    type: bool
+    default: false
+    warn_if: true                      # true = X11 yönlendirme AÇIK (sertleştirmeyi zayıflatır)
+    description: "false (varsayılan): sshd X11Forwarding no. true: yes (X11 yönlendirme açılır; sertleştirmeyi zayıflatır). Eskiden sabit no'ydu."
+  - name: hardening_ssh_agent_forwarding
+    group: SSH
+    type: bool
+    default: false
+    warn_if: true                      # true = ssh-agent yönlendirme AÇIK
+    description: "false (varsayılan): sshd AllowAgentForwarding no. true: yes (ele geçirilen sunucu üzerinden ssh-agent kötüye kullanılabilir). Eskiden sabit no'ydu."
   - name: hardening_ufw_outgoing_deny
     group: Güvenlik duvarı
     type: bool

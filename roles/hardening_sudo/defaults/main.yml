@@ -8,3 +8,7 @@ hardening_sudo_logfile: /var/log/sudo.log
 hardening_su_restrict: false
 # su yapabilecek grup. Boş bırakılan varsayılan `sugroup` en sıkısıdır; mevcut bir gruba (örn. sudo) çevrilirse o grubun üyeleri su yapabilir.
 hardening_su_group: sugroup
+# Eskiden sabitti (use_pty, timestamp_timeout=15); varsayılanlar AYNI. use_pty (CIS 5.2.2): sudo komutları bir pty'de çalışır, false yaparsanız bu koruma kalkar.
+# timestamp_timeout dakika (0-120; CIS en çok 15): 0 her sudo'da parola ister (NOPASSWD'sız Ansible'ı etkilemez), -1 (süresiz) kabul EDİLMEZ.
+hardening_sudo_use_pty: true
+hardening_sudo_timestamp_timeout: 15

@@ -10,15 +10,15 @@ Bugün kodda sabit yazılı, kullanıcı değiştiremiyor. Varsayılanlar bugün
 
 | # | Aday değişken | Bugünkü sabit | Not |
 |---|---|---|---|
-| [ ] U-A1 | `hardening_ssh_max_auth_tries` | 3 | |
-| [ ] U-A2 | `hardening_ssh_login_grace_time` | 60 | |
-| [ ] U-A3 | `hardening_ssh_client_alive_interval`, `_count_max` | 300 / 2 | sshpocket oturum kopmalarını etkileyebilir; değer aralığı doğrulanır |
-| [ ] U-A4 | `hardening_ssh_max_startups` | `10:30:60` | |
-| [ ] U-A5 | `hardening_ssh_log_level` | `VERBOSE` | |
-| [ ] U-A6 | `hardening_ssh_x11_forwarding`, `_agent_forwarding` | `no` / `no` | |
+| [x] U-A1 (YAPILDI) | `hardening_ssh_max_auth_tries` | 3 | |
+| [x] U-A2 (YAPILDI) | `hardening_ssh_login_grace_time` | 60 | |
+| [x] U-A3 (YAPILDI) | `hardening_ssh_client_alive_interval`, `_count_max` | 300 / 2 | sshpocket oturum kopmalarını etkileyebilir; değer aralığı doğrulanır |
+| [x] U-A4 (YAPILDI) | `hardening_ssh_max_startups` | `10:30:60` | |
+| [x] U-A5 (YAPILDI) | `hardening_ssh_log_level` | `VERBOSE` | |
+| [x] U-A6 (YAPILDI) | `hardening_ssh_x11_forwarding`, `_agent_forwarding` | `no` / `no` | |
 | [ ] U-A7 | `hardening_ssh_banner_path` | `/etc/issue.net` | |
 | [ ] U-A8 | `hardening_ssh_macs` / `_ciphers` / `_kex` (boş = bugünkü liste ya da sunucu varsayılanı) | MACs sabit listesi var, cipher/kex yazılmıyor | Eski istemci uyumsuzluğu riski; `sshd -t` doğrulaması ve geri alma ağı içinde |
-| [ ] U-A9 | `hardening_sudo_timestamp_timeout`, `hardening_sudo_use_pty` | 15 / true | |
+| [x] U-A9 (YAPILDI) | `hardening_sudo_timestamp_timeout`, `hardening_sudo_use_pty` | 15 / true | |
 | [ ] U-A10 | Tek tek sysctl: `hardening_sysctl_rp_filter`, `_log_martians`, `_ptrace_scope`, `_kptr_restrict`, `_dmesg_restrict`, `_suid_dumpable`, `_randomize_va_space` | şablonda sabit | Alternatif: tek `hardening_sysctl_overrides` sözlüğü (aşağıdaki soru) |
 | [ ] U-A11 | `hardening_fail2ban_findtime`, `_banaction`, `_sshd_port` | şablonda sabit/varsayılan | `maxretry`, `bantime`, `ignoreip` zaten değişken |
 | [ ] U-A12 | `hardening_ufw_default_incoming`, `_default_outgoing`, `_logging` | sabit | outgoing zaten `ufw_outgoing_deny` ile bool |
