@@ -875,7 +875,7 @@ vars:
     default: 300
     min: 30
     max: 3600
-    description: "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur"
+    description: "Doğrulanmazsa sunucunun kendini geri alma süresi (saniye); aralık dışı değerde playbook ufw/ssh değişmeden durur. 120 sn'den kısa değerde uyarı verilir: arm ile disarm arasındaki pencere gerçek sunucuda 30-60 sn sürdü, süre kısaysa zamanlayıcı apply bitmeden tetiklenir ve apply başarısız olur. Varsayılan 300"
   - name: hardening_base_enabled
     group: Alanlar
     type: bool

@@ -29,6 +29,16 @@ for good in 30 300 3600; do
   expect_not_contains "timeout=$good zaman asimi hatasi VERMEZ" "$out" "bir tamsayı olmalı"
 done
 
+echo "-- kisa zaman asimi (120 sn alti) uyari verir, 120 ve ustu vermez (30 alt sinir degismedi)"
+for short in 30 60 119; do
+  out=$(run -e "hardening_rollback_timeout=$short")
+  expect_contains "timeout=$short: pencere uyarisi" "$out" "120 sn'den kısa"
+done
+for ok in 120 300 3600; do
+  out=$(run -e "hardening_rollback_timeout=$ok")
+  expect_not_contains "timeout=$ok: pencere uyarisi YOK" "$out" "120 sn'den kısa"
+done
+
 echo "-- kapaliyken uyari verir ve hicbir sey kurmaz"
 out=$(run -e hardening_rollback_enabled=false)
 expect_eq "kapali: basarili" "failed=0" "$(failed_of "$out")"
