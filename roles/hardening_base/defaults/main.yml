@@ -36,6 +36,10 @@ hardening_apt_upgrade: false
 # false (varsayılan): Ubuntu'nun kademeli (phased) güncellemeleri yükseltilmez (apt'nin kendi davranışı). true (yalnızca hardening_apt_upgrade=true iken): bunlar da yükseltilir
 # (APT::Get::Always-Include-Phased-Updates). Kademeli dağıtım bilerek bir güvenlik önlemidir (kötü bir güncellemeyi az sayıda makineye ulaştırır); atlamak o koruma yerine puan/güncellik içindir.
 hardening_apt_upgrade_phased: false
+# false (varsayılan, yalnızca hardening_platform=proxmox-host): true iken hardening_pve_apt_hold_packages listesindeki KURULU paketler `apt-mark hold` ile tutulur, böylece hardening_apt_upgrade=true bunları yükseltmez (pve servisleri yeniden başlamaz).
+# Hold değişken false yapılınca KALKMAZ (`apt-mark unhold`). Gerçek Proxmox'ta hold ile `apt-get upgrade` DENENMEDİ.
+hardening_pve_apt_hold: false
+hardening_pve_apt_hold_packages: [proxmox-ve, pve-manager, qemu-server, pve-container, pve-cluster, pve-firewall, pve-ha-manager, pve-qemu-kvm]
 # false (varsayılan): apt-listbugs kurulmaz. true (yalnızca Debian ailesi: Debian, Proxmox VE, Raspberry Pi OS): kurulur ve kancası `-y` ile yazılır, yani apt'yi ASLA bloklamaz.
 # Varsayılan kancası bugs.debian.org'a ulaşılamazsa apt'yi BLOKLAR; `-y` ile bloklamaz ama hata satırları basar. Ubuntu 26.04'te paket yok (NOT verir). Proxmox'un kendi paketleri Debian
 # hata veritabanında olmadığından yalnızca Debian paketlerinin kritik hatalarını gösterir. Kapatınca paket ve ayar kaldırılmaz.

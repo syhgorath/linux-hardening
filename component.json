@@ -888,6 +888,35 @@
       "description": "true (varsayılan, yalnızca hardening_platform=proxmox-host): Proxmox'un pvebanner.service'i her açılışta /etc/issue'yu yeniden yazıp yasal uyarıyı ezer (Lynis BANN-7126 her yeniden başlatmadan sonra geri gelir). systemd drop-in'i ile pvebanner'dan sonra /etc/issue.net'teki yasal uyarı /etc/issue'ya geri yazılır. pvebanner.service yoksa hiçbir şey yapılmaz. false: drop-in silinir (pvebanner /etc/issue'yu yine ezer). Konsol girişinde Proxmox'un adres satırı yerine yasal uyarı görünür"
     },
     {
+      "name": "hardening_pve_apt_hold",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
+      "type": "bool",
+      "default": false,
+      "description": "false (varsayılan, yalnızca hardening_platform=proxmox-host): true iken hardening_pve_apt_hold_packages listesindeki KURULU Proxmox paketleri `apt-mark hold` ile tutulur; hardening_apt_upgrade=true bunları yükseltmez ve pve servisleri yeniden başlamaz. Proxmox'ta apt-get upgrade pve-manager, qemu-server, pve-container, pve-cluster, pve-firewall gibi paketleri de yükseltir (nested Proxmox'ta benzetim: 60 paket). Hold değişken false yapılınca KALKMAZ (apt-mark unhold). Gerçek Proxmox'ta hold ile apt-get upgrade DENENMEDİ."
+    },
+    {
+      "name": "hardening_pve_apt_hold_packages",
+      "platforms": [
+        "proxmox-host"
+      ],
+      "group": "Proxmox",
+      "type": "list[string]",
+      "default": [
+        "proxmox-ve",
+        "pve-manager",
+        "qemu-server",
+        "pve-container",
+        "pve-cluster",
+        "pve-firewall",
+        "pve-ha-manager",
+        "pve-qemu-kvm"
+      ],
+      "description": "hardening_pve_apt_hold=true iken tutulacak paketler (kurulu olmayanlar atlanır). Varsayılan çekirdek pve bileşenleridir; çekirdek paketleri (proxmox-kernel-*) listede YOK, apt-get upgrade zaten yeni bağımlılık kuran çekirdek paketlerini yükseltmez."
+    },
+    {
       "name": "hardening_sysctl_hardening",
       "type": "bool",
       "default": true,
