@@ -418,6 +418,30 @@
         line: 'DPkg::Pre-Install-Pkgs {"/usr/bin/apt-listbugs -y apt";};'
       when: not (ansible_check_mode and hardening_apt_listbugs_install is changed)
 
+# --- Proxmox: apt upgrade pve paketlerini yükseltmesin (hardening_pve_apt_hold, varsayılan KAPALI) ---
+# Proxmox'ta `apt-get upgrade` pve-manager, qemu-server, pve-container, pve-cluster, pve-firewall gibi paketleri de yükseltir ve pve servislerini yeniden başlatabilir (nested Proxmox'ta benzetim: 60 paket).
+# Hold, yükseltmeden ÖNCE konur; kaldırmak için `apt-mark unhold` (değişken false yapılınca otomatik kaldırılmaz).
+- name: Find the installed Proxmox packages to hold
+  ansible.builtin.command:
+    argv: "{{ ['dpkg-query', '-W', '-f', '${Status}|${Package}\\n'] + hardening_pve_apt_hold_packages }}"
+  register: hardening_pve_apt_hold_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: hardening_platform | default('generic') == 'proxmox-host' and hardening_pve_apt_hold | bool
+
+- name: Hold the Proxmox packages (apt-mark hold)
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: "{{ hardening_pve_apt_hold_installed.stdout_lines | default([]) | select('match', '^install ok installed[|]') | map('regex_replace', '^install ok installed[|]', '') | list }}"
+  when: hardening_platform | default('generic') == 'proxmox-host' and hardening_pve_apt_hold | bool
+
+- name: Note that apt upgrade also upgrades the Proxmox packages
+  ansible.builtin.debug:
+    msg: "NOT (apt): Proxmox'ta hardening_apt_upgrade=true pve-manager, qemu-server, pve-container, pve-cluster, pve-firewall gibi paketleri de yükseltir ve pve servislerini yeniden başlatabilir. hardening_pve_apt_hold=true bu paketleri tutar (apt-mark hold); VM'li hostta önce VM'leri durdurun ya da yedekleyin."
+  when: hardening_platform | default('generic') == 'proxmox-host' and hardening_apt_upgrade | bool and not (hardening_pve_apt_hold | bool)
+
 # --- Bekleyen paket güncellemeleri (varsayılan KAPALI) ---
 - name: Upgrade the installed packages (apt-get upgrade)
   ansible.builtin.apt:
