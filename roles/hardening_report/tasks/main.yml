@@ -94,7 +94,7 @@
         cmd: |
           set -o pipefail
           command -v systemd-analyze >/dev/null 2>&1 || exit 0
-          systemd-analyze security --no-pager 2>/dev/null | awk 'NR > 1 && $2 ~ /^[0-9]+(\.[0-9]+)?$/ {print $1 " " $2 " " $3}'
+          systemd-analyze security --no-pager 2>/dev/null | awk 'NR != 1 && $2 ~ /^[0-9]+(\.[0-9]+)?$/ {print $1 " " $2 " " $3}'
           true
         executable: /bin/bash
       register: hardening_report_sdsec
