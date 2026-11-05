@@ -23,7 +23,7 @@ Bu belge, projenin yaptıklarını **CIS Ubuntu Linux 26.04 LTS Benchmark v1.0.0
 | 1.1 | Dosya sistemi (modüller, bölümler, bağlama seçenekleri) | 29 | 9 |  | 1 | 19 |  |
 | 1.2 | Paket yönetimi (APT depoları, güncellemeler) | 15 | 5 | 1 | 1 | 8 |  |
 | 1.3 | AppArmor | 3 |  |  |  | 3 |  |
-| 1.4 | Önyükleyici | 2 |  | 1 | 1 |  |  |
+| 1.4 | Önyükleyici | 2 |  | 2 |  |  |  |
 | 1.5 | Süreç sertleştirme (sysctl, core dump) | 11 | 7 | 3 |  | 1 |  |
 | 1.6 | Oturum açma uyarı metinleri | 12 | 9 | 1 |  | 2 |  |
 | 1.7 | GNOME oturum yöneticisi (masaüstü) | 6 |  |  |  | 6 |  |
@@ -181,6 +181,7 @@ Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısm
 | 5.3.3.3.2 | `enforce_for_root`: `hardening_pam_pwhistory_enforce_for_root=true` ile (varsayılan KAPALI). Kapalıyken root'un `chpasswd`'si yalnızca UYARI alır, engellenmez (ölçüldü) |
 | 5.3.3.3.3 | `use_authtok`: profil satırında var (`pam_pwhistory.so use_authtok`), seçenek açıksa |
 | 1.2.2.1 | Güvenlik güncellemeleri otomatik (unattended-upgrades); 'tüm güncellemeler kurulu' denetlenmez |
+| 1.4.1 | Önyükleyici (GRUB) parolası: `hardening_grub_password_hash` ile **isteğe bağlı, varsayılan KAPALI**. Gerçek `grub-mkconfig` (GRUB 2.14, Ubuntu 26.04) ile görüldü: `set superusers` normal açılışı da parolaya bağlar (sunucu kendi kendine açılmaz), bu yüzden `10_linux` CLASS satırı yamalanır (`--unrestricted`) ve recovery girdileri kapatılır (aksi hâlde parolasız kök kabuğu); `hardening_grub_unrestricted_boot=false` ile yalnızca parola yazılır. Doğrulama başarısızsa geri alınır. Gerçek GRUB açılışı **DENENMEDİ**; Raspberry Pi'de (GRUB yok) ve Proxmox'ta kök ZFS + UEFI ise (systemd-boot) atlanır |
 | 1.4.2 | grub.cfg 0600 root:root yapılır; update-grub dosyayı yeniden yazarsa 0444'e dönebilir (sonraki çalıştırmada yeniden sıkılaşır, doğrulanmadı) |
 | 1.5.10 | kod var (hardening_disable_coredump) ama varsayılan KAPALI; çökme dökümünü kapatır |
 | 1.5.11 | kod var (hardening_disable_coredump) ama varsayılan KAPALI; çökme dökümünü kapatır |
@@ -227,7 +228,6 @@ Yani Level 1 Server maddelerinin yaklaşık %39'u ✅, %56'sı en azından kısm
 | 5.3.1.4 | `cracklib-runtime` güncelliği: aynı gerekçe |
 | 6.1.2.4 | rsyslog kullanılmıyor (günlükler journald'de); yapılmaz |
 | 6.1.2.5 | Uzak log sunucusu adresi sunucuya özgüdür; yapılmaz |
-| 1.4.1 | Önyükleyici (GRUB) parolası bilerek yok (kullanıcı kararı, 2026-10-22): konsolsuz/uzaktan yönetilen sunucuda, parolalı bir menü girdisi her yeniden başlatmada konsoldan parola bekler ve sunucu açılmaz. CIS'in istediği biçim yalnızca menü düzenlemeyi korur ama yanlış kurulursa açılışı kilitler; Raspberry Pi'de GRUB yok, Proxmox'ta farklı önyükleyici olabilir |
 | 3.3.1.1 | ip_forward'a bilerek dokunulmaz (LXD/konteyner/yönlendirici kullanımı) |
 | 3.3.1.2 | ip_forward'a bilerek dokunulmaz |
 | 3.3.1.3 | ip_forward'a bilerek dokunulmaz |

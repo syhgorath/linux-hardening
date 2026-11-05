@@ -1057,6 +1057,28 @@
       "description": "hardening_proc_hidepid=true iken 'proc' grubuna eklenecek kullanıcılar: root dışında çalışan ve tüm süreçleri görmesi gereken izleme/denetim araçlarının (örn. bir izleme ajanı) kullanıcıları. Boş (varsayılan): kimse eklenmez"
     },
     {
+      "name": "hardening_grub_password_hash",
+      "group": "Sistem",
+      "type": "string",
+      "default": "",
+      "description": "Boş (varsayılan): GRUB parolası KAPALI. Dolu: `grub-mkpasswd-pbkdf2` çıktısı (grub.pbkdf2.sha512.<tur>.<salt>.<özet>; düz parola KABUL EDİLMEZ). GRUB menüsünü düzenlemeyi (e) ve komut satırını (c) korur (CIS 1.4.1). Geri alma güvenlik ağı önyükleyiciyi KAPSAMAZ; gerçek GRUB açılışı DENENMEDİ (yalnızca gerçek grub-mkconfig çıktısı bir konteynerde doğrulandı): konsolla erişilebilen bir makinede deneyin. Doğrulama başarısızsa değişiklikler geri alınır. /etc/default/grub ya da /boot/grub yoksa (Raspberry Pi, LXC, systemd-boot) ve Proxmox'ta kök ZFS + UEFI ise (proxmox-boot-tool systemd-boot kullanır; sezgisel, DENENMEDİ) atlanır."
+    },
+    {
+      "name": "hardening_grub_superuser",
+      "group": "Sistem",
+      "type": "string",
+      "default": "grubadmin",
+      "description": "GRUB süper kullanıcı adı (hardening_grub_password_hash doluyken; küçük harfle başlayan harf/rakam/_/-, en çok 32)."
+    },
+    {
+      "name": "hardening_grub_unrestricted_boot",
+      "group": "Sistem",
+      "type": "bool",
+      "default": true,
+      "warn_if": false,
+      "description": "true (varsayılan, yalnızca hardening_grub_password_hash doluyken): normal açılış parolasız kalır. Bunun için /etc/grub.d/10_linux CLASS satırına --unrestricted eklenir (paket yapılandırma dosyası; yama paket güncellemesinde kalır ama yeni sürümün değişikliklerini almaz) ve recovery girdileri KAPATILIR (GRUB_DISABLE_RECOVERY=true; aksi hâlde recovery parolasız kök kabuğu açardı). Advanced options alt menüsü, UEFI ayarları ve os-prober'ın bulduğu diğer işletim sistemleri kilitli kalır. false: yalnızca parola yazılır ve sunucu HER açılışta konsolda parola bekler (uzaktan yönetilen sunucu kendi kendine açılmaz)."
+    },
+    {
       "name": "hardening_apt_upgrade_phased",
       "group": "Paketler",
       "type": "bool",

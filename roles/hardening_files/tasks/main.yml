@@ -100,6 +100,175 @@
           /etc/fstab satırı yazıldı, yeniden başlatmada uygulanır.
       when: hardening_proc_remount is not skipped and hardening_proc_remount.rc | default(0) != 0
 
+# --- GRUB parolası (CIS 1.4.1; hardening_grub_password_hash, varsayılan KAPALI) ---
+# Ayrıntı ve gerekçe: defaults/main.yml. Önyükleyici geri alma ağı kapsamında DEĞİL; bu yüzden her adımdan sonra üretilen grub.cfg doğrulanır ve başarısızsa değişiklikler geri alınır.
+# `update-grub` grub.cfg'yi yeniden yazar; dosya izinleri (CIS 1.4.2) bu bloktan SONRA sıkılaştırılır.
+- name: GRUB password
+  when: hardening_grub_password_hash | length > 0
+  block:
+    - name: Validate the GRUB password settings
+      ansible.builtin.assert:
+        that:
+          - hardening_grub_password_hash is match('^grub\.pbkdf2\.sha512\.[0-9]+\.[0-9A-Fa-f]+\.[0-9A-Fa-f]+$')
+          - hardening_grub_superuser is match('^[a-z][a-z0-9_-]{0,31}$')
+          - hardening_grub_unrestricted_boot in [true, false]
+        fail_msg: >-
+          Geçersiz GRUB parola ayarı. hardening_grub_password_hash `grub-mkpasswd-pbkdf2` çıktısı olmalı (grub.pbkdf2.sha512.<tur>.<salt>.<özet>; düz parola KABUL EDİLMEZ),
+          hardening_grub_superuser küçük harfle başlayan harf/rakam/_/- (en çok 32), hardening_grub_unrestricted_boot true/false olmalı.
+
+    - name: Check the GRUB files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ hardening_files_root }}/etc/default/grub"
+        - "{{ hardening_files_root }}/etc/grub.d/10_linux"
+        - "{{ hardening_files_root }}/boot/grub"
+        - "{{ hardening_files_root }}/sys/firmware/efi"
+      register: hardening_grub_stat
+
+    - name: Read the root file system type (Proxmox boot loader hint)
+      ansible.builtin.command: findmnt -no FSTYPE /
+      register: hardening_grub_rootfs
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      when: hardening_platform | default('generic') == 'proxmox-host'
+
+    - name: Decide whether GRUB is the boot loader here
+      ansible.builtin.set_fact:
+        hardening_grub_usable: >-
+          {{ hardening_grub_stat.results[0].stat.exists and hardening_grub_stat.results[1].stat.exists and hardening_grub_stat.results[2].stat.exists
+             and not (hardening_platform | default('generic') == 'proxmox-host' and (hardening_grub_rootfs.stdout | default('') | trim) == 'zfs' and hardening_grub_stat.results[3].stat.exists) }}
+
+    - name: Tell that the GRUB password was skipped
+      ansible.builtin.debug:
+        msg: >-
+          NOT (GRUB parolası): ATLANDI. /etc/default/grub, /etc/grub.d/10_linux ya da /boot/grub yok (Raspberry Pi, LXC, systemd-boot...) ya da Proxmox'ta kök dosya sistemi ZFS ve UEFI
+          (proxmox-boot-tool systemd-boot kullanır; bu sezgisel bir karardır, DENENMEDİ). Hiçbir şey değiştirilmedi.
+      when: not (hardening_grub_usable | bool)
+
+    - name: Preview the GRUB password (check mode)
+      ansible.builtin.debug:
+        msg: >-
+          Önizleme (GRUB parolası): /etc/grub.d/40_hardening_password yazılır{{ ', 10_linux CLASS satırına --unrestricted eklenir ve recovery girdileri kapatılır' if hardening_grub_unrestricted_boot | bool else '; her açılışta konsolda parola istenir' }},
+          update-grub çalışır ve grub.cfg doğrulanır. Önyükleyici geri alma ağı kapsamında DEĞİL.
+      when: hardening_grub_usable | bool and ansible_check_mode
+
+    - name: Apply the GRUB password
+      when: hardening_grub_usable | bool and not ansible_check_mode
+      block:
+        - name: Create the GRUB backup directory (outside /etc/grub.d)
+          ansible.builtin.file:
+            path: "{{ hardening_files_root }}{{ hardening_grub_backup_dir }}"
+            state: directory
+            owner: "{{ hardening_files_owner }}"
+            group: "{{ hardening_files_group }}"
+            mode: "0700"
+
+        - name: Back up /etc/default/grub and 10_linux (first run only)
+          ansible.builtin.copy:
+            src: "{{ hardening_files_root }}{{ item }}"
+            dest: "{{ hardening_files_root }}{{ hardening_grub_backup_dir }}/{{ item | basename }}.orig"
+            remote_src: true
+            force: false
+            owner: "{{ hardening_files_owner }}"
+            group: "{{ hardening_files_group }}"
+            mode: "0600"
+          loop:
+            - /etc/default/grub
+            - /etc/grub.d/10_linux
+
+        - name: Write the GRUB password script
+          ansible.builtin.copy:
+            dest: "{{ hardening_files_root }}/etc/grub.d/40_hardening_password"
+            owner: "{{ hardening_files_owner }}"
+            group: "{{ hardening_files_group }}"
+            mode: "0700"
+            content: |
+              #!/bin/sh
+              # Ansible tarafından yönetilir (hardening_grub_password_hash)
+              cat <<'GRUB_EOF'
+              set superusers="{{ hardening_grub_superuser }}"
+              password_pbkdf2 {{ hardening_grub_superuser }} {{ hardening_grub_password_hash }}
+              GRUB_EOF
+          register: hardening_grub_script
+
+        - name: Make the normal Linux entries unrestricted (10_linux CLASS)
+          ansible.builtin.replace:
+            path: "{{ hardening_files_root }}/etc/grub.d/10_linux"
+            regexp: '^CLASS="--class gnu-linux --class gnu --class os"$'
+            replace: 'CLASS="--class gnu-linux --class gnu --class os --unrestricted"'
+          register: hardening_grub_class
+          when: hardening_grub_unrestricted_boot | bool
+
+        - name: Remove the unrestricted flag again (hardening_grub_unrestricted_boot=false)
+          ansible.builtin.replace:
+            path: "{{ hardening_files_root }}/etc/grub.d/10_linux"
+            regexp: '^(CLASS="--class gnu-linux --class gnu --class os) --unrestricted"$'
+            replace: '\1"'
+          register: hardening_grub_class_off
+          when: not (hardening_grub_unrestricted_boot | bool)
+
+        - name: Check that 10_linux has the expected CLASS line
+          ansible.builtin.command: grep -qxF 'CLASS="--class gnu-linux --class gnu --class os --unrestricted"' {{ (hardening_files_root ~ '/etc/grub.d/10_linux') | quote }}
+          changed_when: false
+          check_mode: false
+          when: hardening_grub_unrestricted_boot | bool
+
+        - name: Disable the recovery entries (they would be unrestricted too)
+          ansible.builtin.lineinfile:
+            path: "{{ hardening_files_root }}/etc/default/grub"
+            regexp: '^#?\s*GRUB_DISABLE_RECOVERY='
+            line: 'GRUB_DISABLE_RECOVERY="true"'
+          register: hardening_grub_recovery
+          when: hardening_grub_unrestricted_boot | bool
+
+        - name: Regenerate GRUB configuration (update-grub)
+          ansible.builtin.command: "{{ hardening_grub_update_cmd }}"
+          changed_when: true
+          when: hardening_grub_script is changed or hardening_grub_class is changed or hardening_grub_class_off is changed or hardening_grub_recovery is changed
+
+        - name: Verify the generated grub.cfg
+          ansible.builtin.script:
+            cmd: "grub_check.py {{ {'cfg': hardening_files_root ~ '/boot/grub/grub.cfg', 'user': hardening_grub_superuser, 'hash': hardening_grub_password_hash, 'unrestricted': hardening_grub_unrestricted_boot | bool} | to_json | quote }}"
+            executable: python3
+          register: hardening_grub_verify
+          changed_when: false
+          check_mode: false
+
+        - name: Fail when the grub.cfg is not as expected
+          ansible.builtin.assert:
+            that: (hardening_grub_verify.stdout | from_json).ok
+            fail_msg: "GRUB doğrulaması BAŞARISIZ: {{ (hardening_grub_verify.stdout | from_json).errors | join(' ') }}"
+
+      rescue:
+        - name: Restore the GRUB files from the backup
+          ansible.builtin.copy:
+            src: "{{ hardening_files_root }}{{ hardening_grub_backup_dir }}/{{ item.name }}.orig"
+            dest: "{{ hardening_files_root }}{{ item.dest }}"
+            remote_src: true
+            mode: "{{ item.mode }}"
+          loop:
+            - { name: grub, dest: /etc/default/grub, mode: "0644" }
+            - { name: 10_linux, dest: /etc/grub.d/10_linux, mode: "0755" }
+          ignore_errors: true
+
+        - name: Remove the GRUB password script
+          ansible.builtin.file:
+            path: "{{ hardening_files_root }}/etc/grub.d/40_hardening_password"
+            state: absent
+
+        - name: Regenerate GRUB configuration after the rollback
+          ansible.builtin.command: "{{ hardening_grub_update_cmd }}"
+          changed_when: true
+          ignore_errors: true
+
+        - name: Stop after the GRUB rollback
+          ansible.builtin.fail:
+            msg: >-
+              GRUB parolası uygulanamadı ve değişiklikler GERİ ALINDI (yedekler {{ hardening_grub_backup_dir }}). Sebep için yukarıdaki göreve bakın;
+              GRUB'a elle bakmadan yeniden denemeyin. Önyükleyici geri alma ağı kapsamında değildir.
+
 # Dosya izinleri (CIS 7.1.x, 5.1.1-5.1.4, 2.4.x, 1.4.2, 1.6.6). Yalnızca fazla izni kaldırır (sembolik modlar), mevcut dosyalara dokunur, yenisini oluşturmaz.
 # Geri alma güvenlik ağı bunları geri almaz (izinler yalnızca sıkılaşır). Kapsam: docs/cis-esleme.md.
 - name: File permissions (CIS)
