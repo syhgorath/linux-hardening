@@ -2,7 +2,7 @@
 
 **Durum:** ADAY LİSTESİ, kod yok. Genel kurallar: [README](README.md). İşaret: `[ ]` karar bekliyor, `[x]` yap, `[-]` yapma, `[?]` konuşalım.
 
-Ortam: Debian 13. Ubuntu listesindeki seçeneklerin çoğu ([ubuntu.md](ubuntu.md): A bölümü, U-B1, U-B2, U-B3, U-B6, U-C1) Debian'a da aynen uyar; bu belge yalnızca **farkları** ve Debian'a özgü adayları listeler.
+Ortam: Debian 13. Ubuntu listesindeki seçeneklerin çoğu ([ubuntu.md](ubuntu.md): A bölümü, U-B1, U-B3, U-B6, U-C1) Debian'a da aynen uyar; bu belge yalnızca **farkları** ve Debian'a özgü adayları listeler.
 
 Bilinen: bu proje Debian 13'ü bir konteyner labında (`ufw` yok, `auditd` çalışmıyor) denedi; **gerçek Debian VM'de auditd'li koşu yapılmadı.** Aşağıdakilerin hepsi gerçek VM gerektirir.
 
