@@ -251,7 +251,7 @@
           loop:
             - { name: grub, dest: /etc/default/grub, mode: "0644" }
             - { name: 10_linux, dest: /etc/grub.d/10_linux, mode: "0755" }
-          ignore_errors: true
+          failed_when: false
 
         - name: Remove the GRUB password script
           ansible.builtin.file:
@@ -261,7 +261,7 @@
         - name: Regenerate GRUB configuration after the rollback
           ansible.builtin.command: "{{ hardening_grub_update_cmd }}"
           changed_when: true
-          ignore_errors: true
+          failed_when: false
 
         - name: Stop after the GRUB rollback
           ansible.builtin.fail:
