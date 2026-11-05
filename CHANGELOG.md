@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Değişti
+- **Ek seçenekler: NTP sunucu yapılandırması `utility` paketine devredildi** (`docs/design/ek-secenekler/`, yalnızca tasarım): `hardening_chrony_servers` adayı yapılmayacak; NTP, saat dilimi ve locale yapılandırması planlanan `utility` paketinin sahipliğinde. Hardening yalnız salt okunur zaman raporu, opt-in `makestep` ve auditd izlemesi olarak kalır.
+
 ### Eklendi
 - **Proxmox'ta `apt upgrade` koruması** (`hardening_pve_apt_hold`, `hardening_pve_apt_hold_packages`, varsayılan KAPALI, yalnızca `proxmox-host`): `hardening_apt_upgrade=true` Proxmox'ta `pve-manager`, `qemu-server`, `pve-container`, `pve-cluster`, `pve-firewall` gibi paketleri de yükseltir ve pve servislerini yeniden başlatabilir (nested Proxmox'ta benzetim: 60 paket). Hold açıksa listedeki KURULU paketler yükseltmeden önce `apt-mark hold` ile tutulur; kapalıyken ve `apt_upgrade` açıkken bir NOT yazılır. Hold değişken `false` yapılınca kalkmaz. Gerçek `apt-mark hold` ve hold varken `apt-get upgrade` DENENMEDİ; `dpkg-query` biçimi ve paket adları gerçek Proxmox'ta salt okunur doğrulandı.
 - **Ek seçenekler aday listesi güncellendi** (`docs/design/ek-secenekler/`, yalnızca tasarım): GRUB parolası bulgusu (Ubuntu 26.04 `10_linux` betiğinde `--unrestricted` desteği yok; superusers açılışı da parolaya bağlar, bu yüzden güvenli bir pasif uygulama bulunamadı), yeni adaylar (Ctrl+Alt+Del maskesi, auditd dışlama, auditd durum raporu, kayma özeti) ve bir dış kaynak incelemesinin fikir notları.
