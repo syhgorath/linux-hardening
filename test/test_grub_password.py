@@ -49,14 +49,14 @@ no_unres = re.sub(r" --unrestricted", "", FIXTURE)
 o = verify(no_unres)
 check("ana girdi kilitliyse (normal acilis parola ister) REDDEDILIR", not o["ok"] and "unrestricted" in " ".join(o["errors"]), o)
 check("   ama unrestricted=false iken ayni cikti KABUL edilir (yalniz parola)", verify(no_unres, unrestricted=False)["ok"])
-rec = FIXTURE.replace("\n}\n", "\n}\nmenuentry 'GNU/Linux, with Linux 6.8.0-1-generic (recovery mode)' --class gnu-linux --unrestricted $menuentry_id_option 'gnulinux-6.8.0-1-generic-recovery-x' {\n}\n", 1)
+rec = FIXTURE.replace("\n}\n", "\n}\nmenuentry 'GNU/Linux, with Linux 6.8.0-1-generic (recovery mode)' --class gnu-linux --unrestricted $menuentry_id_option 'gnulinux-6.8.0-1-generic-recovery-x' {\n  true\n}\n", 1)
 o = verify(rec)
 check("KILITSIZ recovery girdisi REDDEDILIR (parolasiz kok kabugu)", not o["ok"] and "recovery" in " ".join(o["errors"]).lower(), o)
 locked_rec = rec.replace("--unrestricted $menuentry_id_option 'gnulinux-6.8.0-1-generic-recovery-x'", "$menuentry_id_option 'gnulinux-6.8.0-1-generic-recovery-x'")
 check("   kilitli recovery girdisi sorun degil", verify(locked_rec)["ok"])
-osp = FIXTURE + "menuentry 'Baska OS (on /dev/sdb1)' --class gnu-linux --class gnu --class os $menuentry_id_option 'osprober-gnulinux-simple-x' {\n}\n"
+osp = FIXTURE + "menuentry 'Baska OS (on /dev/sdb1)' --class gnu-linux --class gnu --class os $menuentry_id_option 'osprober-gnulinux-simple-x' {\n  true\n}\n"
 check("os-prober'in buldugu BASKA isletim sistemi girdisi kilitli kalir, hata DEGIL", verify(osp)["ok"])
-dup = FIXTURE + [ln for ln in FIXTURE.split("\n") if ln.startswith("menuentry ")][0] + " {\n}\n"
+dup = FIXTURE + [ln for ln in FIXTURE.split("\n") if ln.startswith("menuentry ")][0] + " {\n  true\n}\n"
 o = verify(dup)
 check("ana girdi YINELENIRSE (yedek betik /etc/grub.d'de kalmis) REDDEDILIR", not o["ok"] and "yinelenmi" in " ".join(o["errors"]), o)
 check("parola satiri yoksa REDDEDILIR", not verify(re.sub(r"password_pbkdf2.*\n", "", FIXTURE))["ok"] and not verify(re.sub(r'set superusers=.*\n', "", FIXTURE))["ok"])
@@ -83,7 +83,7 @@ def make_root(d, with_grub=True, class_line=CLASS_LINE):
                     'lin = open(R + "/etc/grub.d/10_linux").read()\ndef_ = open(R + "/etc/default/grub").read()\n'
                     'if "--unrestricted" not in lin: fx = fx.replace(" --unrestricted", "")\n'
                     'if not re.search(r"^GRUB_DISABLE_RECOVERY=.true.", def_, re.M):\n'
-                    '    fx = fx.replace("\\n}\\n", "\\n}\\nmenuentry \'x (recovery mode)\' --class gnu-linux %%s $menuentry_id_option \'gnulinux-r\' {\\n}\\n" %% ("--unrestricted" if "--unrestricted" in lin else ""), 1)\n'
+                    '    fx = fx.replace("\\n}\\n", "\\n}\\nmenuentry \'x (recovery mode)\' --class gnu-linux %%s $menuentry_id_option \'gnulinux-r\' {\\n  true\\n}\\n" %% ("--unrestricted" if "--unrestricted" in lin else ""), 1)\n'
                     'if os.path.exists(R + "/etc/grub.d/40_hardening_password"):\n'
                     '    sc = open(R + "/etc/grub.d/40_hardening_password").read()\n'
                     '    fx = re.sub(r"set superusers=.*\\n|password_pbkdf2.*\\n", "", fx)\n'
