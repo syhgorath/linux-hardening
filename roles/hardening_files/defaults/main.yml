@@ -90,3 +90,17 @@ hardening_proc_hidepid: false
 hardening_proc_hidepid_group: proc
 hardening_proc_hidepid_users: []
 hardening_proc_fstab: /etc/fstab
+# GRUB parolası (CIS 1.4.1; Ubuntu/Debian'da GRUB kullanan sunucular). VARSAYILAN KAPALI (boş özet). DOLU ÖZET: `grub-mkpasswd-pbkdf2` çıktısı (`grub.pbkdf2.sha512.<tur>.<salt>.<özet>`);
+# düz parola buraya YAZILMAZ. Parola, GRUB menüsünü DÜZENLEMEYİ (e) ve GRUB komut satırını (c) korur. Geri alma güvenlik ağı önyükleyiciyi KAPSAMAZ ve gerçek GRUB açılışı DENENMEDİ
+# (yalnızca gerçek grub-mkconfig çıktısı bir konteynerde doğrulandı): gerçek VM'de, konsolla erişilebilen bir makinede deneyin.
+# NEDEN KARMAŞIK: `set superusers` ayarlanınca --unrestricted olmayan HER girdi parola ister, yani normal açılış da sunucu başında parola bekler (uzaktan yönetilen sunucu açılmaz).
+# hardening_grub_unrestricted_boot=true (varsayılan, yalnızca özet doluyken): /etc/grub.d/10_linux içindeki CLASS satırına --unrestricted eklenir (normal açılış parolasız) ve recovery
+# girdileri KAPATILIR (GRUB_DISABLE_RECOVERY=true; aksi hâlde recovery parolasız kök kabuğu açardı). 10_linux bir paket yapılandırma dosyasıdır: yama paket güncellemesinde
+# (--force-confold) kalır ama yeni sürümün değişikliklerini almaz; yeniden başlatmada parola istenirse rolü yeniden çalıştırın. false: yalnızca parola yazılır, HER açılışta konsolda parola istenir.
+# Atlanır: /etc/default/grub ya da /boot/grub yoksa (Raspberry Pi, LXC, systemd-boot) ve Proxmox'ta kök ZFS + UEFI ise (proxmox-boot-tool systemd-boot kullanır; sezgisel, DENENMEDİ).
+# Yedekler /etc/grub.d İÇİNE konmaz (oradaki her çalıştırılabilir dosya çalışır ve menüyü çift üretir).
+hardening_grub_password_hash: ""
+hardening_grub_superuser: grubadmin
+hardening_grub_unrestricted_boot: true
+hardening_grub_backup_dir: /var/backups/linux-hardening/grub
+hardening_grub_update_cmd: update-grub
