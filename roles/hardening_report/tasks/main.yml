@@ -103,6 +103,16 @@
       failed_when: false
       check_mode: false
 
+    # become başarısızsa (sudo parola ister / yetki yok) `failed_when: false` kayıtlarında stdout_lines OLMAZ ve değerlendirme anlaşılmaz bir şablon hatasıyla düşerdi; rapor SALT OKUNUR ek olduğu için atlanır ve nedeni söylenir.
+    - name: Check that the privileged report reads worked
+      ansible.builtin.set_fact:
+        hardening_report_reads_ok: "{{ hardening_report_dotdirs.stdout_lines is defined and hardening_report_nullok.stdout_lines is defined and hardening_report_sudomount.stdout_lines is defined }}"
+
+    - name: Skip the system report when the privileged reads failed
+      ansible.builtin.debug:
+        msg: "UYARI (rapor): sistem raporu ATLANDI, ayrıcalıklı okumalar (become/sudo) başarısız oldu. Rapor salt okunurdur, harden etkilenmez; sudo parolası/yetkisini düzeltip `--tags report` ile yeniden çalıştırın."
+      when: not (hardening_report_reads_ok | bool)
+
     - name: Evaluate the system report
       ansible.builtin.script:
         cmd: "cis_report.py {{ hardening_report_input | to_json | quote }}"
@@ -128,19 +138,21 @@
             lines: "{{ hardening_report_nullok.stdout_lines | select('match', '^NULLOK:') | map('regex_replace', '^NULLOK:', '') | list }}"
             empty_accounts: "{{ hardening_report_nullok.stdout_lines | select('match', '^EMPTY:') | map('regex_replace', '^EMPTY:', '') | list }}"
       register: hardening_report_raw
+      when: hardening_report_reads_ok | bool
       changed_when: false
       check_mode: false
 
     - name: Parse the system report
       ansible.builtin.set_fact:
         hardening_report_result: "{{ hardening_report_raw.stdout | from_json }}"
+      when: hardening_report_reads_ok | bool
 
     - name: Warn from the system report
       ansible.builtin.debug:
         msg: "UYARI (rapor): {{ hardening_report_result.warnings | join(' ') }}"
-      when: hardening_report_result.warnings | length > 0
+      when: hardening_report_reads_ok | bool and hardening_report_result.warnings | length > 0
 
     - name: Notes from the system report
       ansible.builtin.debug:
         msg: "NOT (rapor): {{ hardening_report_result.notes | join(' ') }}"
-      when: hardening_report_result.notes | length > 0
+      when: hardening_report_reads_ok | bool and hardening_report_result.notes | length > 0

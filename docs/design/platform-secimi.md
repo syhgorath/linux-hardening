@@ -32,7 +32,7 @@ Bugün `hardening_platform` bir **paket değişkenidir** ve varsayılanı `gener
 | Grup | Kural | Örnek | Davranış |
 |---|---|---|---|
 | **(a) Sunucu NE** | yalnızca `platform_var` | `hardening_platform` | Seçimden otomatik yazılır |
-| **(b) Platform varsayılanı** | `platforms:` etiketli değişkenler (10 Proxmox) | `hardening_pve_pveproxy_allow_from` (boş), `hardening_pve_keep_banner` (true), `hardening_aide_pve_excludes` | **Yeni yazılacak bir şey yok**: değişken zaten kendi `default`'unu taşıyor; platform seçilince menüde görünür olur. Elle `-e` ile gevşetmek gerekmez |
+| **(b) Platform varsayılanı** | `platforms:` etiketli değişkenler (12 Proxmox) | `hardening_pve_pveproxy_allow_from` (boş), `hardening_pve_keep_banner` (true), `hardening_aide_pve_excludes` | **Yeni yazılacak bir şey yok**: değişken zaten kendi `default`'unu taşıyor; platform seçilince menüde görünür olur. Elle `-e` ile gevşetmek gerekmez |
 | **(c) Erişimi/sunucuyu etkileyen** | `warn_if` taşıyanlar (45 değişken) ve `hardening_ssh_allow_from` | `hardening_ufw_prune_ssh`, `hardening_rpi_strict`, `hardening_pve_strict`, `hardening_pve_apply`, `hardening_fail2ban_pve_web`, `hardening_ssh_allow_from` | **Asla sessizce yazılmaz.** İstisnalar aşağıda |
 
 (c) içinde üç ayrı davranış:

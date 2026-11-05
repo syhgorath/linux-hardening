@@ -19,6 +19,13 @@
       ansible.builtin.set_fact:
         hardening_sudo_is_rs: "{{ 'visudo-rs' in (hardening_sudo_visudo_version.stdout | default('')) }}"
 
+    - name: Validate the sudo tuning values
+      ansible.builtin.assert:
+        that:
+          - hardening_sudo_use_pty in [true, false]
+          - hardening_sudo_timestamp_timeout is integer and hardening_sudo_timestamp_timeout >= 0 and hardening_sudo_timestamp_timeout <= 120
+        fail_msg: "hardening_sudo_use_pty true/false (bool) ve hardening_sudo_timestamp_timeout 0-120 (dakika, tamsayı) olmalı; -1 (süresiz) kabul edilmez."
+
     - name: Write sudoers drop-in (use_pty, logfile, timestamp_timeout)
       ansible.builtin.copy:
         dest: /etc/sudoers.d/60-hardening
@@ -28,11 +35,13 @@
         validate: /usr/sbin/visudo -cf %s
         content: |
           # Ansible tarafından yönetilir
+          {% if hardening_sudo_use_pty %}
           Defaults use_pty
+          {% endif %}
           {% if not hardening_sudo_is_rs %}
           Defaults logfile="{{ hardening_sudo_logfile }}"
           {% endif %}
-          Defaults timestamp_timeout=15
+          Defaults timestamp_timeout={{ hardening_sudo_timestamp_timeout }}
 
     - name: Check that privilege escalation still works
       ansible.builtin.command: id -u

@@ -18,6 +18,15 @@
           - hardening_rollback_timeout | int <= 3600
         fail_msg: "hardening_rollback_timeout 30..3600 arasında bir tamsayı olmalı (saniye)."
 
+    # Gerçek VM turunda arm→disarm penceresi 30-60 sn sürdü (ufw/ssh/PAM adımları ve doğrulama); süre bundan kısaysa zamanlayıcı apply bitmeden tetiklenir ve geri alır.
+    - name: Warn about a rollback timeout shorter than the arm window
+      ansible.builtin.debug:
+        msg: >-
+          UYARI: hardening_rollback_timeout={{ hardening_rollback_timeout }} sn, 120 sn'den kısa. arm ile disarm arasındaki pencere (ufw/ssh/PAM adımları ve erişim doğrulaması)
+          gerçek sunucuda 30-60 sn sürdü; süre bundan kısaysa zamanlayıcı apply bitmeden tetiklenir, değişiklikleri geri alır ve apply BAŞARISIZ olur.
+          Varsayılan 300 sn'dir.
+      when: hardening_rollback_timeout | int < 120
+
     - name: Check systemd is available
       ansible.builtin.command: systemctl --version
       register: hardening_rollback_systemd
