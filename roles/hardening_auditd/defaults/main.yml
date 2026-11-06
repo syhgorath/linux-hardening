@@ -24,6 +24,9 @@ hardening_auditd_disk_full_halt: false
 hardening_auditd_immutable: false
 # true (varsayılan): Docker kuruluysa Docker dosyaları/dizinleri için izleme kuralı eklenir (CIS Docker 1.1.x). Yalnızca VAR OLAN yollar için yazılır
 # (var olmayan yola kural eklemek yüklemeyi bozar). /var/lib/docker bilerek izlenmez (konteyner çalışırken çok gürültülü).
+# /run ve /var/run altındaki yollar (docker.sock, containerd.sock) İZLENMEZ: /run tmpfs'tir, açılışta soket servis başlayana kadar yoktur ve audit-rules.service kuralları ondan
+# ÖNCE yükler; var olmayan yola kural `auditctl -R`'yi o satırda durdurur (sonraki kurallar yüklenmez, birim başarısız olur; gerçek VM bulgusu V0121-S3-BULGU1).
+# Soketlerin izni hardening_files'ta zaten sıkılaştırılır; docker.socket/docker.service birimleri aşağıda izlenir. Listeye /run yolu yazarsanız da atlanır.
 hardening_auditd_docker_rules: true
 hardening_auditd_docker_paths:
   - /usr/bin/dockerd
@@ -40,8 +43,6 @@ hardening_auditd_docker_paths:
   - /usr/lib/systemd/system/docker.socket
   - /etc/systemd/system/docker.service
   - /etc/systemd/system/docker.socket
-  - /run/docker.sock
-  - /run/containerd/containerd.sock
 # CIS Level 2 denetim kuralları (6.2.3.x) ve auditd dosya/araç izinleri (6.2.4.x). Varsayılan KAPALI: true iken /etc/audit/rules.d/61-hardening-cis-l2.rules yazılır
 # (ayrıcalıklı komutlar, başarısız dosya erişimleri, chmod/chown/xattr, silme/yeniden adlandırma, mount, oturum, PAM/nsswitch/hosts/issue izleme...) ve audit günlük/yapılandırma/araç
 # dosyalarının izinleri sıkılaştırılır. BEDELİ: günlük hacmi ciddi artar (başarısız erişimler ve her dosya silme/yeniden adlandırma kayda geçer), disk dolabilir. `-e 2` (değiştirilemez

@@ -12,9 +12,11 @@
   register: hardening_auditd_docker_stat
   when: hardening_auditd_docker_rules | bool
 
+# /run altı (tmpfs) yollar reboot'ta servis başlayana kadar yoktur ve audit-rules.service kuralları ondan önce yükler: süzülür (kural yüklemeyi durdurur).
 - name: Remember the Docker paths that exist
   ansible.builtin.set_fact:
-    hardening_auditd_docker_existing: "{{ hardening_auditd_docker_stat.results | selectattr('stat.exists') | map(attribute='item') | list }}"
+    hardening_auditd_docker_existing: "{{ hardening_auditd_docker_stat.results | selectattr('stat.exists') | map(attribute='item')
+      | reject('match', '^/(var/)?run/') | list }}"
   when: hardening_auditd_docker_rules | bool
 
 - name: Audit rules
