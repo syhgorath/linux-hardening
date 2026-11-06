@@ -5,6 +5,9 @@ Bu dosya [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimini ve
 
 ## [Yayımlanmamış]
 
+### Değişti
+- **`scripts/release-publish.sh`: Release sonrası imzalı paket indeksi adımı (6)** (`syhgorath/sshpocket-index`, `SSHPOCKET_INDEX_DIR`): `gh release create` ve özet doğrulaması geçtikten sonra `index-publish.sh <id> <sürüm> <depo> --archive … --sig …` çağrılır; `--dry-run` planda 6) adımını gösterir ve indeks betiğine `--dry-run` iletir. İndeks imza anahtarı yolu `INDEX_SIGNING_KEY` → `PAKET_SIGNING_KEY` → `LH_SIGNING_KEY` sırasıyla aktarılır (anahtar okunmaz). İndeks betiği yoksa etiketten ÖNCE durur (`--no-index` ile atlanır); indeks hatası yayımlanmış Release'i geri almaz, çıkış kodu ≠ 0 olur ve betik tek başına yeniden çalıştırılabilir. `components.lock` satırı bilgi olarak kalır (normal sürümde gerekmez). Testler sahte `index-publish.sh` ile (`test/test_release_publish.sh`); gerçek indeks betiğiyle DENENMEDİ.
+
 ## [0.13.0] - 2026-11-06
 
 Bu sürümde yeni, varsayılan KAPALI seçenekler (GRUB parolası, Proxmox apt hold), SSH/sudo sabitlerinin değişkenleştirilmesi, systemd sandbox özeti ve sshpocket'in gerçek VM turunda bulunan auditd düzeltmesi var. Gerçek VM'de DOĞRULANMAYANLAR: reboot sonrası `audit-rules.service` ve `auditctl -l | grep -c docker` (Docker kuralları 11 yerine 9 olmalı; yalnızca kod ve testle doğrulandı), GRUB'un gerçek açılışı ve parola istemi (yalnızca `grub-mkconfig` ve LAB'da denendi), Proxmox'ta apt hold ve GRUB atlama, Debian.

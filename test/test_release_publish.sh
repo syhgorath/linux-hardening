@@ -41,7 +41,17 @@ fresh() { # temiz depo + yerel bare origin (main, takip ediyor)
     && git -c user.email=t@t -c user.name=t commit -qm base \
     && git remote add origin "$TMP/o.git" && git push -q -u origin main)
 }
-pub() { (cd "$TMP/r" && PATH="$BIN:$PATH" LH_SIGNING_KEY="$KEY" bash scripts/release-publish.sh "$@" 2>&1); }
+# Sahte indeks betiği (gerçeği henüz yok): çağrı argümanlarını ve anahtar değişkenini kaydeder, FAKE_INDEX_RC ile çıkar
+IDX="$TMP/idx"; mkdir -p "$IDX/scripts"
+cat > "$IDX/scripts/index-publish.sh" <<'IX'
+#!/usr/bin/env bash
+echo "$*" >> "$FAKE_INDEX_LOG"
+echo "KEY=${INDEX_SIGNING_KEY-<yok>}" >> "$FAKE_INDEX_LOG"
+exit "${FAKE_INDEX_RC:-0}"
+IX
+chmod +x "$IDX/scripts/index-publish.sh"
+export FAKE_INDEX_LOG="$TMP/index.log"
+pub() { (cd "$TMP/r" && rm -f "$FAKE_INDEX_LOG" && PATH="$BIN:$PATH" SSHPOCKET_INDEX_DIR="${IDXDIR:-$IDX}" LH_SIGNING_KEY="$KEY" bash scripts/release-publish.sh "$@" 2>&1); }
 expect_fail() { if printf '%s' "$2" | grep -q '^HATA:'; then ok "$1 reddedildi"; else bad "$1 REDDEDILMEDI: $2"; fi; }
 
 echo "-- dry-run: ne yapacagini gosterir, HICBIR SEY yapmaz"
@@ -49,6 +59,8 @@ fresh; out=$(pub --dry-run); rc=$?
 expect_eq "dry-run cikis 0" "0" "$rc"
 expect_contains "  plan: etiket" "$out" "git tag -a v$V"
 expect_contains "  plan: gh release create" "$out" "gh release create v$V"
+expect_contains "  plan: 6) indeks adimi" "$out" "6) indeks"
+expect_contains "  dry-run indeks betigine --dry-run iletildi" "$(cat "$FAKE_INDEX_LOG" 2>/dev/null)" "--dry-run linux-hardening $V"
 expect_contains "  [dry-run] hicbir sey yapilmadi" "$out" "[dry-run] hiçbir şey yapılmadı"
 if (cd "$TMP/r" && git rev-parse -q --verify "refs/tags/v$V" >/dev/null); then bad "dry-run etiket OLUSTURDU"; else ok "dry-run etiket olusturmadi"; fi
 if git --git-dir="$TMP/o.git" rev-parse -q --verify "refs/tags/v$V" >/dev/null; then bad "dry-run etiketi ITTI"; else ok "dry-run etiketi itmedi"; fi
@@ -67,7 +79,7 @@ fresh; out=$(FAKE_CI="completed failure abc" pub --dry-run --no-ci-check); expec
 fresh; expect_fail "bilinmeyen bagimsiz degisken" "$(pub --bilinmeyen)"
 fresh; (cd "$TMP/r" && git tag -a "v$V" -m x && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m yeni && git push -q origin main); expect_fail "yerel etiket baska commit'i gosteriyor" "$(pub --dry-run)"
 
-fresh; out=$(cd "$TMP/r" && PATH="$BIN:$PATH" LH_PYTHON=/bin/false LH_SIGNING_KEY="$KEY" bash scripts/release-publish.sh --yes 2>&1); rc=$?
+fresh; out=$(cd "$TMP/r" && PATH="$BIN:$PATH" SSHPOCKET_INDEX_DIR="$IDX" LH_PYTHON=/bin/false LH_SIGNING_KEY="$KEY" bash scripts/release-publish.sh --yes 2>&1); rc=$?
 if [ "$rc" != "0" ] && printf '%s' "$out" | grep -q "check-consistency"; then ok "tutarlilik denetimi ETIKETTEN ONCE (Python/PyYAML yoksa durur)"; else bad "tutarlilik denetimi atlandi (rc=$rc): $out"; fi
 if git --git-dir="$TMP/o.git" rev-parse -q --verify "refs/tags/v$V" >/dev/null; then bad "tutarlilik basarisizken etiket itildi"; else ok "tutarlilik basarisizken etiket itilmedi"; fi
 
@@ -87,6 +99,25 @@ expect_contains "  ozet dogrulandi mesaji" "$out" "yüklenen dosyaların özeti 
 expect_contains "  components.lock bilgisi: SHA-256" "$out" "SHA-256"
 expect_contains "  components.lock bilgisi: imzalayici satiri" "$out" 'namespaces="sshpocket-component"'
 expect_not_contains "  sshpocket reposuna dokunmaz (components.lock yazilmaz)" "$out" "components.lock'a yazıldı"
+echo "-- indeks adimi (sahte index-publish.sh)"
+fresh; out=$(pub --yes); log=$(cat "$FAKE_INDEX_LOG" 2>/dev/null)
+expect_contains "  indeks: id, surum, depo, arsiv ve imza iletildi" "$log" "linux-hardening $V sahip/depo --archive dist/linux-hardening-$V.tar.gz --sig dist/linux-hardening-$V.tar.gz.sig"
+expect_contains "  indeks: imza anahtari LH_SIGNING_KEY'den aktarildi (yalniz yol)" "$log" "KEY=$KEY"
+expect_contains "  indeks: push SIZDE notu" "$out" "push SİZDE"
+expect_contains "  components.lock satiri artik 'gerekmez' der" "$out" "GEREKMEZ"
+if [ "$(printf '%s\n' "$out" | grep -n 'yayımlandı ve yüklenen' | cut -d: -f1)" -gt "$(printf '%s\n' "$out" | grep -n -- '-- 6) indeks' | cut -d: -f1)" ]; then ok "  indeks adimi son satirdan ONCE"; else bad "  indeks adimi sirasi yanlis"; fi
+fresh; out=$(cd "$TMP/r" && rm -f "$FAKE_INDEX_LOG" && INDEX_SIGNING_KEY=/ozel/indeks PATH="$BIN:$PATH" SSHPOCKET_INDEX_DIR="$IDX" LH_SIGNING_KEY="$KEY" bash scripts/release-publish.sh --yes 2>&1)
+expect_contains "  INDEX_SIGNING_KEY LH_SIGNING_KEY'e ustun" "$(cat "$FAKE_INDEX_LOG")" "KEY=/ozel/indeks"
+fresh; out=$(FAKE_INDEX_RC=3 pub --yes); rc=$?
+if [ "$rc" != "0" ] && printf '%s' "$out" | grep -q "Release YAYIMLANDI ve geçerli"; then ok "  indeks hatasi: cikis != 0 ama Release geri alinmadi"; else bad "  indeks hatasi yanlis ele alindi (rc=$rc): $out"; fi
+expect_contains "  indeks hatasi: tek basina yeniden calistirma komutu" "$out" "Tek başına yeniden çalıştırın"
+if [ -f "$TMP/gh.create" ] && git --git-dir="$TMP/o.git" rev-parse -q --verify "refs/tags/v$V" >/dev/null; then ok "  indeks hatasi: etiket ve Release duruyor"; else bad "  indeks hatasi Release/etiketi bozdu"; fi
+fresh; out=$(IDXDIR="$TMP/yok" pub --yes); rc=$?
+if [ "$rc" != "0" ] && printf '%s' "$out" | grep -q "index-publish.sh bulunamadı"; then ok "  indeks betigi yoksa durur"; else bad "  indeks betigi yokken devam etti (rc=$rc): $out"; fi
+if git --git-dir="$TMP/o.git" rev-parse -q --verify "refs/tags/v$V" >/dev/null || [ -f "$TMP/gh.create" ]; then bad "  indeks betigi yokken etiket/Release YAPILDI"; else ok "  indeks betigi yokken ETIKETTEN ONCE durdu (hicbir sey yapilmadi)"; fi
+fresh; out=$(IDXDIR="$TMP/yok" pub --yes --no-index); rc=$?
+if [ "$rc" = "0" ] && [ ! -f "$FAKE_INDEX_LOG" ]; then ok "  --no-index: indeks atlanir, yayin tamamlanir"; else bad "  --no-index yanlis (rc=$rc): $out"; fi
+expect_contains "  --no-index: uyari yazar" "$out" "indeks adımı atlandı"
 echo "-- ozet UYUSMAZSA durur"
 fresh; export FAKE_DIGEST=kotu; out=$(pub --yes); rc=$?; unset FAKE_DIGEST
 if [ "$rc" != "0" ] && printf '%s' "$out" | grep -q "özeti uyuşmuyor"; then ok "uyusmayan ozet reddedildi"; else bad "uyusmayan ozet KABUL EDILDI (rc=$rc): $out"; fi
