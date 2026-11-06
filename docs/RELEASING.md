@@ -71,8 +71,11 @@ python3 -m venv /tmp/denemevenv && /tmp/denemevenv/bin/pip install --require-has
 ```
 
 ## Tek komutla yayın (isteğe bağlı): `scripts/release-publish.sh`
-Yukarıdaki adım 3-5'i (etiket, paket+imza, GitHub Release, yüklenen dosyaların özet doğrulaması) tek betikte toplar; `components.lock` sshpocket reposunda olduğundan ona **dokunmaz**,
-yalnızca yazılacak SHA-256 ve imzalayıcı satırını yazdırır. Özel imza anahtarı yine yalnızca `LH_SIGNING_KEY` ile `release.sh`'e aktarılır.
+Yukarıdaki adım 3-5'i (etiket, paket+imza, GitHub Release, yüklenen dosyaların özet doğrulaması) ve ardından **6) imzalı paket indeksi** adımını tek betikte toplar. `components.lock` sshpocket reposunda olduğundan ona **dokunmaz**;
+SHA-256 ve imzalayıcı satırını yalnızca bilgi olarak yazdırır: normal sürümde `components.lock` güncellemesi GEREKMEZ, indeks halleder. Özel imza anahtarı yalnızca `LH_SIGNING_KEY` ile `release.sh`'e aktarılır.
+İndeks adımı (Release ve özet doğrulaması geçtikten sonra) `syhgorath/sshpocket-index` deposundaki `scripts/index-publish.sh`'ı çağırır (`SSHPOCKET_INDEX_DIR`, varsayılan `~/Developer/sshpocket-index`): yerel commit üretir, **push sizdedir**.
+İndeks imza anahtarı için `INDEX_SIGNING_KEY` (yoksa `PAKET_SIGNING_KEY`, yoksa `LH_SIGNING_KEY`) yolu aktarılır; betik anahtarı okumaz. İndeks betiği yoksa betik **etiketten önce** durur (indekssiz yayın için `--no-index`).
+İndeks adımı hata verirse Release geçerli kalır, geri alınmaz; çıkış kodu ≠ 0 olur ve `index-publish.sh <id> <sürüm> <depo>` tek başına yeniden çalıştırılabilir.
 ```bash
 LH_SIGNING_KEY=~/.ssh/<anahtar> scripts/release-publish.sh --dry-run   # ne yapacağını gösterir, HİÇBİR ŞEY yapmaz
 LH_SIGNING_KEY=~/.ssh/<anahtar> scripts/release-publish.sh              # onay ister, sonra etiketler, imzalar, Release açar
