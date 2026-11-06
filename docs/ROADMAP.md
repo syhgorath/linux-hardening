@@ -27,7 +27,8 @@ Sıra bağlayıcı değildir. Kararlar ve istisnalar: [decisions.md](decisions.m
 | v0.10.0 yayını | Yayımlandı 2026-10-31 (`SSHPOCKET_PROGRESS` ilerleme satırları, `audit` için `bulgular.tsv` üretimi ve `outputs.findings` bildirimi; sshpocket ekranı PR 139 ve 140 ile main'de) |
 | v0.11.0 yayını | Yayımlandı 2026-11-01 (fail2ban: `ignoreip` kontrol makinesi/`hardening_ssh_allow_from` adresini otomatik eklemez, yerel adresler her zaman muaf, `hardening_fail2ban_ignoreip` ek adresler için ve varsayılan boş, `bantime` 10m; gerçek VM'de henüz doğrulanmadı) |
 | v0.12.0 yayını | Yayımlandı 2026-11-02 (manifest: `platform_choices`, `onboarding_vars`, `requires_vars`, `apply_vars`; Proxmox + `generic` hata iletisine ipucu; gerçek sunucuda ve gerçek sshpocket akışında henüz doğrulanmadı) |
-| v0.12.1 yayını | Hazırlandı (düzeltmeler, sshpocket'in gerçek VM turu bulguları: geri alma `restore` ufw aktifken `ufw reload` yapar; zamanlayıcı `disarm`'dan önce tetiklenmişse `disarm` çıkış 3 verir ve apply başarısız olur; Proxmox'ta `login.defs` `UMASK` yazılmaz; gerçek sunucuda henüz yeniden doğrulanmadı) |
+| v0.12.1 yayını | Yayımlandı 2026-11-04 (düzeltmeler, sshpocket'in gerçek VM turu bulguları: geri alma `restore` ufw aktifken `ufw reload` yapar; zamanlayıcı `disarm`'dan önce tetiklenmişse `disarm` çıkış 3 verir ve apply başarısız olur; Proxmox'ta `login.defs` `UMASK` yazılmaz; gerçek sunucuda henüz yeniden doğrulanmadı) |
+| v0.13.0 yayını | Hazırlandı (GRUB parolası ve Proxmox `apt` koruması, varsayılan kapalı; SSH/sudo sabitleri değişken; systemd sandbox özeti; rapor/rollback iyileştirmeleri; auditd `/run` soket düzeltmesi; CI Ubuntu 26.04 runner'ı; gerçek VM'de reboot sonrası auditd, GRUB açılışı ve Proxmox henüz doğrulanmadı) |
 
 ## Orta
 | İş | Not |
