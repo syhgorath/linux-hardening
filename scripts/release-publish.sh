@@ -7,7 +7,7 @@
 #   --yes (onay sorma), --no-ci-check (main CI kontrolünü atla: önerilmez), --no-index (paket indeksi adımını atla)
 #
 # Son adım (6) imzalı paket indeksidir (syhgorath/sshpocket-index): Release + özet doğrulaması geçtikten sonra `index-publish.sh` çağrılır
-# (konum: $SSHPOCKET_INDEX_DIR, varsayılan ~/Developer/sshpocket-index). İndeks hatası yayımlanmış Release'i geçersiz kılmaz; `index-publish.sh` tek başına yeniden çalıştırılabilir.
+# (konum: $SSHPOCKET_INDEX_DIR, varsayılan ~/Developer/sshpocket-index). Baştaki y/N yayın onayı olduğundan indeks betiğine `--yes` geçirilir (ikinci onay etkileşimsiz pencerede düşerdi). İndeks hatası yayımlanmış Release'i geçersiz kılmaz; `index-publish.sh` tek başına yeniden çalıştırılabilir.
 # İndeks imza anahtarı: INDEX_SIGNING_KEY, yoksa PAKET_SIGNING_KEY, yoksa LH_SIGNING_KEY (yalnızca yol aktarılır, anahtar okunmaz).
 #
 # Özel imza anahtarı ASLA repoya, CI'a veya sohbete konmaz; yalnızca release.sh'e LH_SIGNING_KEY ile aktarılır. components.lock sshpocket reposundadır: bu betik ona DOKUNMAZ,
@@ -82,7 +82,7 @@ echo "  3) gh release create $TAG $ARCHIVE $ARCHIVE.sig --title $TAG --notes-fil
 echo "  4) yüklenen dosyaların SHA-256 özetini yerel dosyalarla karşılaştır"
 echo "  5) components.lock için SHA-256 ve imzalayıcı satırını yazdır (bilgi; normal sürümde GEREKMEZ, indeks halleder; sshpocket reposuna DOKUNULMAZ)"
 if [ "$NOINDEX" = 0 ]; then
-    echo "  6) indeks: $INDEX_PUBLISH $PKG_ID $VERSION <sahip/depo> --archive $ARCHIVE --sig $ARCHIVE.sig  (yerel commit, push sizde)"
+    echo "  6) indeks: $INDEX_PUBLISH $PKG_ID $VERSION <sahip/depo> --archive $ARCHIVE --sig $ARCHIVE.sig --yes  (yerel commit, push sizde)"
 else
     echo "  6) indeks: ATLANACAK (--no-index)"
 fi
@@ -129,7 +129,7 @@ if [ "$NOINDEX" = 0 ]; then
     echo "-- 6) indeks"
     INDEX_SIGNING_KEY="${INDEX_SIGNING_KEY:-${PAKET_SIGNING_KEY:-${LH_SIGNING_KEY:-}}}"
     if [ -n "$INDEX_SIGNING_KEY" ]; then export INDEX_SIGNING_KEY; else unset INDEX_SIGNING_KEY; fi
-    "$INDEX_PUBLISH" "$PKG_ID" "$VERSION" "$REPO" --archive "$ARCHIVE" --sig "$ARCHIVE.sig" || INDEX_RC=$?
+    "$INDEX_PUBLISH" "$PKG_ID" "$VERSION" "$REPO" --archive "$ARCHIVE" --sig "$ARCHIVE.sig" --yes || INDEX_RC=$?
 fi
 echo ""
 echo "✅ $TAG yayımlandı ve yüklenen dosyaların özeti yerelle aynı."
@@ -139,7 +139,7 @@ if [ "$NOINDEX" = 1 ]; then
     echo "UYARI: indeks adımı atlandı (--no-index). İndeksi sonra güncellemek için: $INDEX_PUBLISH $PKG_ID $VERSION $REPO"
 elif [ "$INDEX_RC" != 0 ]; then
     echo "HATA: indeks adımı başarısız (çıkış $INDEX_RC). Release YAYIMLANDI ve geçerli; geri alınmadı." >&2
-    echo "Tek başına yeniden çalıştırın (idempotent): $INDEX_PUBLISH $PKG_ID $VERSION $REPO --archive $ARCHIVE --sig $ARCHIVE.sig" >&2
+    echo "Tek başına yeniden çalıştırın (idempotent): $INDEX_PUBLISH $PKG_ID $VERSION $REPO --archive $ARCHIVE --sig $ARCHIVE.sig --yes" >&2
     exit 1
 else
     echo "İndeks güncellendi (yerel commit): push SİZDE, indeks deposundaki komutu çalıştırın."
