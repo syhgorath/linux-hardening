@@ -6,7 +6,9 @@
 PYBIN="$(command -v python3)"
 HARDEN="$ROOT/playbooks/harden.yml"; AUDIT="$ROOT/playbooks/audit.yml"
 
-# Yerel hedefte (macOS ya da CI'ın Ubuntu 24.04'ü) OS desteklenmez: preflight çalışırsa "Desteklenmeyen sistem" ile DURMALI.
+# Yerel hedefin işletim sistemi (macOS, CI'ın Ubuntu 26.04 runner'ı...) ne olursa olsun test aynı olsun diye desteklenen sürüm listesi boşaltılır:
+# preflight çalışırsa "Desteklenmeyen sistem" ile DURMALI.
+UNSUP='{"hardening_supported_os":{"Ubuntu":["0.0"]}}'
 runp() { # playbook tags...
   local pb="$1"; shift
   ANSIBLE_CONFIG="$TESTDIR/ansible-test.cfg" ANSIBLE_ROLES_PATH="$ROOT/roles" \
@@ -15,14 +17,14 @@ runp() { # playbook tags...
 }
 echo "-- etiketli calistirmada preflight atlanmamali"
 for tag in kernel ssh ufw base auth fail2ban auditd aide time files sudo docker; do
-  out=$(runp "$HARDEN" --tags "$tag")
+  out=$(runp "$HARDEN" --tags "$tag" -e "$UNSUP")
   expect_contains "harden.yml --tags $tag: preflight durdurdu" "$out" "Desteklenmeyen sistem"
 done
-out=$(runp "$HARDEN")
+out=$(runp "$HARDEN" -e "$UNSUP")
 expect_contains "harden.yml (etiketsiz): preflight durdurdu" "$out" "Desteklenmeyen sistem"
-out=$(runp "$AUDIT" --tags baska)
+out=$(runp "$AUDIT" --tags baska -e "$UNSUP")
 expect_contains "audit.yml --tags baska: preflight durdurdu" "$out" "Desteklenmeyen sistem"
-out=$(runp "$AUDIT")
+out=$(runp "$AUDIT" -e "$UNSUP")
 expect_contains "audit.yml (etiketsiz): preflight durdurdu" "$out" "Desteklenmeyen sistem"
 
 echo "-- desteklenmeyen OS bayragiyla erisim korumalari etiketli calismada da calismali"

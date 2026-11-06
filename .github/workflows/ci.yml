@@ -11,7 +11,7 @@ concurrency:
 jobs:
   tests:
     name: tests (python ${{ matrix.python }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +34,7 @@ jobs:
   runtime-install:
     # Çalışma zamanı bağımlılıkları (requirements.txt) desteklenen tüm Python sürümlerinde hash'li kurulabilmeli.
     name: runtime-install (python ${{ matrix.python }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -51,11 +51,10 @@ jobs:
           .venv/bin/ansible-playbook --version
 
   linux-smoke:
-    # Gerçek bir Linux'ta (runner Ubuntu 24.04) harden.yml'i YALNIZCA --check ile çalıştırır:
+    # Gerçek bir Linux'ta (runner Ubuntu 26.04) harden.yml'i YALNIZCA --check ile çalıştırır:
     # temiz sunucuda failed=0 (PR-0c), gerçek `ss -p` ve ufw/ssh okumaları. Hiçbir değişiklik uygulanmaz.
-    # Runner 24.04 olduğu için destek sınırı bu iş için bilerek aşılır.
     name: linux-smoke (--check, uygulama yok)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -73,7 +72,6 @@ jobs:
           ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/ci_smoke_key
           cat ~/.ssh/ci_smoke_key.pub >> ~/.ssh/authorized_keys
           chmod 600 ~/.ssh/authorized_keys
-          cp vars/ubuntu-26.04.yml vars/ubuntu-24.04.yml
       - name: harden.yml --check --diff (temiz sunucu)
         env:
           SSH_CONNECTION: "192.0.2.10 5555 192.0.2.20 22"
