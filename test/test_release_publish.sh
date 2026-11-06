@@ -60,6 +60,7 @@ expect_eq "dry-run cikis 0" "0" "$rc"
 expect_contains "  plan: etiket" "$out" "git tag -a v$V"
 expect_contains "  plan: gh release create" "$out" "gh release create v$V"
 expect_contains "  plan: 6) indeks adimi" "$out" "6) indeks"
+expect_contains "  plan: 6) satiri --yes gosterir" "$(printf '%s' "$out" | grep '6) indeks:')" "--sig dist/linux-hardening-$V.tar.gz.sig --yes"
 expect_contains "  dry-run indeks betigine --dry-run iletildi" "$(cat "$FAKE_INDEX_LOG" 2>/dev/null)" "--dry-run linux-hardening $V"
 expect_contains "  [dry-run] hicbir sey yapilmadi" "$out" "[dry-run] hiçbir şey yapılmadı"
 if (cd "$TMP/r" && git rev-parse -q --verify "refs/tags/v$V" >/dev/null); then bad "dry-run etiket OLUSTURDU"; else ok "dry-run etiket olusturmadi"; fi
@@ -101,7 +102,7 @@ expect_contains "  components.lock bilgisi: imzalayici satiri" "$out" 'namespace
 expect_not_contains "  sshpocket reposuna dokunmaz (components.lock yazilmaz)" "$out" "components.lock'a yazıldı"
 echo "-- indeks adimi (sahte index-publish.sh)"
 fresh; out=$(pub --yes); log=$(cat "$FAKE_INDEX_LOG" 2>/dev/null)
-expect_contains "  indeks: id, surum, depo, arsiv ve imza iletildi" "$log" "linux-hardening $V sahip/depo --archive dist/linux-hardening-$V.tar.gz --sig dist/linux-hardening-$V.tar.gz.sig"
+expect_contains "  indeks: id, surum, depo, arsiv ve imza iletildi" "$log" "linux-hardening $V sahip/depo --archive dist/linux-hardening-$V.tar.gz --sig dist/linux-hardening-$V.tar.gz.sig --yes"
 expect_contains "  indeks: imza anahtari LH_SIGNING_KEY'den aktarildi (yalniz yol)" "$log" "KEY=$KEY"
 expect_contains "  indeks: push SIZDE notu" "$out" "push SİZDE"
 expect_contains "  components.lock satiri artik 'gerekmez' der" "$out" "GEREKMEZ"
@@ -111,6 +112,7 @@ expect_contains "  INDEX_SIGNING_KEY LH_SIGNING_KEY'e ustun" "$(cat "$FAKE_INDEX
 fresh; out=$(FAKE_INDEX_RC=3 pub --yes); rc=$?
 if [ "$rc" != "0" ] && printf '%s' "$out" | grep -q "Release YAYIMLANDI ve geçerli"; then ok "  indeks hatasi: cikis != 0 ama Release geri alinmadi"; else bad "  indeks hatasi yanlis ele alindi (rc=$rc): $out"; fi
 expect_contains "  indeks hatasi: tek basina yeniden calistirma komutu" "$out" "Tek başına yeniden çalıştırın"
+expect_contains "  indeks hatasi: yeniden calistirma komutu --yes icerir" "$(printf '%s' "$out" | grep -A0 'Tek başına yeniden')" "--sig dist/linux-hardening-$V.tar.gz.sig --yes"
 if [ -f "$TMP/gh.create" ] && git --git-dir="$TMP/o.git" rev-parse -q --verify "refs/tags/v$V" >/dev/null; then ok "  indeks hatasi: etiket ve Release duruyor"; else bad "  indeks hatasi Release/etiketi bozdu"; fi
 fresh; out=$(IDXDIR="$TMP/yok" pub --yes); rc=$?
 if [ "$rc" != "0" ] && printf '%s' "$out" | grep -q "index-publish.sh bulunamadı"; then ok "  indeks betigi yoksa durur"; else bad "  indeks betigi yokken devam etti (rc=$rc): $out"; fi
