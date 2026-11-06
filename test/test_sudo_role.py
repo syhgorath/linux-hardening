@@ -91,6 +91,11 @@ check("sudo, ssh'tan SONRA (en sonda)", roles.index("hardening_sudo") > roles.in
 
 # Üretilen içerik (iki sudo türü için) gerçek visudo ile doğrulanır; sudo-rs içeriğinde `logfile` OLMAMALI
 visudo = shutil.which("visudo") or ("/usr/sbin/visudo" if Path("/usr/sbin/visudo").exists() else None)
+# Bu makinenin visudo'su sudo-rs ise (Ubuntu 26.04 varsayılanı) klasik sudo içeriğini (`logfile`) reddeder; o durumda klasik içerik atlanır (sudo-rs içeriği klasik visudo'dan da geçer, ikisi de denenir).
+visudo_is_rs = False
+if visudo:
+    ver = subprocess.run([visudo, "--version"], capture_output=True, text=True)
+    visudo_is_rs = "visudo-rs" in (ver.stdout + ver.stderr)
 for is_rs in (False, True):
     label = "sudo-rs" if is_rs else "klasik sudo"
     with tempfile.TemporaryDirectory() as d:
@@ -103,7 +108,9 @@ for is_rs in (False, True):
         out = Path(f"{d}/out").read_text(encoding="utf-8") if Path(f"{d}/out").exists() else ""
         check(f"{label}: logfile satiri " + ("YOK" if is_rs else "VAR"), ("logfile" in out) == (not is_rs), out)
         check(f"{label}: use_pty ve timestamp_timeout=15 var", "Defaults use_pty" in out and "Defaults timestamp_timeout=15" in out)
-        if visudo:
+        if visudo and visudo_is_rs and not is_rs:
+            print(f"  --   {label}: bu makinenin visudo'su sudo-rs; klasik sudo içeriği (`logfile`) onunla doğrulanmaz (atlandı)")
+        elif visudo:
             ok = subprocess.run([visudo, "-cf", f"{d}/out"], capture_output=True, text=True)
             check(f"{label}: uretilen sudoers visudo -cf ile gecerli (bu makinenin visudo'su)", ok.returncode == 0, ok.stdout + ok.stderr)
             Path(f"{d}/bad").write_text(out + "Defaults bu_gecersiz_secenek_yok\n")
