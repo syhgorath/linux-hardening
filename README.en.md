@@ -156,6 +156,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # only tests whose name con
 | `test_examples.py` | `examples/` consistency: the `group_vars` merge (real `ansible-inventory`) equals the sshpocket files; only existing variables, extra ufw rules match the validation pattern, the database port is never opened |
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: default true; when false the rule file is removed and USB storage is usable again |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh keepalive options (no hanging on a dead connection); the default `ssh_args` is not overridden |
+| `test_action_confirms.py` | Action confirmations: `apply` is yes/no (preview still required), other mutating actions need the server name; `component.json` matches |
 | `test_apt_listchanges.py` | `apt-listchanges`: install + non-blocking config (`confirm=false`, `frontend=text`), idempotent, no `warn_if` |
 | `test_pam_faillock.py` | account lockout: guards (safety net off / not armed → stops), stack ORDER (real Ubuntu output and broken variants), `faillock.conf` lines, rescue rollback |
 | `test_cis_report.py`, `test_cis_remaining.py` | Read-only report (IPv6, listeners, dot directories, nullok/empty passwords) decision logic; pwquality, journald rotation and sshd access lists (refusal of a self-locking list); mutation-checked |
