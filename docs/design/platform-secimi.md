@@ -52,6 +52,8 @@ Bugün `hardening_platform` bir **paket değişkenidir** ve varsayılanı `gener
 4. **Değişken kalır.** `hardening_pve_apply` `component.yml`'den kalkmaz; elle `-e`/vars ile kullananlar (ve eski sürümler) aynı çalışır. Bu yüzden "türetme" yalnızca eksik olanı doldurur.
 5. Onay gücü aynı kalır (`type-server-name`); gevşetme yok. Gerçek Proxmox'ta apply hâlâ `DENENMEDİ` notları taşıyor, bu değişiklik onları kaldırmaz.
 
+**Güncelleme (2026-11-27):** `apply` onayı `type-server-name` yerine `yes-no` oldu (KeyLab "Önizle ve uygula": parola, önizleme, `e/H`, uygulama; boş Enter hayır). `requires: [preview]` ve uyarılar aynı; `pve_firewall_apply`, `rollback_disarm`, `rollback_now`, `kaldir`, `kaldir_geri_yukle` sunucu adında kalır. Yukarıdaki "sunucu adı onayı" ifadeleri `apply` için artık geçerli değil. **Proxmox (kullanıcı kararı, koordinatör aracılığıyla: "Orada da e/h"):** Proxmox'ta da sunucu adı sorulmaz. `apply_vars`, KeyLab'ın bu kuralı içeren sürümüyle terminalde sorulan `e/H` onayından sonra geçer (ayar kartı düğmesiyle onaylanan adımda geçmez). Eski KeyLab'da geçmez: Proxmox'ta `apply` preflight'ta durur (vars dosyasına elle `hardening_pve_apply=true` yazmak çalışır).
+
 ## 6. Platformu kim algılar? ( `auto` neden yok )
 sshpocket değişken listesini `hardening_platform` değerine göre süzüyor; değer `auto` kalırsa süzemez. Bu yüzden değer sunucu eklenirken **bir kez somut olarak** yazılır.
 

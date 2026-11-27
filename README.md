@@ -151,6 +151,7 @@ PATH="$PWD/.venv/bin:$PATH" test/run-all.sh summary  # adı "summary" içerenler
 | `test_examples.py` | `examples/` tutarlılığı: gerçek `ansible-inventory` ile `group_vars` birleşimi, sshpocket dosyalarıyla aynı; yalnız var olan değişkenler, ek ufw kuralları doğrulama kalıbına uyar, DB portu açılmaz |
 | `test_usb_storage.py` | `hardening_disable_usb_storage`: varsayılan true; false iken kural dosyası silinir, USB depolama tekrar kullanılabilir |
 | `test_ansible_cfg.py` | `ansible.cfg` ssh canlılık seçenekleri (ölü bağlantıda takılmama), varsayılan `ssh_args` ezilmez |
+| `test_action_confirms.py` | Eylem onayları: `apply` evet/hayır (+ önizleme şartı), diğer değiştiren eylemler sunucu adı; `component.json` aynı |
 | `test_apt_listchanges.py` | `apt-listchanges`: kurulum + bloklamayan yapılandırma (`confirm=false`, `frontend=text`), idempotent, `warn_if` yok |
 | `test_pam_faillock.py` | hesap kilitleme: korumalar (güvenlik ağı kapalı/armed değil → durur), yığın SIRASI (gerçek Ubuntu çıktısı ve bozuk varyantlar), `faillock.conf` satırları, rescue geri alma |
 | `test_cis_report.py`, `test_cis_remaining.py` | Salt okunur rapor (IPv6, dinleyiciler, nokta dizinleri, nullok/boş parola) karar mantığı; pwquality, journald döndürme ve sshd erişim listeleri (kendini kilitleyen liste reddi); mutasyonla doğrulandı |

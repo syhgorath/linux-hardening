@@ -25,8 +25,10 @@ platform_var: hardening_platform
 # Sunucu eklerken platform seçimi (docs/design/platform-secimi.md). Hepsi isteğe bağlı: bilinmeyen alanı eski sshpocket yok sayar (sshpocket_api 1 kalır).
 # id = hardening_platform değeri (sshpocket yazar); kimlik kümesi roles/hardening_preflight hardening_platforms_known ile AYNI olmalı (check-consistency).
 # defaults: seçimle birlikte yazılacak EK değişkenler (warn_if taşıyan değişken olamaz). auto_detect: platform_detect önerisi bu platformu seçebilir mi (false = yalnızca ipucu).
-# apply_vars: yalnızca değişiklik yapan eylemde, type-server-name onayından SONRA o koşuya -e ile geçer; vars dosyasına yazılmaz, dosyada yazılıysa ezilmez (kuralı sshpocket uygular);
+# apply_vars: yalnızca değişiklik yapan eylemde, eylemin onayından SONRA o koşuya -e ile geçer; vars dosyasına yazılmaz, dosyada yazılıysa ezilmez (kuralı sshpocket uygular);
 #   yalnızca bu platforma ait (platforms: etiketli) warn_if bool değişkenler; apply_vars doluysa apply_warnings zorunlu (onaydan ÖNCE gösterilir).
+#   `apply` yes-no olduğundan apply_vars, sshpocket'in (KeyLab) bu kuralı içeren sürümüyle terminalde e/h onayından sonra geçer; eski sürümde geçmez ve
+#   Proxmox'ta apply preflight'ta durur (elle hardening_pve_apply=true yazmak çalışır).
 platform_choices:
   - id: generic
     label: "Ubuntu / Debian"
@@ -91,7 +93,7 @@ actions:
     effects: [installs-package, changes-config]
     requires_sudo: true
     requires: [preview]                # sshpocket önce preview çalıştırıp göstermeli
-    confirm: type-server-name
+    confirm: yes-no                    # bilinçli: "Önizle ve uygula" akışında önizlemeden sonra e/h yeter (diğer değiştiren eylemler sunucu adında kalır)
     warnings:
       - "hardening_ssh_allow_from'a sunucuya BAĞLANABİLECEĞİN TÜM ağları yaz (VPN + LAN + ...). ufw yalnızca bunlardan SSH'a izin verir; yalnızca VPN yazarsan LAN'dan SSH kesilir (ping/ARP çalışır, ssh zaman aşar) ve geri alma güvenlik ağı bunu yakalamaz."
       - "SSH ve ufw kurallarını değiştirir; bağlantınız kopabilir. Çalıştırmadan önce anahtarın ssh-agent'ta olduğunu doğrulayın (ssh-add -l)."
